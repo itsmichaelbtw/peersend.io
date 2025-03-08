@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -12,28 +14,39 @@ type Session struct {
   lock sync.RWMutex
 }
 
-func (r *Session) connectClient(conn *websocket.Conn) *Client {
-	client := Client{
-		conn: conn,
-		host: len(r.clients) == 0,
-	}
-
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
-	id := client.getConnectionID()
-	r.clients[id] = &client
-
-	return &client
+var wsUpgrader = websocket.Upgrader{
+  CheckOrigin: func(r *http.Request) bool {
+    return true
+  },
 }
 
-func (r *Session) disconnectClient(client *Client) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
+func (s *Session) connectClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
+	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return nil, fmt.Errorf("could not upgrade to WebSocket connection: %v", err)
+	}
+
+	client := Client{
+		conn: conn,
+		host: len(s.clients) == 0,
+	}
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	id := client.getConnectionID()
+	s.clients[id] = &client
+
+	return &client, nil
+}
+
+func (s *Session) disconnectClient(client *Client) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 		
 	if client.host {
 		// transfer host to another client
-		for _, client := range r.clients {
+		for _, client := range s.clients {
 			if !client.host {
 				client.host = true
 				client.message([]byte("You are now the host"))
@@ -43,24 +56,24 @@ func (r *Session) disconnectClient(client *Client) {
 	}
 
 	client.conn.Close()
-	delete(r.clients, client.getConnectionID())
+	delete(s.clients, client.getConnectionID())
 }
 
-func (r *Session) broadcastMessage() {
-	for message := range r.broadcast {
-		r.lock.Lock()
+func (s *Session) broadcastMessage() {
+	for message := range s.broadcast {
+		s.lock.Lock()
 
-		for _, client := range r.clients {
+		for _, client := range s.clients {
 			client.message(message)
 		}
 
-		r.lock.Unlock()
+		s.lock.Unlock()
 	}
 }
 
-func (r *Session) handleClient(client *Client) {
+func (s *Session) handleClient(client *Client) {
 	defer func() {
-		r.disconnectClient(client)
+		s.disconnectClient(client)
 	}()
 
 	for {
@@ -69,6 +82,6 @@ func (r *Session) handleClient(client *Client) {
 			break
 		}
 
-		r.broadcast <- message
+		s.broadcast <- message
 	}
 }

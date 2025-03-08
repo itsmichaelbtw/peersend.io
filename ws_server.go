@@ -4,8 +4,6 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
-
-	"github.com/gorilla/websocket"
 )
 
 type Server struct {
@@ -20,35 +18,31 @@ const (
   maxGenerationAttempts = 10
 )
 
-var wsUpgrader = websocket.Upgrader{
-  CheckOrigin: func(r *http.Request) bool {
-    return true
-  },
-}
-
-var server = Server{
-  sessions: make(map[string]*Session),
-}
-
-func generateSessionCode(attempt int) string {
+func generateSessionCode(s *Server, attempt int) string {
 	code := make([]byte, sessionCodeLength)
 	for i := range code {
 		code[i] = sessionCodeChars[rand.Intn(len(sessionCodeChars))]
 	}
 
-  if _, exists := server.sessions[string(code)]; exists {
+  if _, exists := s.sessions[string(code)]; exists {
     if attempt >= maxGenerationAttempts {
       panic("Could not generate unique session code")
     }
 
-    return generateSessionCode(attempt + 1)
+    return generateSessionCode(s, attempt + 1)
   }
 
 	return string(code)
 }
 
+func SpawnServer() *Server {
+  return &Server{
+    sessions: make(map[string]*Session),
+  }
+}
+
 func (s *Server) createSession() *Session {
-  sessionCode := generateSessionCode(0)
+  sessionCode := generateSessionCode(s, 0)
 
   s.lock.Lock()
   defer s.lock.Unlock()
@@ -79,12 +73,6 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 
   sessionCode := r.URL.Query().Get("session")
 
-  conn, err := wsUpgrader.Upgrade(w, r, nil)
-  if err != nil {
-    http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
-    return
-  }
-
   var session *Session
 
   if sessionCode != "" {
@@ -102,11 +90,13 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
     http.Error(w, "Session is full", http.StatusForbidden)
     return
   }
-
-  client := session.connectClient(conn)
-
-  go session.broadcastMessage()
-  session.handleClient(client)
+  
+  if client, err := session.connectClient(w, r); err != nil {
+    http.Error(w, "Could not connect to session", http.StatusInternalServerError);
+  } else {
+    go session.broadcastMessage()
+    session.handleClient(client)
+  }
 }
 
 
