@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"math/rand"
 	"net/http"
 	"sync"
@@ -55,6 +56,7 @@ func (s *Server) createSession() (*Session, string) {
 	}
 
 	s.sessions[sessionCode] = &session
+	log.Printf("[%s] session created", sessionCode)
 
 	return &session, sessionCode
 }

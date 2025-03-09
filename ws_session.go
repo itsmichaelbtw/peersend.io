@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"sync"
 
@@ -31,14 +32,16 @@ func (s *Session) connectClient(w http.ResponseWriter, r *http.Request) (*Client
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	clientID := GenerateClientID()
 	client := Client{
-		id:      GenerateClientID(),
+		id:      clientID,
 		conn:    conn,
 		host:    s.isEmpty(),
 		session: s,
 	}
 
-	s.clients[client.id] = &client
+	s.clients[clientID] = &client
+	log.Printf("[%s] [%s] client connected", s.code, clientID)
 
 	return &client, nil
 }
@@ -53,9 +56,9 @@ func (s *Session) disconnectClient(client *Client) {
 		for _, otherClient := range s.clients {
 			if !otherClient.host {
 				otherClient.host = true
-
 				message := CreateMessage(SignalMessage, map[string]any{"type": "host_transfer"})
 				otherClient.message(message)
+				log.Printf("[%s] [%s] host transferred from [%s]", s.code, otherClient.id, client.id)
 				break
 			}
 		}
@@ -63,6 +66,7 @@ func (s *Session) disconnectClient(client *Client) {
 
 	client.close()
 	delete(s.clients, client.getConnectionID())
+	log.Printf("[%s] [%s] client disconnected", s.code, client.id)
 
 	if s.isEmpty() {
 		s.cleanup()
@@ -115,7 +119,7 @@ func (s *Session) handleClient(client *Client) {
 func (s *Session) cleanup() {
 	close(s.broadcast)
 	s.server.lock.Lock()
-	defer s.server.lock.Unlock()
-
 	delete(s.server.sessions, s.code)
+	s.server.lock.Unlock()
+	log.Printf("[%s] session destroyed", s.code)
 }
