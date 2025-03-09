@@ -9,15 +9,17 @@ import (
 )
 
 type Session struct {
-  clients map[string]*Client
-  broadcast chan []byte
-  lock sync.RWMutex
+	clients   map[string]*Client
+	broadcast chan []byte
+	lock      sync.RWMutex
+	server    *Server
+	code      string
 }
 
 var wsUpgrader = websocket.Upgrader{
-  CheckOrigin: func(r *http.Request) bool {
-    return true
-  },
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func (s *Session) connectClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
@@ -26,16 +28,17 @@ func (s *Session) connectClient(w http.ResponseWriter, r *http.Request) (*Client
 		return nil, fmt.Errorf("could not upgrade to WebSocket connection: %v", err)
 	}
 
-	client := Client{
-		conn: conn,
-		host: len(s.clients) == 0,
-	}
-
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	id := client.getConnectionID()
-	s.clients[id] = &client
+	client := Client{
+		id:      GenerateClientID(),
+		conn:    conn,
+		host:    s.isEmpty(),
+		session: s,
+	}
+
+	s.clients[client.id] = &client
 
 	return &client, nil
 }
@@ -43,32 +46,49 @@ func (s *Session) connectClient(w http.ResponseWriter, r *http.Request) (*Client
 func (s *Session) disconnectClient(client *Client) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-		
-	if client.host {
-		// transfer host to another client
-		for _, client := range s.clients {
-			if !client.host {
-				client.host = true
-				client.message([]byte("You are now the host"))
+
+	if client.host && !s.isEmpty() {
+		// transfer host role to another
+		// client if available
+		for _, otherClient := range s.clients {
+			if !otherClient.host {
+				otherClient.host = true
+
+				message := CreateMessage(SignalMessage, map[string]any{"type": "host_transfer"})
+				otherClient.message(message)
 				break
 			}
 		}
 	}
 
-	client.conn.Close()
+	client.close()
 	delete(s.clients, client.getConnectionID())
+
+	if s.isEmpty() {
+		s.cleanup()
+	}
 }
 
 func (s *Session) broadcastMessage() {
 	for message := range s.broadcast {
-		s.lock.Lock()
+		s.lock.RLock()
+		failedClients := make([]*Client, 0)
 
 		for _, client := range s.clients {
-			client.message(message)
+			if err := client.message(message); err != nil {
+				failedClients = append(failedClients, client)
+			}
 		}
+		s.lock.RUnlock()
 
-		s.lock.Unlock()
+		for _, client := range failedClients {
+			s.disconnectClient(client)
+		}
 	}
+}
+
+func (s *Session) isEmpty() bool {
+	return len(s.clients) == 0
 }
 
 func (s *Session) handleClient(client *Client) {
@@ -82,6 +102,20 @@ func (s *Session) handleClient(client *Client) {
 			break
 		}
 
+		if _, err := ParseMessage(message); err != nil {
+			errorMessage := CreateMessage(ErrorMessage, map[string]any{"error": err.Error()})
+			client.message(errorMessage)
+			continue
+		}
+
 		s.broadcast <- message
 	}
+}
+
+func (s *Session) cleanup() {
+	close(s.broadcast)
+	s.server.lock.Lock()
+	defer s.server.lock.Unlock()
+
+	delete(s.server.sessions, s.code)
 }
