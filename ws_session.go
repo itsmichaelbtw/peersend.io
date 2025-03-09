@@ -56,7 +56,9 @@ func (s *Session) disconnectClient(client *Client) {
 		for _, otherClient := range s.clients {
 			if !otherClient.host {
 				otherClient.host = true
-				message := CreateMessage(SignalMessage, map[string]any{"type": "host_transfer"})
+				message := CreateMessage(SignalMessage, map[string]any{
+					"type": "host_transfer",
+				})
 				otherClient.message(message)
 				log.Printf("[%s] [%s] host transferred from [%s]", s.code, otherClient.id, client.id)
 				break

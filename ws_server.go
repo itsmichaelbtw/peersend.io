@@ -99,9 +99,9 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not connect to session", http.StatusInternalServerError)
 	} else {
 		message := CreateMessage(SessionMessage, map[string]any{
-			"code":     sessionCode,
-			"clientId": client.getConnectionID(),
-			"isHost":   client.host,
+			"code":      sessionCode,
+			"client_id": client.getConnectionID(),
+			"is_host":   client.host,
 		})
 		client.message(message)
 
