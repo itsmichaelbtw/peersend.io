@@ -9,7 +9,7 @@ import (
 
 type Server struct {
 	sessions map[string]*Session
-	lock     sync.RWMutex
+	mu       sync.RWMutex
 }
 
 const (
@@ -45,8 +45,8 @@ func SpawnServer() *Server {
 func (s *Server) createSession() (*Session, string) {
 	sessionCode := generateSessionCode(s, 0)
 
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	session := Session{
 		clients:   make(map[string]*Client),
@@ -62,8 +62,8 @@ func (s *Server) createSession() (*Session, string) {
 }
 
 func (s *Server) getSession(code string) *Session {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	return s.sessions[code]
 }
