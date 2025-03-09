@@ -3,22 +3,38 @@ package main
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	conn *websocket.Conn
-	host bool
+	id      string
+	conn    *websocket.Conn
+	host    bool
+	session *Session
+	closed  bool
 }
 
-// Returns the memory address of the connection
-// which is used as the connection ID
-func (u *Client) getConnectionID() string {
-	return fmt.Sprintf("%p", u.conn)
+func GenerateClientID() string {
+	return uuid.New().String()
 }
 
-func (u *Client) message(message []byte) {
-	u.conn.WriteMessage(websocket.TextMessage, message)
+func (c *Client) getConnectionID() string {
+	return c.id
+}
+
+func (c *Client) message(message []byte) error {
+	if c.closed {
+		return fmt.Errorf("connection closed")
+	}
+	return c.conn.WriteMessage(websocket.TextMessage, message)
+}
+
+func (c *Client) close() {
+	if !c.closed {
+		c.closed = true
+		c.conn.Close()
+	}
 }
 
 // func (u *Client) disconnect() {}
