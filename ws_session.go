@@ -44,10 +44,12 @@ func (s *Session) handleClient(client *Client) {
 		if msg.Type == SignalMessage {
 			switch msg.Data["type"] {
 			case "transfer_host_request":
+				s.mu.Lock()
 				if err := s.transferSessionHost(client, true); err != nil {
 					errorMessage := CreateMessage(ErrorMessage, map[string]any{"error": err.Error()})
 					client.message(errorMessage)
 				}
+				s.mu.Unlock()
 				continue
 			}
 		}
