@@ -1,4 +1,4 @@
-module example.com/labs/beacon
+module peersend.io/app
 
 go 1.22.3
 
