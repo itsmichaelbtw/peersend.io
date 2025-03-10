@@ -103,6 +103,8 @@ export function disconnectWebsocket(): void {
     return;
   }
 
+  state.error_message = null;
+
   state.ws.close();
   state.ws = null;
   state.session_code = null;
