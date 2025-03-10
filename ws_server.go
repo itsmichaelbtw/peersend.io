@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -19,6 +20,7 @@ const (
 	sessionCodeChars      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	maxClients            = 2
 	maxGenerationAttempts = 10
+	httpQueryName         = "sessionCode"
 )
 
 var wsUpgrader = websocket.Upgrader{
@@ -27,7 +29,13 @@ var wsUpgrader = websocket.Upgrader{
 	},
 }
 
-func generateSessionCode(s *Server, attempt int) string {
+func SpawnServer() *Server {
+	return &Server{
+		sessions: make(map[string]*Session),
+	}
+}
+
+func GenerateSessionCode(s *Server, attempt int) string {
 	code := make([]byte, sessionCodeLength)
 	for i := range code {
 		code[i] = sessionCodeChars[rand.Intn(len(sessionCodeChars))]
@@ -38,20 +46,18 @@ func generateSessionCode(s *Server, attempt int) string {
 			panic("Could not generate unique session code")
 		}
 
-		return generateSessionCode(s, attempt+1)
+		return GenerateSessionCode(s, attempt+1)
 	}
 
 	return string(code)
 }
 
-func SpawnServer() *Server {
-	return &Server{
-		sessions: make(map[string]*Session),
-	}
+func GetSessionCodeFromRequest(r *http.Request) string {
+	return r.URL.Query().Get(httpQueryName)
 }
 
-func (s *Server) createSession() (*Session, string) {
-	sessionCode := generateSessionCode(s, 0)
+func (s *Server) createSession() *Session {
+	sessionCode := GenerateSessionCode(s, 0)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -66,7 +72,7 @@ func (s *Server) createSession() (*Session, string) {
 	s.sessions[sessionCode] = &session
 	log.Printf("[%s] session created", sessionCode)
 
-	return &session, sessionCode
+	return &session
 }
 
 func (s *Server) getSession(code string) *Session {
@@ -74,6 +80,24 @@ func (s *Server) getSession(code string) *Session {
 	defer s.mu.RUnlock()
 
 	return s.sessions[code]
+}
+
+func (s *Server) resolveSession(sessionCode string) (*Session, error) {
+	if sessionCode != "" {
+		session := s.getSession(sessionCode)
+
+		if session == nil {
+			return nil, fmt.Errorf("no session found with code '%s'", sessionCode)
+		}
+
+		if session.isFull() {
+			return nil, fmt.Errorf("session is full")
+		}
+
+		return session, nil
+	}
+
+	return s.createSession(), nil
 }
 
 func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
@@ -89,9 +113,13 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionCode := r.URL.Query().Get("sessionCode")
+	session, err := s.resolveSession(GetSessionCodeFromRequest(r))
 
-	var session *Session
+	if err != nil {
+		conn.WriteMessage(websocket.TextMessage, NewErrorMessage(err.Error()))
+		conn.Close()
+		return
+	}
 
 	defer func() {
 		if session != nil && session.isEmpty() {
@@ -99,28 +127,8 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	if sessionCode != "" {
-		session = s.getSession(sessionCode)
-
-		var errorMsg []byte
-
-		if session == nil {
-			errorMsg = NewErrorMessage("Session not found")
-		} else if session.isFull() {
-			errorMsg = NewErrorMessage("Session is full")
-		}
-
-		if errorMsg != nil {
-			conn.WriteMessage(websocket.TextMessage, errorMsg)
-			conn.Close()
-			return
-		}
-	} else {
-		session, sessionCode = s.createSession()
-	}
-
 	client := session.createClient(conn)
-	client.sendSessionInformation(sessionCode)
+	client.sendSessionInformation(session.code)
 
 	go session.broadcastMessage()
 	session.handleClientConnection(client)
