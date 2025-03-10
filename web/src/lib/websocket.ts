@@ -26,36 +26,46 @@ export const state = reactive<WebSocketState>({
 });
 
 function onMessage(event: MessageEvent): void {
-  const message: Message = JSON.parse(event.data);
+  try {
+    const message: Message = JSON.parse(event.data);
 
-  switch (message.type) {
-    case "session":
-      state.session_code = message.data.code;
-      state.client_id = message.data.client_id;
-      state.is_host = message.data.is_host;
-      state.error_message = null;
-      break;
-
-    case "signal":
-      if (message.data.type === "host_transfer") {
+    switch (message.type) {
+      case "session":
+        state.session_code = message.data.code;
+        state.client_id = message.data.client_id;
         state.is_host = message.data.is_host;
-      }
-      break;
+        state.is_connected = true;
+        state.error_message = null;
+        break;
 
-    case "error":
-      state.error_message = message.data.error;
-      break;
+      case "signal":
+        switch (message.data.type) {
+          case "host_transfer_granted": {
+            state.is_host = message.data.is_host;
+            break;
+          }
+        }
+
+        break;
+      case "error":
+        state.error_message = message.data.message;
+        break;
+    }
+  } catch (error) {
+    state.error_message = "Failed to parse message";
+
+    if (state.is_connected) {
+      disconnectWebsocket();
+    }
   }
 }
 
-function onError(event: Event): void {
-  state.error_message = "WebSocket connection error occurred";
-  console.error("WebSocket error occurred", event);
-}
+function onError(): void {
+  state.error_message = "Unable to establish connection";
 
-function onOpen(): void {
-  state.is_connected = true;
-  state.error_message = null;
+  if (state.is_connected) {
+    disconnectWebsocket();
+  }
 }
 
 function onClose(): void {
@@ -77,12 +87,15 @@ export function initialiseWebsocket(code?: string): void {
     url.searchParams.set("sessionCode", code);
   }
 
-  state.ws = new WebSocket(url.toString());
+  try {
+    state.ws = new WebSocket(url.toString());
 
-  state.ws.onmessage = onMessage;
-  state.ws.onerror = onError;
-  state.ws.onopen = onOpen;
-  state.ws.onclose = onClose;
+    state.ws.onmessage = onMessage;
+    state.ws.onerror = onError;
+    state.ws.onclose = onClose;
+  } catch (error) {
+    state.error_message = "Failed to connect";
+  }
 }
 
 export function disconnectWebsocket(): void {
@@ -98,29 +111,14 @@ export function disconnectWebsocket(): void {
   state.client_id = null;
 }
 
-export function sendSignal(data: Record<string, any>): void {
+export function deliverPayload(type: MessageType, data: Record<string, any>): void {
   if (!state.ws) {
     throw new Error("WebSocket not connected");
   }
 
   const message: Message = {
-    type: "signal",
-    data
-  };
-
-  state.ws.send(JSON.stringify(message));
-}
-
-export function transferHost(): void {
-  if (!state.ws) {
-    throw new Error("WebSocket not connected");
-  }
-
-  const message: Message = {
-    type: "signal",
-    data: {
-      type: "transfer_host_request"
-    }
+    type: type,
+    data: data
   };
 
   state.ws.send(JSON.stringify(message));
