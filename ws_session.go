@@ -22,7 +22,6 @@ func (s *Session) handleClientConnection(client *Client) {
 			log.Printf("[%s] [%s] panic in handleClientConnection: %v", s.code, client.id, r)
 		}
 		s.disconnectClient(client)
-		s.syncClients()
 	}()
 
 	for {
@@ -70,6 +69,8 @@ func (s *Session) createClient(conn *websocket.Conn) *Client {
 }
 
 func (s *Session) disconnectClient(client *Client) {
+	defer s.syncClients()
+
 	s.mu.Lock()
 
 	if client.host && !s.isEmpty() {
