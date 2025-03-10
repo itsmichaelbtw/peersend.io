@@ -21,6 +21,12 @@ const (
 	maxGenerationAttempts = 10
 )
 
+var wsUpgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
 func generateSessionCode(s *Server, attempt int) string {
 	code := make([]byte, sessionCodeLength)
 	for i := range code {
@@ -71,54 +77,51 @@ func (s *Server) getSession(code string) *Session {
 }
 
 func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
-	sessionCode := r.URL.Query().Get("sessionCode")
-
-	var session *Session
-
-	if sessionCode != "" {
-		session = s.getSession(sessionCode)
-
-		if session == nil {
-			http.Error(w, "Session not found", http.StatusNotFound)
-			return
-		}
-	} else {
-		session, sessionCode = s.createSession()
-	}
-
-	if len(session.clients) >= maxClients {
-		http.Error(w, "Session is full", http.StatusForbidden)
-		return
-	}
-
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("Panic in handleConnection: %v", r)
 		}
 	}()
 
+	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("Failed to upgrade connection: %v", err)
+		return
+	}
+
+	sessionCode := r.URL.Query().Get("sessionCode")
+
+	var session *Session
+
 	defer func() {
-		if session.isEmpty() {
+		if session != nil && session.isEmpty() {
 			session.cleanup()
 		}
 	}()
 
-	client, err := session.connectClient(w, r)
-	if err != nil {
-		if _, ok := err.(*websocket.HandshakeError); ok {
-			http.Error(w, "Could not upgrade to WebSocket connection", http.StatusBadRequest)
+	if sessionCode != "" {
+		session = s.getSession(sessionCode)
+
+		var errorMsg []byte
+
+		if session == nil {
+			errorMsg = NewErrorMessage("Session not found")
+		} else if session.isFull() {
+			errorMsg = NewErrorMessage("Session is full")
 		}
-		log.Printf("Error connecting client: %v", err)
-		return
+
+		if errorMsg != nil {
+			conn.WriteMessage(websocket.TextMessage, errorMsg)
+			conn.Close()
+			return
+		}
+	} else {
+		session, sessionCode = s.createSession()
 	}
 
-	message := CreateMessage(SessionMessage, map[string]any{
-		"code":      sessionCode,
-		"client_id": client.getConnectionID(),
-		"is_host":   client.host,
-	})
-	client.message(message)
+	client := session.createClient(conn)
+	client.sendSessionInformation(sessionCode)
 
 	go session.broadcastMessage()
-	session.handleClient(client)
+	session.handleClientConnection(client)
 }

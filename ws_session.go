@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -17,13 +16,7 @@ type Session struct {
 	code      string
 }
 
-var wsUpgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func (s *Session) handleClient(client *Client) {
+func (s *Session) handleClientConnection(client *Client) {
 	defer func() {
 		s.disconnectClient(client)
 	}()
@@ -58,12 +51,7 @@ func (s *Session) handleClient(client *Client) {
 	}
 }
 
-func (s *Session) connectClient(w http.ResponseWriter, r *http.Request) (*Client, error) {
-	conn, err := wsUpgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not upgrade to WebSocket connection: %v", err)
-	}
-
+func (s *Session) createClient(conn *websocket.Conn) *Client {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -78,7 +66,7 @@ func (s *Session) connectClient(w http.ResponseWriter, r *http.Request) (*Client
 	s.clients[clientID] = &client
 	log.Printf("[%s] [%s] client connected", s.code, clientID)
 
-	return &client, nil
+	return &client
 }
 
 func (s *Session) disconnectClient(client *Client) {
@@ -96,7 +84,10 @@ func (s *Session) disconnectClient(client *Client) {
 }
 
 func (s *Session) deleteClient(client *Client) {
-	client.close()
+	if !client.closed {
+		client.close()
+	}
+
 	delete(s.clients, client.id)
 }
 
@@ -158,6 +149,10 @@ func (s *Session) broadcastMessage() {
 
 func (s *Session) isEmpty() bool {
 	return len(s.clients) == 0
+}
+
+func (s *Session) isFull() bool {
+	return len(s.clients) >= maxClients
 }
 
 func (s *Session) cleanup() {
