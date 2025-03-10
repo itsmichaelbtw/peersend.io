@@ -14,7 +14,24 @@
           <span v-if="state.is_host" class="text-sm text-gray-500 ml-2">(Host)</span>
         </div>
         <div class="text-sm text-gray-600 mb-2">Client ID: {{ state.client_id }}</div>
+
+        <div class="text-sm text-gray-600 mb-4">
+          <div>Connected Clients:</div>
+          <ul class="list-disc list-inside">
+            <li v-for="clientId in state.clients" :key="clientId">
+              {{ clientId }}
+              <span v-if="clientId === state.client_id">(You)</span>
+            </li>
+          </ul>
+        </div>
+
         <div class="flex gap-2">
+          <Button
+            v-if="state.is_host && state.clients.length === 2"
+            severity="primary"
+            v-on:click="initiateDirectConnect"
+            label="Direct Connect"
+          />
           <Button
             v-if="state.is_host"
             severity="secondary"
@@ -55,5 +72,9 @@ function disconnect() {
 
 function transferHost() {
   deliverPayload("signal", { type: "transfer_host_request" });
+}
+
+function initiateDirectConnect() {
+  console.log("Initiating direct connection as host");
 }
 </script>

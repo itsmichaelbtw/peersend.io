@@ -14,6 +14,7 @@ interface WebSocketState {
   is_connected: boolean;
   client_id: string | null;
   error_message: string | null;
+  clients: string[];
 }
 
 export const state = reactive<WebSocketState>({
@@ -22,7 +23,8 @@ export const state = reactive<WebSocketState>({
   is_host: false,
   is_connected: false,
   client_id: null,
-  error_message: null
+  error_message: null,
+  clients: []
 });
 
 function onMessage(event: MessageEvent): void {
@@ -36,6 +38,7 @@ function onMessage(event: MessageEvent): void {
         state.is_host = message.data.is_host;
         state.is_connected = true;
         state.error_message = null;
+        state.clients = message.data.clients || [];
         break;
 
       case "signal":
@@ -44,8 +47,11 @@ function onMessage(event: MessageEvent): void {
             state.is_host = message.data.is_host;
             break;
           }
+          case "sync_session_clients": {
+            state.clients = message.data.clients;
+            break;
+          }
         }
-
         break;
       case "error":
         state.error_message = message.data.message;
@@ -74,6 +80,7 @@ function onClose(): void {
   state.is_host = false;
   state.is_connected = false;
   state.client_id = null;
+  state.clients = [];
 }
 
 export function initialiseWebsocket(code?: string): void {
@@ -111,6 +118,7 @@ export function disconnectWebsocket(): void {
   state.is_host = false;
   state.is_connected = false;
   state.client_id = null;
+  state.clients = [];
 }
 
 export function deliverPayload(type: MessageType, data: Record<string, any>): void {
