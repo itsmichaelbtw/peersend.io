@@ -39,3 +39,9 @@ func CreateMessage(msgType MessageType, data map[string]any) []byte {
 
 	return bytes
 }
+
+func NewErrorMessage(errMsg string) []byte {
+	return CreateMessage(ErrorMessage, map[string]any{
+		"message": errMsg,
+	})
+}
