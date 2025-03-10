@@ -13,17 +13,19 @@ interface WebSocketState {
   is_host: boolean;
   is_connected: boolean;
   client_id: string | null;
+  error_message: string | null;
 }
 
-const state = reactive<WebSocketState>({
+export const state = reactive<WebSocketState>({
   ws: null,
   session_code: null,
   is_host: false,
   is_connected: false,
-  client_id: null
+  client_id: null,
+  error_message: null
 });
 
-function handleMessage(event: MessageEvent): void {
+function onMessage(event: MessageEvent): void {
   const message: Message = JSON.parse(event.data);
 
   switch (message.type) {
@@ -31,18 +33,37 @@ function handleMessage(event: MessageEvent): void {
       state.session_code = message.data.code;
       state.client_id = message.data.client_id;
       state.is_host = message.data.is_host;
+      state.error_message = null;
       break;
 
     case "signal":
       if (message.data.type === "host_transfer") {
-        state.is_host = true;
+        state.is_host = message.data.is_host;
       }
       break;
 
     case "error":
-      console.error("WebSocket error:", message.data.error);
+      state.error_message = message.data.error;
       break;
   }
+}
+
+function onError(event: Event): void {
+  state.error_message = "WebSocket connection error occurred";
+  console.error("WebSocket error occurred", event);
+}
+
+function onOpen(): void {
+  state.is_connected = true;
+  state.error_message = null;
+}
+
+function onClose(): void {
+  state.ws = null;
+  state.session_code = null;
+  state.is_host = false;
+  state.is_connected = false;
+  state.client_id = null;
 }
 
 export function initialiseWebsocket(code?: string): void {
@@ -58,20 +79,10 @@ export function initialiseWebsocket(code?: string): void {
 
   state.ws = new WebSocket(url.toString());
 
-  state.ws.onmessage = handleMessage;
-  state.ws.onerror = function (): void {
-    console.error("WebSocket error occurred");
-  };
-  state.ws.onopen = function (): void {
-    state.is_connected = true;
-  };
-  state.ws.onclose = function (): void {
-    state.ws = null;
-    state.session_code = null;
-    state.is_host = false;
-    state.is_connected = false;
-    state.client_id = null;
-  };
+  state.ws.onmessage = onMessage;
+  state.ws.onerror = onError;
+  state.ws.onopen = onOpen;
+  state.ws.onclose = onClose;
 }
 
 export function disconnectWebsocket(): void {
@@ -100,4 +111,17 @@ export function sendSignal(data: Record<string, any>): void {
   state.ws.send(JSON.stringify(message));
 }
 
-export { state };
+export function transferHost(): void {
+  if (!state.ws) {
+    throw new Error("WebSocket not connected");
+  }
+
+  const message: Message = {
+    type: "signal",
+    data: {
+      type: "transfer_host_request"
+    }
+  };
+
+  state.ws.send(JSON.stringify(message));
+}
