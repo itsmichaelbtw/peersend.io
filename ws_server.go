@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
 type Server struct {
@@ -69,12 +71,6 @@ func (s *Server) getSession(code string) *Session {
 }
 
 func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if r := recover(); r != nil {
-			http.Error(w, "Failed to establish connection", http.StatusInternalServerError)
-		}
-	}()
-
 	sessionCode := r.URL.Query().Get("sessionCode")
 
 	var session *Session
@@ -95,17 +91,34 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if client, err := session.connectClient(w, r); err != nil {
-		http.Error(w, "Could not connect to session", http.StatusInternalServerError)
-	} else {
-		message := CreateMessage(SessionMessage, map[string]any{
-			"code":      sessionCode,
-			"client_id": client.getConnectionID(),
-			"is_host":   client.host,
-		})
-		client.message(message)
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Panic in handleConnection: %v", r)
+		}
+	}()
 
-		go session.broadcastMessage()
-		session.handleClient(client)
+	defer func() {
+		if session.isEmpty() {
+			session.cleanup()
+		}
+	}()
+
+	client, err := session.connectClient(w, r)
+	if err != nil {
+		if _, ok := err.(*websocket.HandshakeError); ok {
+			http.Error(w, "Could not upgrade to WebSocket connection", http.StatusBadRequest)
+		}
+		log.Printf("Error connecting client: %v", err)
+		return
 	}
+
+	message := CreateMessage(SessionMessage, map[string]any{
+		"code":      sessionCode,
+		"client_id": client.getConnectionID(),
+		"is_host":   client.host,
+	})
+	client.message(message)
+
+	go session.broadcastMessage()
+	session.handleClient(client)
 }
