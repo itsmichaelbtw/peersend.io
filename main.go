@@ -7,9 +7,6 @@ import (
 )
 
 func main() {
-	fs := http.FileServer(http.Dir("web"))
-	http.Handle("/", fs)
-
 	server := SpawnServer()
 
 	http.HandleFunc("/signal", server.handleConnection)
