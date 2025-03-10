@@ -34,7 +34,7 @@ func CreateMessage(msgType MessageType, data map[string]any) []byte {
 
 	bytes, err := json.Marshal(msg)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to marshal message: %v", err))
+		return []byte(`{"type":"error","data":{"message":"Internal server error"}}`)
 	}
 
 	return bytes
