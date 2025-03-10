@@ -91,13 +91,13 @@ func (s *Session) disconnectClient(client *Client) {
 		}
 	}
 
-	client.close()
-	delete(s.clients, client.getConnectionID())
+	s.deleteClient(client)
 	log.Printf("[%s] [%s] client disconnected", s.code, client.id)
+}
 
-	if s.isEmpty() {
-		s.cleanup()
-	}
+func (s *Session) deleteClient(client *Client) {
+	client.close()
+	delete(s.clients, client.id)
 }
 
 func (s *Session) transferSessionHost(fromClient *Client, notifyPrevious bool) error {
@@ -163,7 +163,13 @@ func (s *Session) isEmpty() bool {
 func (s *Session) cleanup() {
 	close(s.broadcast)
 	s.server.mu.Lock()
-	delete(s.server.sessions, s.code)
-	s.server.mu.Unlock()
+	defer s.server.mu.Unlock()
+
 	log.Printf("[%s] session destroyed", s.code)
+
+	for _, client := range s.clients {
+		s.deleteClient(client)
+	}
+
+	delete(s.server.sessions, s.code)
 }
