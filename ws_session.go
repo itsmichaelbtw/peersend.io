@@ -18,7 +18,11 @@ type Session struct {
 
 func (s *Session) handleClientConnection(client *Client) {
 	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("[%s] [%s] panic in handleClientConnection: %v", s.code, client.id, r)
+		}
 		s.disconnectClient(client)
+		s.syncClients()
 	}()
 
 	for {
@@ -89,6 +93,18 @@ func (s *Session) deleteClient(client *Client) {
 	delete(s.clients, client.id)
 }
 
+func (s *Session) getClientIDs() []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	ids := make([]string, 0, len(s.clients))
+	for id := range s.clients {
+		ids = append(ids, id)
+	}
+
+	return ids
+}
+
 func (s *Session) transferSessionHost(fromClient *Client, notifyPrevious bool) error {
 	if !fromClient.host {
 		return fmt.Errorf("only host can transfer host status")
@@ -127,17 +143,37 @@ func (s *Session) transferSessionHost(fromClient *Client, notifyPrevious bool) e
 	return nil
 }
 
+func (s *Session) syncClients() {
+	message := CreateMessage(SignalMessage, map[string]any{
+		"type":    "sync_session_clients",
+		"clients": s.getClientIDs(),
+	})
+
+	s.broadcast <- message
+}
+
+func (s *Session) sliceClients() []*Client {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	clientsCopy := make([]*Client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clientsCopy = append(clientsCopy, client)
+	}
+
+	return clientsCopy
+}
+
 func (s *Session) broadcastMessage() {
 	for message := range s.broadcast {
 		failedClients := make([]*Client, 0)
+		clientsCopy := s.sliceClients()
 
-		s.mu.RLock()
-		for _, client := range s.clients {
+		for _, client := range clientsCopy {
 			if err := client.message(message); err != nil {
 				failedClients = append(failedClients, client)
 			}
 		}
-		s.mu.RUnlock()
 
 		for _, client := range failedClients {
 			s.disconnectClient(client)
@@ -154,15 +190,17 @@ func (s *Session) isFull() bool {
 }
 
 func (s *Session) cleanup() {
-	close(s.broadcast)
-	s.server.mu.Lock()
-	defer s.server.mu.Unlock()
+	clientsCopy := s.sliceClients()
 
-	log.Printf("[%s] session destroyed", s.code)
-
-	for _, client := range s.clients {
-		s.deleteClient(client)
+	for _, client := range clientsCopy {
+		client.close()
 	}
 
+	close(s.broadcast)
+
+	s.server.mu.Lock()
 	delete(s.server.sessions, s.code)
+	s.server.mu.Unlock()
+
+	log.Printf("[%s] session destroyed", s.code)
 }
