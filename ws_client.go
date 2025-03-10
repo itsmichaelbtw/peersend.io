@@ -19,14 +19,11 @@ func GenerateClientID() string {
 	return uuid.New().String()
 }
 
-func (c *Client) getConnectionID() string {
-	return c.id
-}
-
 func (c *Client) message(message []byte) error {
 	if c.closed {
 		return fmt.Errorf("connection closed")
 	}
+
 	return c.conn.WriteMessage(websocket.TextMessage, message)
 }
 
@@ -35,6 +32,16 @@ func (c *Client) close() {
 		c.closed = true
 		c.conn.Close()
 	}
+}
+
+func (c *Client) sendSessionInformation(code string) {
+	message := CreateMessage(SessionMessage, map[string]any{
+		"code":      code,
+		"client_id": c.id,
+		"is_host":   c.host,
+	})
+
+	c.message(message)
 }
 
 // func (u *Client) disconnect() {}
