@@ -131,5 +131,7 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 	client.sendSessionInformation(session.code)
 
 	go session.broadcastMessage()
-	session.handleClientConnection(client)
+	go session.handleClientConnection(client)
+
+	session.syncClients()
 }
