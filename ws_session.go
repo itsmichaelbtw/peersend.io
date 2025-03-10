@@ -29,8 +29,7 @@ func (s *Session) handleClientConnection(client *Client) {
 
 		msg, err := ParseMessage(message)
 		if err != nil {
-			errorMessage := CreateMessage(ErrorMessage, map[string]any{"error": err.Error()})
-			client.message(errorMessage)
+			client.message(NewErrorMessage(err.Error()))
 			continue
 		}
 
@@ -39,8 +38,7 @@ func (s *Session) handleClientConnection(client *Client) {
 			case "transfer_host_request":
 				s.mu.Lock()
 				if err := s.transferSessionHost(client, true); err != nil {
-					errorMessage := CreateMessage(ErrorMessage, map[string]any{"error": err.Error()})
-					client.message(errorMessage)
+					client.message(NewErrorMessage(err.Error()))
 				}
 				s.mu.Unlock()
 				continue
@@ -113,14 +111,14 @@ func (s *Session) transferSessionHost(fromClient *Client, notifyPrevious bool) e
 
 	if notifyPrevious && !fromClient.closed {
 		hostTransferMsg := CreateMessage(SignalMessage, map[string]any{
-			"type":    "host_transfer",
+			"type":    "host_transfer_granted",
 			"is_host": false,
 		})
 		fromClient.message(hostTransferMsg)
 	}
 
 	newHostMsg := CreateMessage(SignalMessage, map[string]any{
-		"type":    "host_transfer",
+		"type":    "host_transfer_granted",
 		"is_host": true,
 	})
 	newHost.message(newHostMsg)
