@@ -40,11 +40,9 @@ func (s *Session) handleClientConnection(client *Client) {
 		if msg.Type == SignalMessage {
 			switch msg.Data["type"] {
 			case "transfer_host_request":
-				s.mu.Lock()
 				if err := s.transferSessionHost(client, true); err != nil {
 					client.message(NewErrorMessage(err.Error()))
 				}
-				s.mu.Unlock()
 				continue
 			}
 		}
@@ -73,12 +71,14 @@ func (s *Session) createClient(conn *websocket.Conn) *Client {
 
 func (s *Session) disconnectClient(client *Client) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if client.host && !s.isEmpty() {
+		s.mu.Unlock()
 		if err := s.transferSessionHost(client, false); err != nil {
 			log.Printf("[%s] [%s] failed to transfer host: %v", s.code, client.id, err)
 		}
+	} else {
+		s.mu.Unlock()
 	}
 
 	s.deleteClient(client)
@@ -86,6 +86,9 @@ func (s *Session) disconnectClient(client *Client) {
 }
 
 func (s *Session) deleteClient(client *Client) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if !client.closed {
 		client.close()
 	}
@@ -106,6 +109,9 @@ func (s *Session) getClientIDs() []string {
 }
 
 func (s *Session) transferSessionHost(fromClient *Client, notifyPrevious bool) error {
+	defer s.mu.Unlock()
+	s.mu.Lock()
+
 	if !fromClient.host {
 		return fmt.Errorf("only host can transfer host status")
 	}
@@ -166,17 +172,12 @@ func (s *Session) sliceClients() []*Client {
 
 func (s *Session) broadcastMessage() {
 	for message := range s.broadcast {
-		failedClients := make([]*Client, 0)
 		clientsCopy := s.sliceClients()
 
 		for _, client := range clientsCopy {
 			if err := client.message(message); err != nil {
-				failedClients = append(failedClients, client)
+				go s.disconnectClient(client)
 			}
-		}
-
-		for _, client := range failedClients {
-			s.disconnectClient(client)
 		}
 	}
 }
