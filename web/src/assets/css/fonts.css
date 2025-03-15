@@ -1,0 +1,14 @@
+@font-face {
+  font-family: "Geist";
+  src: local("Geist"), url("../fonts/Geist-VariableFont_wght.ttf");
+}
+
+:root {
+  --geist: "Geist", sans-serif;
+  --font-family-main: var(--geist);
+}
+
+body {
+  font-family: var(--font-family-main);
+  font-weight: 400;
+}
