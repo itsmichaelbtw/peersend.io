@@ -36,6 +36,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: ":session_code",
+        name: "active-session",
         component: ActiveSession
       }
     ]

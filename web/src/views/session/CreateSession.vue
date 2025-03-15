@@ -57,12 +57,12 @@ const sessionCode = "X-4FGS67";
     </template>
 
     <template #footer>
-      <Button color="primary" class="w-full"
-        >Enter
-        <ArrowRight :size="20" />
-      </Button>
-
-      <Divider />
+      <RouterLink :to="{ name: 'active-session', params: { session_code: sessionCode } }">
+        <Button color="primary" class="w-full">
+          Enter
+          <ArrowRight :size="20" />
+        </Button>
+      </RouterLink>
 
       <p class="mt-2 text-xs text-gray-500">This room will expire in 30 minutes if unused</p>
     </template>
