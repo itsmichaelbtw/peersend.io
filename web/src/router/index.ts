@@ -2,16 +2,43 @@ import type { RouteRecordRaw } from "vue-router";
 
 import { createRouter, createWebHistory } from "vue-router";
 
-import App from "@/pages/App.vue";
+import MainLayout from "@/layouts/MainLayout.vue";
+import SessionLayout from "@/layouts/SessionLayout.vue";
+
+import App from "@/views/App.vue";
+
+import CreateSession from "@/views/session/CreateSession.vue";
+import JoinSession from "@/views/session/JoinSession.vue";
+import ActiveSession from "@/views/session/ActiveSession.vue";
 
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
-    redirect: "/app"
+    component: MainLayout,
+    children: [
+      {
+        path: "",
+        component: App
+      }
+    ]
   },
   {
-    path: "/app",
-    component: App
+    path: "/session",
+    component: SessionLayout,
+    children: [
+      {
+        path: "create",
+        component: CreateSession
+      },
+      {
+        path: "join",
+        component: JoinSession
+      },
+      {
+        path: ":session_code",
+        component: ActiveSession
+      }
+    ]
   }
 ];
 
