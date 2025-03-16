@@ -1,17 +1,10 @@
 <script setup lang="ts">
+import type { ComponentTypes } from "@/types/components";
+
 import { useRouter } from "vue-router";
 import { ChevronLeft } from "lucide-vue-next";
 
-const props = defineProps({
-  text: {
-    type: String,
-    default: ""
-  },
-  to: {
-    type: String,
-    default: ""
-  }
-});
+const props = defineProps<ComponentTypes.BackNavigation>();
 
 const router = useRouter();
 

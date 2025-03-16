@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SessionContainer from "@/components/session/SessionContainer.vue";
+import SessionStage from "@/components/session/SessionStage.vue";
 
 import { WifiOff } from "lucide-vue-next";
 
@@ -9,7 +9,7 @@ const sessionCode = "X-4FGS67";
 </script>
 
 <template>
-  <SessionContainer heading="Room Full" back-navigation="/">
+  <SessionStage heading="Room Full" back-navigation="/">
     <template #title>
       <div class="flex flex-row items-center">
         <WifiOff :size="24" class="text-red-500" />
@@ -33,5 +33,5 @@ const sessionCode = "X-4FGS67";
         <Button class="mt-4" size="small">Create Session</Button>
       </RouterLink>
     </template>
-  </SessionContainer>
+  </SessionStage>
 </template>

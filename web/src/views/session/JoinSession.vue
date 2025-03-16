@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import SessionContainer from "@/components/session/SessionContainer.vue";
+import SessionStage from "@/components/session/SessionStage.vue";
+import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
 
 import { ArrowRight } from "lucide-vue-next";
 
@@ -11,7 +12,7 @@ const connectionInfoItems = [
 </script>
 
 <template>
-  <SessionContainer
+  <SessionStage
     heading="Join a Session"
     :alternative="{
       text: 'Don\'t have a session code?',
@@ -19,7 +20,7 @@ const connectionInfoItems = [
       linkText: 'Create a Session'
     }"
   >
-    <template #title>Enter Session Code</template>
+    <template #title>Enter session code</template>
     <template #subtitle>Ask the session host for their unique code</template>
     <template #content>
       <InputText
@@ -28,7 +29,7 @@ const connectionInfoItems = [
         fluid
       />
 
-      <SessionCard>
+      <BackdropGrayCard>
         <template #title>What to expect</template>
         <template #content>
           <ul class="text-muted-foreground space-y-2 text-sm">
@@ -44,14 +45,14 @@ const connectionInfoItems = [
             </li>
           </ul>
         </template>
-      </SessionCard>
+      </BackdropGrayCard>
     </template>
 
     <template #footer>
-      <Button color="primary" class="w-full"
-        >Join Session
+      <Button color="primary" size="small" fluid
+        >Join session
         <ArrowRight :size="20" />
       </Button>
     </template>
-  </SessionContainer>
+  </SessionStage>
 </template>
