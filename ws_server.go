@@ -15,12 +15,16 @@ type Server struct {
 	mu       sync.RWMutex
 }
 
+type HttpQuery struct {
+	sessionCode string
+	mode        string
+}
+
 const (
 	sessionCodeLength     = 6
 	sessionCodeChars      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	maxClients            = 2
 	maxGenerationAttempts = 10
-	httpQueryName         = "sessionCode"
 )
 
 var wsUpgrader = websocket.Upgrader{
@@ -52,8 +56,13 @@ func GenerateSessionCode(s *Server, attempt int) string {
 	return string(code)
 }
 
-func GetSessionCodeFromRequest(r *http.Request) string {
-	return r.URL.Query().Get(httpQueryName)
+func ExtractHttpQuery(r *http.Request) *HttpQuery {
+	query := r.URL.Query()
+
+	return &HttpQuery{
+		sessionCode: query.Get("sessionCode"),
+		mode:        query.Get("mode"),
+	}
 }
 
 func (s *Server) createSession() *Session {
@@ -110,13 +119,27 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("Failed to upgrade connection: %v", err)
+		http.Error(w, "Failed to upgrade connection", http.StatusInternalServerError)
 		return
 	}
 
-	session, err := s.resolveSession(GetSessionCodeFromRequest(r))
+	query := ExtractHttpQuery(r)
 
+	if query.sessionCode == "" && query.mode == "join" {
+		message := CreateMessage(ErrorMessageType, ErrorData{
+			Message: "A session code must be provided when connecting to the signaling server",
+		})
+		conn.WriteMessage(websocket.TextMessage, message)
+		conn.Close()
+		return
+	}
+
+	session, err := s.resolveSession(query.sessionCode)
 	if err != nil {
-		conn.WriteMessage(websocket.TextMessage, NewErrorMessage(err.Error()))
+		message := CreateMessage(ErrorMessageType, ErrorData{
+			Message: err.Error(),
+		})
+		conn.WriteMessage(websocket.TextMessage, message)
 		conn.Close()
 		return
 	}
@@ -128,7 +151,15 @@ func (s *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	client := session.createClient(conn)
-	client.sendSessionInformation(session.code)
+
+	message := CreateMessage("session_information", SessionData{
+		SessionCode:    session.code,
+		ClientID:       client.id,
+		IsHost:         client.host,
+		Clients:        session.getClientIDs(),
+		MaximumClients: maxClients,
+	})
+	client.message(message)
 
 	go session.broadcastMessage()
 	go session.handleClientConnection(client)
