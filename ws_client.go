@@ -33,15 +33,3 @@ func (c *Client) close() {
 		c.conn.Close()
 	}
 }
-
-func (c *Client) sendSessionInformation(code string) {
-	message := CreateMessage(SessionMessage, map[string]any{
-		"code":      code,
-		"client_id": c.id,
-		"is_host":   c.host,
-	})
-
-	c.message(message)
-}
-
-// func (u *Client) disconnect() {}
