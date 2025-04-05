@@ -132,7 +132,7 @@ func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
 		SessionCode:    session.code,
 		ClientID:       client.id,
 		IsHost:         client.host,
-		Clients:        make([]string, 0),
+		Clients:        []string{client.id},
 		MaximumClients: maxClients,
 	}))
 
