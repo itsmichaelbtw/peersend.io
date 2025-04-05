@@ -9,7 +9,7 @@ import (
 func main() {
 	server := SpawnServer()
 
-	http.HandleFunc("/signal", server.handleConnection)
+	http.HandleFunc("/signal", server.handleHttpConnection)
 
 	fmt.Printf("Server started on port 8080\n")
 	log.Fatal(http.ListenAndServe("localhost:8080", nil))
