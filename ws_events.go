@@ -6,7 +6,7 @@ import (
 )
 
 func SyncClients(clients []string, broadcast chan []byte) {
-	payload := SerialiseOutgoingData("sync_online_clients", SessionData{
+	payload := SerialiseOutgoingData("sync_online_clients", SyncClientsData{
 		Clients: clients,
 	})
 
@@ -42,13 +42,13 @@ func TransferHost(currentClient *Client, otherClient *Client) error {
 	otherClient.host = true
 
 	currentClient.message(
-		SerialiseOutgoingData("host_transfer_granted", SessionData{
+		SerialiseOutgoingData("host_transfer", HostTransferData{
 			IsHost: currentClient.host,
 		}),
 	)
 
 	otherClient.message(
-		SerialiseOutgoingData("host_transfer_granted", SessionData{
+		SerialiseOutgoingData("host_transfer", HostTransferData{
 			IsHost: otherClient.host,
 		}),
 	)

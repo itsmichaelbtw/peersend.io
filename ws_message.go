@@ -28,6 +28,14 @@ type SignalData struct {
 	IsHost bool `json:"is_host"`
 }
 
+type SyncClientsData struct {
+	Clients []string `json:"clients"`
+}
+
+type HostTransferData struct {
+	IsHost bool `json:"is_host"`
+}
+
 type ErrorData struct {
 	Message string `json:"message"`
 }
