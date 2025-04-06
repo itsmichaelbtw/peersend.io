@@ -131,9 +131,13 @@ func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
 	client.message(SerialiseOutgoingData("session_information", SessionData{
 		SessionCode:    session.code,
 		ClientID:       client.id,
-		IsHost:         client.host,
-		Clients:        []string{client.id},
 		MaximumClients: maxClients,
+		HostTransferData: HostTransferData{
+			IsHost: client.host,
+		},
+		SyncClientsData: SyncClientsData{
+			Clients: session.getClientIDs(),
+		},
 	}))
 
 	go session.startBroadcastLoop()

@@ -17,11 +17,11 @@ type Message[T any] struct {
 }
 
 type SessionData struct {
-	SessionCode    string   `json:"session_code"`
-	ClientID       string   `json:"client_id"`
-	IsHost         bool     `json:"is_host"`
-	Clients        []string `json:"clients"`
-	MaximumClients int      `json:"maximum_clients"`
+	SessionCode    string `json:"session_code"`
+	ClientID       string `json:"client_id"`
+	MaximumClients int    `json:"maximum_clients"`
+	HostTransferData
+	SyncClientsData
 }
 
 type SignalData struct {
