@@ -6,6 +6,7 @@ import { router } from "./router";
 
 import Aura from "@primeuix/themes/aura";
 import PrimeVue from "primevue/config";
+import ToastService from "primevue/toastservice";
 
 import StyleClass from "primevue/styleclass";
 
@@ -15,6 +16,7 @@ const app = createApp(PeerSend);
 
 app
   .use(router)
+  .use(ToastService)
   .use(PrimeVue, {
     theme: {
       preset: Aura,
