@@ -29,7 +29,16 @@ func (s *Session) handleClientMessages(client *Client) {
 			break
 		}
 
-		s.broadcast <- message
+		otherClient := s.getOtherClient(client)
+
+		if otherClient == nil {
+			continue
+		}
+
+		if err := otherClient.message(message); err != nil {
+			s.disconnectClient(otherClient)
+			continue
+		}
 	}
 }
 
