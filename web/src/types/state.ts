@@ -1,5 +1,13 @@
 import type { WithNullable } from "./misc";
 
+export type IncomingWebSocketMessageType =
+  | "session_information"
+  | "sync_online_clients"
+  | "connection_issue"
+  | "message_parse_error"
+  | "session_full"
+  | "error";
+
 export namespace WebSocketData {
   export interface Session {
     session_code: string;
@@ -17,7 +25,7 @@ export namespace WebSocketData {
 }
 
 export interface IncomingWebSocketMessage<D extends Record<string, any>> {
-  type: string;
+  type: IncomingWebSocketMessageType;
   data: D;
 }
 
