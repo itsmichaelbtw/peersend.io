@@ -40,6 +40,11 @@ type ErrorData struct {
 	Message string `json:"message"`
 }
 
+type SessionFullData struct {
+	MaximumClients int    `json:"maximum_clients"`
+	SessionCode    string `json:"session_code"`
+}
+
 func ParseIncomingData(data []byte) (*Message[map[string]any], error) {
 	var msg Message[map[string]any]
 	if err := json.Unmarshal(data, &msg); err != nil {

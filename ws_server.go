@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -81,21 +80,35 @@ func (s *Server) deleteSession(code string) {
 	delete(s.sessions, code)
 }
 
-func (s *Server) resolveSession(sessionCode string) (*Session, error) {
-	if sessionCode == "" {
-		return s.createSession(), nil
+func (s *Server) establishConnectionSession(conn *websocket.Conn, query HttpQuery) *Session {
+	closeWithMessage := func(code int, reason string) *Session {
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(code, reason))
+		return nil
 	}
 
-	session := s.getSession(sessionCode)
-	if session == nil {
-		return nil, fmt.Errorf("no session found with code '%s'", sessionCode)
-	}
+	switch query.mode {
+	case "host":
+		session := s.createSession()
+		if session == nil {
+			return closeWithMessage(websocket.CloseInternalServerErr, "connection: failed to create session")
+		}
+		return session
 
-	if session.isFull() {
-		return nil, fmt.Errorf("session is full")
-	}
+	case "join":
+		if query.sessionCode == "" {
+			return closeWithMessage(websocket.CloseInvalidFramePayloadData, "connection: session code is required")
+		}
 
-	return session, nil
+		session := s.getSession(query.sessionCode)
+		if session == nil {
+			return closeWithMessage(websocket.CloseInvalidFramePayloadData, "connection: session not found")
+		}
+
+		return session
+
+	default:
+		return closeWithMessage(websocket.CloseUnsupportedData, "connection: invalid mode")
+	}
 }
 
 func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
@@ -106,22 +119,21 @@ func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query := ExtractHttpQuery(r)
-
-	if query.sessionCode == "" && query.mode == "join" {
-		payload := SerialiseOutgoingData(ErrorMessageType, ErrorData{
-			Message: "A session code must be provided when connecting to the signaling server",
-		})
-		conn.WriteMessage(websocket.TextMessage, payload)
-		conn.Close()
+	session := s.establishConnectionSession(conn, query)
+	if session == nil {
 		return
 	}
 
-	session, err := s.resolveSession(query.sessionCode)
-	if err != nil {
-		payload := SerialiseOutgoingData(ErrorMessageType, ErrorData{
-			Message: err.Error(),
+	if session.isFull() {
+		payload := SerialiseOutgoingData("session_full", SessionFullData{
+			SessionCode:    session.code,
+			MaximumClients: maxClients,
 		})
+
 		conn.WriteMessage(websocket.TextMessage, payload)
+		conn.WriteMessage(websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseNormalClosure, "connection: session is full"),
+		)
 		conn.Close()
 		return
 	}
