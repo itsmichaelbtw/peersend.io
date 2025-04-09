@@ -7,10 +7,10 @@ type HttpQuery struct {
 	mode        string
 }
 
-func ExtractHttpQuery(r *http.Request) *HttpQuery {
+func ExtractHttpQuery(r *http.Request) HttpQuery {
 	query := r.URL.Query()
 
-	return &HttpQuery{
+	return HttpQuery{
 		sessionCode: query.Get("sessionCode"),
 		mode:        query.Get("mode"),
 	}
