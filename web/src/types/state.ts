@@ -1,42 +1,24 @@
 import type { WithNullable } from "./misc";
 
-interface DataPayload<T extends string> {
-  type: T;
-}
-
-export namespace WebSocketPayload {
-  export namespace Types {
-    export type Session = "create" | "join" | "host_transfer_granted" | "host_transfer_request";
-    export type Signal = "";
-    export type Error = "session_full" | "session_not_found" | "invalid_session_code" | "unknown";
+export namespace WebSocketData {
+  export interface Session {
+    session_code: string;
+    client_id: string;
+    is_host: boolean;
+    clients: string[];
+    maximum_clients: number;
   }
-
-  export namespace Data {
-    export interface Session extends DataPayload<Types.Session> {}
-    export interface Signal extends DataPayload<Types.Signal> {}
-    export interface Error extends DataPayload<Types.Error> {
-      message: string;
-    }
+  export interface Signal {
+    is_host: boolean;
+  }
+  export interface Error {
+    message: string;
   }
 }
 
-export type WebSocketPayloadType =
-  | WebSocketPayload.Types.Session
-  | WebSocketPayload.Types.Signal
-  | WebSocketPayload.Types.Error;
-
-export type WebSocketDataByPayloadType<T extends WebSocketPayloadType> =
-  T extends WebSocketPayload.Types.Session
-    ? WebSocketPayload.Data.Session
-    : T extends WebSocketPayload.Types.Signal
-      ? WebSocketPayload.Data.Signal
-      : WebSocketPayload.Data.Error;
-
-export type WebSocketMessageType = "session" | "signal" | "error";
-
-export interface IncomingWebSocketMessage<T extends WebSocketPayloadType> {
-  type: WebSocketMessageType;
-  data: WebSocketDataByPayloadType<T>;
+export interface IncomingWebSocketMessage<D extends Record<string, any>> {
+  type: string;
+  data: D;
 }
 
 export interface WebSocketState {
@@ -44,6 +26,9 @@ export interface WebSocketState {
   session_code: WithNullable<string>;
   is_host: boolean;
   is_connected: boolean;
+  is_connecting: boolean;
   client_id: WithNullable<string>;
-  last_error_message: WithNullable<string>;
+  clients: string[];
+  maximum_clients: number;
+  last_error: WithNullable<IncomingWebSocketMessage<WebSocketData.Error>>;
 }
