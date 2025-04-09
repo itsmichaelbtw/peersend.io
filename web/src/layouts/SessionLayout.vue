@@ -14,8 +14,8 @@ watch(
     if (newError) {
       toast.add({
         severity: "error",
-        detail: newError.message,
         life: 2500,
+        detail: newError.data.message,
         summary: newError.type
       });
     }
