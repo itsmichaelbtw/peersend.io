@@ -1,16 +1,39 @@
 import type { WithNullable } from "@/types/misc";
+import type { IncomingWebSocketMessage } from "@/types/state";
 
+import { router } from "@/router";
 import { WEBSOCKET_ENDPOINT } from "@/config/constants";
 import { websocketState as state } from "@/state/websocket";
+import { keyMatchStateUpdate } from "@/utils/update-state";
+import { wsCloseReason } from "@/utils/close-reason";
 
 export abstract class WebSocketSingleton {
-  public static onOpen(this: WebSocket, _: Event) {}
-
-  public static onClose(this: WebSocket, _: CloseEvent) {
-    WebSocketSingleton.disconnect();
+  public static getState() {
+    return state;
   }
 
-  public static onError(this: WebSocket, event: Event) {
+  public static onOpen(this: WebSocket, _: Event) {}
+
+  public static onClose(this: WebSocket, event: CloseEvent) {
+    state.is_connecting = false;
+
+    const closeReason = wsCloseReason(event.reason);
+
+    if (closeReason.isSessionFull()) {
+      return router.push("/session/full");
+    }
+
+    WebSocketSingleton.disconnect();
+
+    state.last_error = {
+      type: "error",
+      data: {
+        message: event.reason
+      }
+    };
+  }
+
+  public static onError(this: WebSocket, _: Event) {
     WebSocketSingleton.disconnect();
 
     state.last_error = {
@@ -31,52 +54,41 @@ export abstract class WebSocketSingleton {
     }
 
     try {
-      // const payload = JSON.parse(event.data) as IncomingWebSocketMessage<any>;
-      // switch (payload.type) {
-      //   case "session_information": {
-      //     websocketState.is_connected = true;
-      //     keyMatchStateUpdate(state, payload.data, [
-      //       "session_code",
-      //       "client_id",
-      //       "is_host",
-      //       "maximum_clients"
-      //     ]);
-      //     break;
-      //   }
-      //   case "sync_online_clients": {
-      //     keyMatchStateUpdate(state, payload.data, ["clients"]);
-      //     break;
-      //   }
-      // }
-      // switch (payload.type) {
-      //   case "session": {
-      //     const data = payload.data as WebSocketPayload.Data.Session;
-      //     state.session_code = data.session_code;
-      //     state.client_id = data.client_id;
-      //     state.is_host = data.is_host;
-      //     state.is_connected = true;
-      //     state.last_error = null;
-      //     break;
-      //   }
-      //   case "signal": {
-      //     const data = payload.data as WebSocketPayload.Data.Signal;
-      //     switch (data.type) {
-      //       case "host_transfer_granted": {
-      //         state.is_host = data.is_host;
-      //         break;
-      //       }
-      //     }
-      //     break;
-      //   }
-      //   case "error": {
-      //     const data = payload.data as WebSocketPayload.Data.Error;
-      //     state.last_error = {
-      //       type: data.type,
-      //       message: data.message
-      //     };
-      //     break;
-      //   }
-      // }
+      const payload = JSON.parse(event.data) as IncomingWebSocketMessage<any>;
+
+      switch (payload.type) {
+        case "session_information": {
+          state.is_connected = true;
+
+          keyMatchStateUpdate(state, payload.data, [
+            "client_id",
+            "clients",
+            "is_host",
+            "maximum_clients",
+            "session_code"
+          ]);
+
+          break;
+        }
+
+        case "sync_online_clients": {
+          keyMatchStateUpdate(state, payload.data, ["clients"]);
+          break;
+        }
+
+        case "session_full": {
+          keyMatchStateUpdate(state, payload.data, ["maximum_clients", "session_code"]);
+          break;
+        }
+
+        case "error": {
+          state.last_error = {
+            type: payload.type,
+            data: payload.data
+          };
+          break;
+        }
+      }
     } catch (error) {
       state.last_error = {
         type: "message_parse_error",
@@ -84,6 +96,8 @@ export abstract class WebSocketSingleton {
           message: "Unable to parse latest message"
         }
       };
+    } finally {
+      state.is_connecting = false;
     }
   }
 
@@ -121,16 +135,16 @@ export abstract class WebSocketSingleton {
   }
 
   public static disconnect() {
-    if (!state.ws) {
-      return;
+    if (state.ws) {
+      state.ws.close();
     }
-
-    state.ws.close();
 
     WebSocketSingleton.reset();
   }
 
   public static reset() {
+    console.warn("Resetting WebSocket state");
+
     state.ws = null;
     state.session_code = null;
     state.is_host = false;
