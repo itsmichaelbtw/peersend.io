@@ -5,7 +5,7 @@ import BackNavigation from "@/components/BackNavigation.vue";
 
 import { RouterLink } from "vue-router";
 
-defineProps<ComponentTypes.SessionProps.Container>();
+defineProps<ComponentTypes.SessionProps.Deck>();
 </script>
 
 <template>

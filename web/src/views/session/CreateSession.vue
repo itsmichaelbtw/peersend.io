@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SessionStage from "@/components/session/SessionStage.vue";
+import SessionDeck from "@/components/session/SessionDeck.vue";
 import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
 
 import { Copy, ArrowRight, Shield, Globe, Clock, Loader2 } from "lucide-vue-next";
@@ -20,7 +20,7 @@ function onConnect() {
 </script>
 
 <template>
-  <SessionStage v-if="websocketState.is_connected" heading="Create a Session">
+  <SessionDeck v-if="websocketState.is_connected" heading="Create a Session">
     <template #title>Session created</template>
     <template #subtitle>Share this code with another user to join this session</template>
     <template #content>
@@ -73,8 +73,8 @@ function onConnect() {
 
       <p class="mt-2 text-xs text-gray-500">This room will expire in 30 minutes if unused</p>
     </template>
-  </SessionStage>
-  <SessionStage
+  </SessionDeck>
+  <SessionDeck
     v-else
     heading="Create a Session"
     :alternative="{
@@ -113,5 +113,5 @@ function onConnect() {
         {{ websocketState.is_connecting ? "Creating session..." : "Create session" }}
       </Button>
     </template>
-  </SessionStage>
+  </SessionDeck>
 </template>

@@ -2,7 +2,7 @@
 import type { FormSubmitEvent } from "@primevue/forms";
 import type { FormValues } from "@/types/forms";
 
-import SessionStage from "@/components/session/SessionStage.vue";
+import SessionDeck from "@/components/session/SessionDeck.vue";
 import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
 
 import Message from "primevue/message";
@@ -52,7 +52,7 @@ function onFormSubmit(event: FormSubmitEvent): void {
 </script>
 
 <template>
-  <SessionStage
+  <SessionDeck
     heading="Join a Session"
     :alternative="{
       text: 'Don\'t have a session code?',
@@ -111,5 +111,5 @@ function onFormSubmit(event: FormSubmitEvent): void {
         </div>
       </Form>
     </template>
-  </SessionStage>
+  </SessionDeck>
 </template>

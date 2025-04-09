@@ -2,7 +2,7 @@ import type { RouteLocationRaw } from "vue-router";
 
 export namespace ComponentTypes {
   export namespace SessionProps {
-    export interface Stage {
+    export interface Deck {
       heading: string;
       backNavigation?: BackNavigation["to"];
       alternative?: {
