@@ -1,135 +1,142 @@
-import { reactive } from "vue";
+import type { WithNullable } from "@/types/misc";
 
-type MessageType = "session" | "signal" | "error";
+import { WEBSOCKET_ENDPOINT } from "@/config/constants";
+import { websocketState as state } from "@/state/websocket";
 
-interface Message {
-  type: MessageType;
-  data: Record<string, any>;
-}
+export abstract class WebSocketSingleton {
+  public static onOpen(this: WebSocket, _: Event) {}
 
-interface WebSocketState {
-  ws: WebSocket | null;
-  session_code: string | null;
-  is_host: boolean;
-  is_connected: boolean;
-  client_id: string | null;
-  error_message: string | null;
-  clients: string[];
-}
+  public static onClose(this: WebSocket, _: CloseEvent) {
+    WebSocketSingleton.disconnect();
+  }
 
-export const state = reactive<WebSocketState>({
-  ws: null,
-  session_code: null,
-  is_host: false,
-  is_connected: false,
-  client_id: null,
-  error_message: null,
-  clients: []
-});
+  public static onError(this: WebSocket, event: Event) {
+    WebSocketSingleton.disconnect();
 
-function onMessage(event: MessageEvent): void {
-  try {
-    const message: Message = JSON.parse(event.data);
+    state.last_error = {
+      type: "connection_issue",
+      data: {
+        message: "Unable to establish connection"
+      }
+    };
+  }
 
-    switch (message.type) {
-      case "session":
-        state.session_code = message.data.code;
-        state.client_id = message.data.client_id;
-        state.is_host = message.data.is_host;
-        state.is_connected = true;
-        state.error_message = null;
-        state.clients = message.data.clients || [];
-        break;
+  public static onMessage(this: WebSocket, event: MessageEvent) {
+    if (state.is_connecting) {
+      state.is_connecting = false;
+    }
 
-      case "signal":
-        switch (message.data.type) {
-          case "host_transfer_granted": {
-            state.is_host = message.data.is_host;
-            break;
-          }
-          case "sync_session_clients": {
-            state.clients = message.data.clients;
-            break;
-          }
+    if (state.last_error) {
+      state.last_error = null;
+    }
+
+    try {
+      // const payload = JSON.parse(event.data) as IncomingWebSocketMessage<any>;
+      // switch (payload.type) {
+      //   case "session_information": {
+      //     websocketState.is_connected = true;
+      //     keyMatchStateUpdate(state, payload.data, [
+      //       "session_code",
+      //       "client_id",
+      //       "is_host",
+      //       "maximum_clients"
+      //     ]);
+      //     break;
+      //   }
+      //   case "sync_online_clients": {
+      //     keyMatchStateUpdate(state, payload.data, ["clients"]);
+      //     break;
+      //   }
+      // }
+      // switch (payload.type) {
+      //   case "session": {
+      //     const data = payload.data as WebSocketPayload.Data.Session;
+      //     state.session_code = data.session_code;
+      //     state.client_id = data.client_id;
+      //     state.is_host = data.is_host;
+      //     state.is_connected = true;
+      //     state.last_error = null;
+      //     break;
+      //   }
+      //   case "signal": {
+      //     const data = payload.data as WebSocketPayload.Data.Signal;
+      //     switch (data.type) {
+      //       case "host_transfer_granted": {
+      //         state.is_host = data.is_host;
+      //         break;
+      //       }
+      //     }
+      //     break;
+      //   }
+      //   case "error": {
+      //     const data = payload.data as WebSocketPayload.Data.Error;
+      //     state.last_error = {
+      //       type: data.type,
+      //       message: data.message
+      //     };
+      //     break;
+      //   }
+      // }
+    } catch (error) {
+      state.last_error = {
+        type: "message_parse_error",
+        data: {
+          message: "Unable to parse latest message"
         }
-        break;
-      case "error":
-        state.error_message = message.data.message;
-        break;
-    }
-  } catch (error) {
-    state.error_message = "Failed to parse message";
-
-    if (state.is_connected) {
-      disconnectWebsocket();
+      };
     }
   }
-}
 
-function onError(): void {
-  state.error_message = "Unable to establish connection";
+  public static connect(sessionCode: WithNullable<string>) {
+    if (state.ws || state.is_connected) {
+      return;
+    }
 
-  if (state.is_connected) {
-    disconnectWebsocket();
-  }
-}
+    state.is_connecting = true;
 
-function onClose(): void {
-  state.ws = null;
-  state.session_code = null;
-  state.is_host = false;
-  state.is_connected = false;
-  state.client_id = null;
-  state.clients = [];
-}
+    const url = new URL(WEBSOCKET_ENDPOINT);
 
-export function initialiseWebsocket(code?: string): void {
-  if (state.ws) {
-    return;
-  }
+    if (sessionCode) {
+      url.searchParams.set("sessionCode", sessionCode);
+      url.searchParams.set("mode", "join");
+    } else {
+      url.searchParams.set("mode", "host");
+    }
 
-  const url = new URL("ws://localhost:8080/signal");
+    try {
+      state.ws = new WebSocket(url.toString());
 
-  if (code) {
-    url.searchParams.set("sessionCode", code);
-  }
-
-  try {
-    state.ws = new WebSocket(url.toString());
-
-    state.ws.onmessage = onMessage;
-    state.ws.onerror = onError;
-    state.ws.onclose = onClose;
-  } catch (error) {
-    state.error_message = "Failed to connect";
-  }
-}
-
-export function disconnectWebsocket(): void {
-  if (!state.ws) {
-    return;
+      state.ws.onmessage = WebSocketSingleton.onMessage;
+      state.ws.onerror = WebSocketSingleton.onError;
+      state.ws.onclose = WebSocketSingleton.onClose;
+      state.ws.onopen = WebSocketSingleton.onOpen;
+    } catch (error) {
+      state.last_error = {
+        type: "connection_issue",
+        data: {
+          message: "Unable to establish connection"
+        }
+      };
+    }
   }
 
-  state.error_message = null;
+  public static disconnect() {
+    if (!state.ws) {
+      return;
+    }
 
-  state.ws.close();
-  state.ws = null;
-  state.session_code = null;
-  state.is_host = false;
-  state.is_connected = false;
-  state.client_id = null;
-  state.clients = [];
-}
+    state.ws.close();
 
-export function deliverPayload(type: MessageType, data: Record<string, any>): void {
-  if (!state.ws) {
-    throw new Error("WebSocket not connected");
+    WebSocketSingleton.reset();
   }
 
-  const message: Message = {
-    type: type,
-    data: data
-  };
-
-  state.ws.send(JSON.stringify(message));
+  public static reset() {
+    state.ws = null;
+    state.session_code = null;
+    state.is_host = false;
+    state.is_connected = false;
+    state.is_connecting = false;
+    state.client_id = null;
+    state.last_error = null;
+  }
 }

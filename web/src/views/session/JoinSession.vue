@@ -14,9 +14,9 @@ import { ArrowRight, Loader2 } from "lucide-vue-next";
 import { Form } from "@primevue/forms";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
 import { JoinSessionSchema } from "@/config/schemas";
+import { WebSocketSingleton } from "@/lib/websocket";
 import { websocketState } from "@/state/websocket";
 import { sleep } from "@/utils/sleep";
-import { useWebSocket } from "@/composables/use-websocket";
 
 const router = useRouter();
 
@@ -25,8 +25,6 @@ watch(websocketState, () => {
     router.push(`/session/${websocketState.session_code}`);
   }
 });
-
-const { connect } = useWebSocket();
 
 const connectionInfoItems: string[] = [
   "You'll initially connect via WebSocket",
@@ -45,7 +43,7 @@ function onFormSubmit(event: FormSubmitEvent): void {
     websocketState.is_connecting = true;
 
     sleep(500).then(() => {
-      connect(event.values.sessionCode);
+      WebSocketSingleton.connect(event.values.sessionCode);
     });
   }
 }

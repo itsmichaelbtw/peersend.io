@@ -4,18 +4,14 @@ import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
 
 import { Copy, ArrowRight, Shield, Globe, Clock, Loader2 } from "lucide-vue-next";
 
-import { useWebSocket } from "@/composables/use-websocket";
+import { WebSocketSingleton } from "@/lib/websocket";
 import { websocketState } from "@/state/websocket";
 import { sleep } from "@/utils/sleep";
-
-const { connect } = useWebSocket();
 
 function onConnect() {
   websocketState.is_connecting = true;
 
-  sleep(500).then(() => {
-    connect();
-  });
+  sleep(500).then(WebSocketSingleton.connect);
 }
 </script>
 
