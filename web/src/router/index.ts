@@ -12,6 +12,8 @@ import JoinSession from "@/views/session/JoinSession.vue";
 import ActiveSession from "@/views/session/ActiveSession.vue";
 import SessionFull from "@/views/session/SessionFull.vue";
 
+import { websocketState } from "@/state/websocket";
+
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
@@ -41,7 +43,14 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: "full",
-        component: SessionFull
+        component: SessionFull,
+        beforeEnter(_1, _2, next) {
+          if (websocketState.is_connected || !websocketState.session_code) {
+            next("/session/create");
+          } else {
+            next();
+          }
+        }
       },
       {
         path: ":session_code",
