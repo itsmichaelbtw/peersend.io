@@ -7,13 +7,26 @@ import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
 
 import Message from "primevue/message";
 
+import { watch } from "vue";
 import { useRouter } from "vue-router";
-import { ArrowRight } from "lucide-vue-next";
+
+import { ArrowRight, Loader2 } from "lucide-vue-next";
 import { Form } from "@primevue/forms";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
 import { JoinSessionSchema } from "@/config/schemas";
+import { websocketState } from "@/state/websocket";
+import { sleep } from "@/utils/sleep";
+import { useWebSocket } from "@/composables/use-websocket";
 
 const router = useRouter();
+
+watch(websocketState, () => {
+  if (websocketState.is_connected) {
+    router.push(`/session/${websocketState.session_code}`);
+  }
+});
+
+const { connect } = useWebSocket();
 
 const connectionInfoItems: string[] = [
   "You'll initially connect via WebSocket",
@@ -28,7 +41,13 @@ const initialValues: FormValues.JoinSession = {
 const resolver = zodResolver(JoinSessionSchema);
 
 function onFormSubmit(event: FormSubmitEvent): void {
-  router.push(`/session/${event.values.sessionCode}`);
+  if (event.valid) {
+    websocketState.is_connecting = true;
+
+    sleep(500).then(() => {
+      connect(event.values.sessionCode);
+    });
+  }
 }
 </script>
 
@@ -44,26 +63,20 @@ function onFormSubmit(event: FormSubmitEvent): void {
     <template #title>Enter session code</template>
     <template #subtitle>Ask the session host for their unique code</template>
     <template #content>
-      <Form
-        v-slot="$form"
-        :resolver="resolver"
-        :initialValues="initialValues"
-        v-on:submit="onFormSubmit"
-        class="space-y-4"
-      >
-        <div class="flex flex-col gap-1">
+      <Form :resolver :initialValues @submit="onFormSubmit" class="space-y-4">
+        <FormField v-slot="$field" name="session_code" initialValue="">
           <InputText
             name="sessionCode"
-            class="rounded! font-mono! shadow-none!"
+            class="mb-2 rounded! font-mono! shadow-none"
             placeholder="e.g. X-4FGS67"
             size="small"
             fluid
-            :class="{ 'p-invalid': $form.sessionCode?.invalid }"
+            :class="{ 'p-invalid': $field?.invalid }"
           />
-          <Message v-if="$form.sessionCode?.invalid" severity="error" size="small" variant="simple">
-            {{ $form.sessionCode.error?.message }}
+          <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">
+            {{ $field?.error?.message }}
           </Message>
-        </div>
+        </FormField>
 
         <BackdropGrayCard>
           <template #title>What to expect</template>
@@ -84,9 +97,16 @@ function onFormSubmit(event: FormSubmitEvent): void {
         </BackdropGrayCard>
 
         <div class="mt-4">
-          <Button type="submit" color="primary" size="small" fluid>
-            Join session
-            <ArrowRight :size="20" />
+          <Button
+            type="submit"
+            :disabled="websocketState.is_connecting"
+            color="primary"
+            size="small"
+            fluid
+          >
+            <Loader2 v-if="websocketState.is_connecting" class="mr-2 h-4 w-4 animate-spin" />
+            {{ websocketState.is_connecting ? "Joining..." : "Join" }}
+            <ArrowRight v-if="!websocketState.is_connecting" :size="20" />
           </Button>
         </div>
       </Form>

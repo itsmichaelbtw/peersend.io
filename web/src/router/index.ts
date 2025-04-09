@@ -10,6 +10,7 @@ import App from "@/views/App.vue";
 import CreateSession from "@/views/session/CreateSession.vue";
 import JoinSession from "@/views/session/JoinSession.vue";
 import ActiveSession from "@/views/session/ActiveSession.vue";
+import SessionFull from "@/views/session/SessionFull.vue";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -27,12 +28,20 @@ const routes: RouteRecordRaw[] = [
     component: SessionLayout,
     children: [
       {
+        path: "",
+        redirect: "/session/create"
+      },
+      {
         path: "create",
         component: CreateSession
       },
       {
         path: "join",
         component: JoinSession
+      },
+      {
+        path: "full",
+        component: SessionFull
       },
       {
         path: ":session_code",
@@ -47,3 +56,9 @@ export const router = createRouter({
   history: createWebHistory(),
   routes: routes
 });
+
+// router.beforeEach((to, from, next) => {
+//   if ()
+
+//   next();
+// });

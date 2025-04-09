@@ -4,31 +4,30 @@ import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
 
 import { Copy, ArrowRight, Shield, Globe, Clock, Loader2 } from "lucide-vue-next";
 
-import { ref } from "vue";
+import { useWebSocket } from "@/composables/use-websocket";
+import { websocketState } from "@/state/websocket";
+import { sleep } from "@/utils/sleep";
 
-const sessionCode = "X-4FGS67";
-const created = ref(false);
-const isCreating = ref(false);
+const { connect } = useWebSocket();
 
-function createSession() {
-  isCreating.value = true;
+function onConnect() {
+  websocketState.is_connecting = true;
 
-  setTimeout(() => {
-    isCreating.value = false;
-    created.value = true;
-  }, 2000);
+  sleep(500).then(() => {
+    connect();
+  });
 }
 </script>
 
 <template>
-  <SessionStage v-if="created" heading="Create a Session">
+  <SessionStage v-if="websocketState.is_connected" heading="Create a Session">
     <template #title>Session created</template>
     <template #subtitle>Share this code with another user to join this session</template>
     <template #content>
       <BackdropGrayCard>
         <template #content>
           <div class="flex flex-row items-center justify-between select-none">
-            <p class="font-mono text-sm" v-cloak>{{ sessionCode }}</p>
+            <p class="font-mono text-sm" v-cloak>{{ websocketState.session_code }}</p>
 
             <Button variant="text" severity="secondary">
               <Copy :size="20" />
@@ -38,7 +37,7 @@ function createSession() {
       </BackdropGrayCard>
 
       <div class="flex items-center justify-end">
-        <p class="text-sm text-gray-500">0/2 connected</p>
+        <p class="text-sm text-gray-500">{{ websocketState.clients.length }}/2 connected</p>
       </div>
 
       <BackdropGrayCard>
@@ -47,7 +46,7 @@ function createSession() {
           <div class="space-y-1 text-sm">
             <div class="flex justify-between">
               <span class="text-muted-foreground">Maximum connections:</span>
-              <span>2</span>
+              <span>{{ websocketState.maximum_clients }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-muted-foreground">Auto WebRTC:</span>
@@ -63,7 +62,9 @@ function createSession() {
     </template>
 
     <template #footer>
-      <RouterLink :to="{ name: 'active-session', params: { session_code: sessionCode } }">
+      <RouterLink
+        :to="{ name: 'active-session', params: { session_code: websocketState.session_code! } }"
+      >
         <Button color="primary" size="small" fluid>
           Enter
           <ArrowRight :size="20" />
@@ -107,9 +108,9 @@ function createSession() {
     </template>
 
     <template #footer>
-      <Button :disabled="isCreating" size="small" fluid v-on:click="createSession">
-        <Loader2 v-if="isCreating" class="mr-2 h-4 w-4 animate-spin" />
-        {{ isCreating ? "Creating session..." : "Create session" }}
+      <Button :disabled="websocketState.is_connecting" v-on:click="onConnect" size="small" fluid>
+        <Loader2 v-if="websocketState.is_connecting" class="mr-2 h-4 w-4 animate-spin" />
+        {{ websocketState.is_connecting ? "Creating session..." : "Create session" }}
       </Button>
     </template>
   </SessionStage>
