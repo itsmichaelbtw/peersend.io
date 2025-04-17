@@ -1,20 +1,19 @@
-export function copyToClipboard(text: string): Promise<boolean>;
-export function copyToClipboard(text: string, callback: (success: boolean) => void): void;
-export function copyToClipboard(
-  text: string,
-  callback?: (success: boolean) => void
-): Promise<boolean> | void {
-  const copyPromise = navigator.clipboard
-    .writeText(text)
-    .then(() => true)
-    .catch((error) => {
-      console.error(error);
-      return false;
-    });
+interface Callback {
+  onSuccess?(): void;
+  onError?(): void;
+}
 
-  if (callback) {
-    copyPromise.then(callback);
+export function copyToClipboard(text: string, callback: Callback = {}): void {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        callback.onSuccess?.();
+      })
+      .catch(() => {
+        callback.onError?.();
+      });
   } else {
-    return copyPromise;
+    callback.onError?.();
   }
 }

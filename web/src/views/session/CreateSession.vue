@@ -3,15 +3,42 @@ import SessionDeck from "@/components/session/SessionDeck.vue";
 import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
 
 import { Copy, ArrowRight, Shield, Globe, Clock, Loader2 } from "lucide-vue-next";
+import { useToast } from "primevue/usetoast";
 
 import { WebSocketSingleton } from "@/lib/websocket";
 import { websocketState } from "@/state/websocket";
 import { sleep } from "@/utils/sleep";
+import { copyToClipboard } from "@/utils/clipboard";
+
+const toast = useToast();
 
 function onConnect() {
   websocketState.is_connecting = true;
 
   sleep(500).then(WebSocketSingleton.connect);
+}
+
+function onCopy() {
+  if (websocketState.session_code) {
+    copyToClipboard(websocketState.session_code, {
+      onSuccess() {
+        toast.add({
+          severity: "success",
+          life: 2500,
+          summary: "Copied",
+          detail: `Session code ${websocketState.session_code} copied to clipboard`
+        });
+      },
+      onError() {
+        toast.add({
+          severity: "error",
+          life: 2500,
+          summary: "Error",
+          detail: "Failed to copy session code to clipboard"
+        });
+      }
+    });
+  }
 }
 </script>
 
@@ -25,8 +52,8 @@ function onConnect() {
           <div class="flex flex-row items-center justify-between select-none">
             <p class="font-mono text-sm" v-cloak>{{ websocketState.session_code }}</p>
 
-            <Button variant="text" severity="secondary">
-              <Copy :size="20" />
+            <Button variant="text" severity="secondary" v-bind:onclick="onCopy">
+              <Copy v-bind:size="20" />
             </Button>
           </div>
         </template>
@@ -59,11 +86,14 @@ function onConnect() {
 
     <template #footer>
       <RouterLink
-        :to="{ name: 'active-session', params: { session_code: websocketState.session_code! } }"
+        v-bind:to="{
+          name: 'active-session',
+          params: { session_code: websocketState.session_code! }
+        }"
       >
         <Button color="primary" size="small" fluid>
           Enter
-          <ArrowRight :size="20" />
+          <ArrowRight v-bind:size="20" />
         </Button>
       </RouterLink>
 
@@ -73,7 +103,7 @@ function onConnect() {
   <SessionDeck
     v-else
     heading="Create a Session"
-    :alternative="{
+    v-bind:alternative="{
       text: 'Already have a session code?',
       link: '/session/join',
       linkText: 'Join session'
@@ -104,7 +134,12 @@ function onConnect() {
     </template>
 
     <template #footer>
-      <Button :disabled="websocketState.is_connecting" v-on:click="onConnect" size="small" fluid>
+      <Button
+        v-bind:disabled="websocketState.is_connecting"
+        v-on:click="onConnect"
+        size="small"
+        fluid
+      >
         <Loader2 v-if="websocketState.is_connecting" class="mr-2 h-4 w-4 animate-spin" />
         {{ websocketState.is_connecting ? "Creating session..." : "Create session" }}
       </Button>
