@@ -52,7 +52,7 @@ function onFormSubmit(event: FormSubmitEvent): void {
 <template>
   <SessionDeck
     heading="Join a Session"
-    :alternative="{
+    v-bind:alternative="{
       text: 'Don\'t have a session code?',
       link: '/session/create',
       linkText: 'Create a Session'
@@ -68,8 +68,8 @@ function onFormSubmit(event: FormSubmitEvent): void {
             class="mb-2 rounded! font-mono! shadow-none"
             placeholder="e.g. X-4FGS67"
             size="small"
+            v-bind:class="{ 'p-invalid': $field?.invalid }"
             fluid
-            :class="{ 'p-invalid': $field?.invalid }"
           />
           <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">
             {{ $field?.error?.message }}
@@ -82,7 +82,7 @@ function onFormSubmit(event: FormSubmitEvent): void {
             <ul class="text-muted-foreground space-y-2 text-sm">
               <li
                 v-for="(item, index) in connectionInfoItems"
-                :key="index"
+                v-bind:key="index"
                 class="flex items-start gap-2"
               >
                 <span class="bg-primary/20 mt-0.5 rounded-full p-1">
@@ -97,7 +97,7 @@ function onFormSubmit(event: FormSubmitEvent): void {
         <div class="mt-4">
           <Button
             type="submit"
-            :disabled="websocketState.is_connecting"
+            v-bind:disabled="websocketState.is_connecting"
             color="primary"
             size="small"
             fluid

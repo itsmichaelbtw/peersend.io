@@ -17,7 +17,7 @@ onUnmounted(() => {
   <SessionDeck heading="Room Full" back-navigation="/session/create">
     <template #title>
       <div class="flex flex-row items-center">
-        <WifiOff :size="24" class="text-red-500" />
+        <WifiOff v-bind:size="24" class="text-red-500" />
         <span class="ml-2">Connection failed</span>
       </div>
     </template>
