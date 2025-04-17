@@ -17,6 +17,7 @@ type Server struct {
 const (
 	sessionCodeLength     = 6
 	sessionCodeChars      = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	sessionCodePrefix     = "X-"
 	maxClients            = 2
 	maxGenerationAttempts = 10
 )
@@ -32,7 +33,7 @@ func (s *Server) generateSessionCode(attempt int) string {
 	for i := range code {
 		code[i] = sessionCodeChars[rand.Intn(len(sessionCodeChars))]
 	}
-	codeStr := string(code)
+	codeStr := sessionCodePrefix + string(code)
 
 	s.mu.RLock()
 	_, exists := s.sessions[codeStr]
