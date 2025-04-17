@@ -35,11 +35,25 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: "create",
-        component: CreateSession
+        component: CreateSession,
+        beforeEnter(_1, _2, next) {
+          if (websocketState.is_connected && websocketState.session_code) {
+            next(`/session/${websocketState.session_code}`);
+          } else {
+            next();
+          }
+        }
       },
       {
         path: "join",
-        component: JoinSession
+        component: JoinSession,
+        beforeEnter(_1, _2, next) {
+          if (websocketState.is_connected && websocketState.session_code) {
+            next(`/session/${websocketState.session_code}`);
+          } else {
+            next();
+          }
+        }
       },
       {
         path: "full",
@@ -55,7 +69,14 @@ const routes: RouteRecordRaw[] = [
       {
         path: ":session_code",
         name: "active-session",
-        component: ActiveSession
+        component: ActiveSession,
+        beforeEnter(_1, _2, next) {
+          if (websocketState.is_connected) {
+            next();
+          } else {
+            next("/session/create");
+          }
+        }
       }
     ]
   }
@@ -65,9 +86,3 @@ export const router = createRouter({
   history: createWebHistory(),
   routes: routes
 });
-
-// router.beforeEach((to, from, next) => {
-//   if ()
-
-//   next();
-// });
