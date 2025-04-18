@@ -14,7 +14,7 @@ import { ArrowRight, Loader2 } from "lucide-vue-next";
 import { Form } from "@primevue/forms";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
 import { JoinSessionSchema } from "@/config/schemas";
-import { WebSocketSingleton } from "@/lib/websocket";
+import { WebSocketClient } from "@/lib/websocket";
 import { websocketState } from "@/state/websocket";
 import { sleep } from "@/utils/sleep";
 
@@ -43,7 +43,7 @@ function onFormSubmit(event: FormSubmitEvent): void {
     websocketState.is_connecting = true;
 
     sleep(500).then(() => {
-      WebSocketSingleton.connect(event.values.sessionCode);
+      WebSocketClient.connect(event.values.sessionCode);
     });
   }
 }
@@ -61,20 +61,27 @@ function onFormSubmit(event: FormSubmitEvent): void {
     <template #title>Enter session code</template>
     <template #subtitle>Ask the session host for their unique code</template>
     <template #content>
-      <Form :resolver :initialValues @submit="onFormSubmit" class="space-y-4">
-        <FormField v-slot="$field" name="session_code" initialValue="">
+      <Form
+        v-slot="$form"
+        v-bind:resolver
+        v-bind:initialValues
+        v-bind:submit="onFormSubmit"
+        class="space-y-4"
+      >
+        <div>
           <InputText
+            type="text"
             name="sessionCode"
-            class="mb-2 rounded! font-mono! shadow-none"
             placeholder="e.g. X-4FGS67"
+            class="rounded! font-mono! shadow-none"
             size="small"
-            v-bind:class="{ 'p-invalid': $field?.invalid }"
             fluid
           />
-          <Message v-if="$field?.invalid" severity="error" size="small" variant="simple">
-            {{ $field?.error?.message }}
+
+          <Message v-if="$form.sessionCode?.invalid" severity="error" size="small" variant="simple">
+            {{ $form.sessionCode.error.message }}
           </Message>
-        </FormField>
+        </div>
 
         <BackdropGrayCard>
           <template #title>What to expect</template>
