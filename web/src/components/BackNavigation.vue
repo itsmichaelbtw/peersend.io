@@ -25,7 +25,7 @@ function handleNavigation() {
       class="hover:bg-gray-100!"
       v-on:click="handleNavigation"
     >
-      <ChevronLeft :size="20" />
+      <ChevronLeft v-bind:size="20" />
     </Button>
     <h1 v-if="text" class="p-card-title text-2xl" style="color: var(--p-card-color)">{{ text }}</h1>
   </div>
