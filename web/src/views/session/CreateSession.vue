@@ -1,44 +1,18 @@
 <script setup lang="ts">
 import SessionDeck from "@/components/session/SessionDeck.vue";
 import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
+import CopyToClipboard from "@/components/CopyToClipboard.vue";
 
 import { Copy, ArrowRight, Shield, Globe, Clock, Loader2 } from "lucide-vue-next";
-import { useToast } from "primevue/usetoast";
 
 import { WebSocketClient } from "@/lib/websocket";
 import { websocketState } from "@/state/websocket";
 import { sleep } from "@/utils/sleep";
-import { copyToClipboard } from "@/utils/clipboard";
-
-const toast = useToast();
 
 function onConnect() {
   websocketState.is_connecting = true;
 
   sleep(500).then(WebSocketClient.connect);
-}
-
-function onCopy() {
-  if (websocketState.session_code) {
-    copyToClipboard(websocketState.session_code, {
-      onSuccess() {
-        toast.add({
-          severity: "success",
-          life: 2500,
-          summary: "Copied",
-          detail: `Session code ${websocketState.session_code} copied to clipboard`
-        });
-      },
-      onError() {
-        toast.add({
-          severity: "error",
-          life: 2500,
-          summary: "Error",
-          detail: "Failed to copy session code to clipboard"
-        });
-      }
-    });
-  }
 }
 </script>
 
@@ -52,9 +26,11 @@ function onCopy() {
           <div class="flex flex-row items-center justify-between select-none">
             <p class="font-mono text-sm" v-cloak>{{ websocketState.session_code }}</p>
 
-            <Button variant="text" severity="secondary" v-bind:onclick="onCopy">
-              <Copy v-bind:size="20" />
-            </Button>
+            <CopyToClipboard v-bind:value="websocketState.session_code">
+              <Button variant="text" severity="secondary">
+                <Copy v-bind:size="20" />
+              </Button>
+            </CopyToClipboard>
           </div>
         </template>
       </BackdropGrayCard>
@@ -115,18 +91,18 @@ function onCopy() {
       <div class="space-y-4">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="flex flex-col items-center rounded-lg border border-gray-200 p-3 text-center">
-            <Shield class="mb-2 h-8 w-8" />
+            <Shield v-bind:size="32" class="mb-2" />
             <h3 class="text-sm font-medium">End-to-End Encrypted</h3>
             <p class="text-muted-foreground text-xs">Your files stay private</p>
           </div>
           <div class="flex flex-col items-center rounded-lg border border-gray-200 p-3 text-center">
-            <Globe class="mb-2 h-8 w-8" />
+            <Globe v-bind:size="32" class="mb-2" />
             <h3 class="text-sm font-medium">Direct Connection</h3>
             <p class="text-muted-foreground text-xs">No server storage</p>
           </div>
         </div>
         <div class="flex flex-col items-center rounded-lg border border-gray-200 p-3 text-center">
-          <Clock class="mb-2 h-8 w-8" />
+          <Clock v-bind:size="32" class="mb-2" />
           <h3 class="text-sm font-medium">Temporary Sessions</h3>
           <p class="text-muted-foreground text-xs">Rooms expire after 30 minutes of inactivity</p>
         </div>
@@ -140,7 +116,7 @@ function onCopy() {
         size="small"
         fluid
       >
-        <Loader2 v-if="websocketState.is_connecting" class="mr-2 h-4 w-4 animate-spin" />
+        <Loader2 v-if="websocketState.is_connecting" v-bind:size="20" class="mr-2 animate-spin" />
         {{ websocketState.is_connecting ? "Creating session..." : "Create session" }}
       </Button>
     </template>

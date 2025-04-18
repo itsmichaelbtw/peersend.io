@@ -1,4 +1,5 @@
 import type { RouteLocationRaw } from "vue-router";
+import type { WithNullable } from "./misc";
 
 export namespace ComponentTypes {
   export namespace SessionProps {
@@ -22,7 +23,11 @@ export namespace ComponentTypes {
   }
 
   export interface BackNavigation {
-    text: string;
+    text?: string;
     to?: RouteLocationRaw;
+  }
+
+  export interface CopyToClipboard {
+    value: WithNullable<string>;
   }
 }
