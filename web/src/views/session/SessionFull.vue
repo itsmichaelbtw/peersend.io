@@ -5,11 +5,11 @@ import { onUnmounted } from "vue";
 import { RouterLink } from "vue-router";
 import { WifiOff } from "lucide-vue-next";
 
-import { WebSocketSingleton } from "@/lib/websocket";
+import { WebSocketClient } from "@/lib/websocket";
 import { websocketState } from "@/state/websocket";
 
 onUnmounted(() => {
-  WebSocketSingleton.disconnect();
+  WebSocketClient.disconnect();
 });
 </script>
 

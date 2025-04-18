@@ -5,7 +5,7 @@ import BackdropGrayCard from "@/components/BackdropGrayCard.vue";
 import { Copy, ArrowRight, Shield, Globe, Clock, Loader2 } from "lucide-vue-next";
 import { useToast } from "primevue/usetoast";
 
-import { WebSocketSingleton } from "@/lib/websocket";
+import { WebSocketClient } from "@/lib/websocket";
 import { websocketState } from "@/state/websocket";
 import { sleep } from "@/utils/sleep";
 import { copyToClipboard } from "@/utils/clipboard";
@@ -15,7 +15,7 @@ const toast = useToast();
 function onConnect() {
   websocketState.is_connecting = true;
 
-  sleep(500).then(WebSocketSingleton.connect);
+  sleep(500).then(WebSocketClient.connect);
 }
 
 function onCopy() {

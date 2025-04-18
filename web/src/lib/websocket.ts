@@ -7,7 +7,7 @@ import { websocketState as state } from "@/state/websocket";
 import { keyMatchStateUpdate } from "@/utils/update-state";
 import { wsCloseReason } from "@/utils/close-reason";
 
-export abstract class WebSocketSingleton {
+export abstract class WebSocketClient {
   public static getState() {
     return state;
   }
@@ -23,7 +23,7 @@ export abstract class WebSocketSingleton {
       return router.push("/session/full");
     }
 
-    WebSocketSingleton.disconnect();
+    WebSocketClient.disconnect();
 
     state.last_error = {
       type: "error",
@@ -34,7 +34,7 @@ export abstract class WebSocketSingleton {
   }
 
   public static onError(this: WebSocket, _: Event) {
-    WebSocketSingleton.disconnect();
+    WebSocketClient.disconnect();
 
     state.last_error = {
       type: "connection_issue",
@@ -120,10 +120,10 @@ export abstract class WebSocketSingleton {
     try {
       state.ws = new WebSocket(url.toString());
 
-      state.ws.onmessage = WebSocketSingleton.onMessage;
-      state.ws.onerror = WebSocketSingleton.onError;
-      state.ws.onclose = WebSocketSingleton.onClose;
-      state.ws.onopen = WebSocketSingleton.onOpen;
+      state.ws.onmessage = WebSocketClient.onMessage;
+      state.ws.onerror = WebSocketClient.onError;
+      state.ws.onclose = WebSocketClient.onClose;
+      state.ws.onopen = WebSocketClient.onOpen;
     } catch (error) {
       state.last_error = {
         type: "connection_issue",
@@ -139,7 +139,7 @@ export abstract class WebSocketSingleton {
       state.ws.close();
     }
 
-    WebSocketSingleton.reset();
+    WebSocketClient.reset();
   }
 
   public static reset() {
