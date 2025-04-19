@@ -66,7 +66,9 @@ export abstract class WebSocketClient {
             "is_host",
             "maximum_clients",
             "session_code",
-            "connection_type"
+            "connection_type",
+            "auto_webrtc",
+            "encryption_mode"
           ]);
 
           break;

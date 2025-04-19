@@ -1,5 +1,7 @@
 import type { WithNullable } from "./misc";
 
+export type EncryptionModes = "none";
+
 export type IncomingWebSocketMessageType =
   | "session_information"
   | "sync_online_clients"
@@ -35,8 +37,12 @@ export interface WebSocketState {
   is_host: boolean;
   is_connected: boolean;
   is_connecting: boolean;
+  auto_webrtc: boolean;
+  encryption_mode: EncryptionModes;
+  latency: number;
   client_id: WithNullable<string>;
   clients: string[];
   maximum_clients: number;
   last_error: WithNullable<IncomingWebSocketMessage<WebSocketData.Error>>;
+  connection_type: "direct" | "signal" | "none";
 }

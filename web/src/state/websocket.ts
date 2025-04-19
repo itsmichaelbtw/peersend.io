@@ -9,7 +9,11 @@ export const websocketState = reactive<WebSocketState>({
   is_host: false,
   is_connected: false,
   is_connecting: false,
+  auto_webrtc: false,
   client_id: null,
   maximum_clients: 0,
-  last_error: null
+  latency: -1,
+  last_error: null,
+  encryption_mode: "none",
+  connection_type: "none"
 });
