@@ -49,11 +49,15 @@ function onConnect() {
             </div>
             <div class="flex justify-between">
               <span class="text-gray-500">Auto WebRTC:</span>
-              <span class="text-red-400">Disabled</span>
+              <span v-if="websocketState.auto_webrtc" class="text-green-400">Enabled</span>
+              <span v-else class="text-red-400">Disabled</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-500">End-to-end encryption:</span>
-              <span class="text-red-400">Disabled</span>
+              <span v-if="websocketState.encryption_mode !== 'none'" class="text-green-400">{{
+                websocketState.encryption_mode
+              }}</span>
+              <span v-else class="text-red-400">Disabled</span>
             </div>
           </div>
         </template>

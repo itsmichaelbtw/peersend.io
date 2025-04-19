@@ -20,6 +20,8 @@ const (
 	sessionCodePrefix     = "X-"
 	maxClients            = 2
 	maxGenerationAttempts = 10
+	autoWebRTCEnabled     = false
+	encryptionMode        = "none"
 )
 
 var wsUpgrader = websocket.Upgrader{
@@ -146,6 +148,8 @@ func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
 		ClientID:       client.id,
 		MaximumClients: maxClients,
 		ConnectionType: "signal",
+		AutoWebRTC:     autoWebRTCEnabled,
+		EncryptionMode: encryptionMode,
 		HostTransferData: HostTransferData{
 			IsHost: client.host,
 		},

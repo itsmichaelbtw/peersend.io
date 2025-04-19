@@ -21,12 +21,10 @@ type SessionData struct {
 	ClientID       string `json:"client_id"`
 	MaximumClients int    `json:"maximum_clients"`
 	ConnectionType string `json:"connection_type"`
+	EncryptionMode string `json:"encryption_mode"`
+	AutoWebRTC     bool   `json:"auto_webrtc"`
 	HostTransferData
 	SyncClientsData
-}
-
-type SignalData struct {
-	IsHost bool `json:"is_host"`
 }
 
 type SyncClientsData struct {

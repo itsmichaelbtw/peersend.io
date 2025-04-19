@@ -54,15 +54,24 @@ function confirmExit() {
           <p>WebRTC (P2P)</p>
         </template>
       </StatInformation>
-      <StatInformation title="Role" stat="Host" />
-      <StatInformation title="Encryption">
+      <StatInformation title="Role">
         <template #stat>
-          <span class="font-medium text-red-400">Disabled</span>
+          <p v-if="websocketState.is_host">Host</p>
+          <p v-else>Guest</p>
         </template>
       </StatInformation>
       <StatInformation title="Auto WebRTC">
         <template #stat>
-          <span class="font-medium text-red-400">Disabled</span>
+          <span v-if="websocketState.auto_webrtc" class="text-green-400">Enabled</span>
+          <span v-else class="text-red-400">Disabled</span>
+        </template>
+      </StatInformation>
+      <StatInformation title="Encryption">
+        <template #stat>
+          <span v-if="websocketState.encryption_mode !== 'none'" class="text-green-400">{{
+            websocketState.encryption_mode
+          }}</span>
+          <span v-else class="text-red-400">Disabled</span>
         </template>
       </StatInformation>
 
@@ -70,7 +79,9 @@ function confirmExit() {
       <ConnectionDetails />
     </template>
     <template #footer>
-      <Button size="small" severity="secondary" fluid> Upgrade to direct </Button>
+      <Button v-if="!websocketState.auto_webrtc" size="small" severity="secondary" fluid>
+        Upgrade to direct
+      </Button>
       <Button v-on:click="confirmExit" severity="danger" size="small" fluid> Leave session </Button>
     </template>
   </Card>
