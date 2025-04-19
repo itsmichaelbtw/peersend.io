@@ -145,6 +145,7 @@ func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
 		SessionCode:    session.code,
 		ClientID:       client.id,
 		MaximumClients: maxClients,
+		ConnectionType: "signal",
 		HostTransferData: HostTransferData{
 			IsHost: client.host,
 		},

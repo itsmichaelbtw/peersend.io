@@ -20,6 +20,7 @@ type SessionData struct {
 	SessionCode    string `json:"session_code"`
 	ClientID       string `json:"client_id"`
 	MaximumClients int    `json:"maximum_clients"`
+	ConnectionType string `json:"connection_type"`
 	HostTransferData
 	SyncClientsData
 }

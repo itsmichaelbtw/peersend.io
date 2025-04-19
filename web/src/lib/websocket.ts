@@ -65,7 +65,8 @@ export abstract class WebSocketClient {
             "clients",
             "is_host",
             "maximum_clients",
-            "session_code"
+            "session_code",
+            "connection_type"
           ]);
 
           break;
@@ -152,5 +153,6 @@ export abstract class WebSocketClient {
     state.is_connecting = false;
     state.client_id = null;
     state.last_error = null;
+    state.connection_type = "none";
   }
 }
