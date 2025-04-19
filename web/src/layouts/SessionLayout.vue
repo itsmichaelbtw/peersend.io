@@ -26,7 +26,7 @@ watch(
 <template>
   <SessionHeader />
   <main
-    class="mx-auto flex max-w-6xl flex-col items-center justify-center gap-4 py-12 not-sm:py-6 md:py-24 lg:py-32"
+    class="mx-auto flex max-w-6xl flex-col items-center justify-center gap-4 py-8 not-sm:py-4 md:py-20 lg:py-28"
   >
     <router-view />
   </main>
