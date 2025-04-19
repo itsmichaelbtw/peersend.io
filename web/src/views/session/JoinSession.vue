@@ -86,7 +86,7 @@ function onFormSubmit(event: FormSubmitEvent): void {
         <BackdropGrayCard>
           <template #title>What to expect</template>
           <template #content>
-            <ul class="text-muted-foreground space-y-2 text-sm">
+            <ul class="space-y-2 text-sm text-gray-500">
               <li
                 v-for="(item, index) in connectionInfoItems"
                 v-bind:key="index"
@@ -109,9 +109,13 @@ function onFormSubmit(event: FormSubmitEvent): void {
             size="small"
             fluid
           >
-            <Loader2 v-if="websocketState.is_connecting" class="mr-2 h-4 w-4 animate-spin" />
+            <Loader2
+              v-if="websocketState.is_connecting"
+              v-bind:size="18"
+              class="mr-2 animate-spin"
+            />
             {{ websocketState.is_connecting ? "Joining..." : "Join" }}
-            <ArrowRight v-if="!websocketState.is_connecting" :size="20" />
+            <ArrowRight v-if="!websocketState.is_connecting" v-bind:size="18" />
           </Button>
         </div>
       </Form>
