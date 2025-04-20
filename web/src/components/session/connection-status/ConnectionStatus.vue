@@ -5,8 +5,18 @@ import StatInformation from "./StatInformation.vue";
 import ConnectionDetails from "./ConnectionDetails.vue";
 import SessionPeers from "./SessionPeers.vue";
 
+import { Zap } from "lucide-vue-next";
 import { useConfirm } from "primevue/useconfirm";
 import { websocketState } from "@/state/websocket";
+
+import { useClsx } from "@/composables/use-clsx";
+
+const { classNames, joinCls } = useClsx({
+  icon: {
+    "bg-primary/50": websocketState.connection_type === "direct",
+    "bg-gray-200 dark:bg-gray-600": websocketState.connection_type === "signal"
+  }
+});
 
 const confirm = useConfirm();
 
@@ -33,9 +43,9 @@ function confirmExit() {
 </script>
 
 <template>
-  <ConfirmDialog />
+  <ConfirmDialog v-bind:draggable="false" />
   <Card
-    :pt="{
+    v-bind:pt="{
       content: {
         class: 'space-y-2 select-none'
       },
@@ -51,7 +61,26 @@ function confirmExit() {
           <p>WebSocket</p>
         </template>
         <template v-if="websocketState.connection_type === 'direct'" #stat>
-          <p>WebRTC (P2P)</p>
+          <div>
+            <p class="inline-block align-middle">WebRTC (P2P)</p>
+            <div class="relative ml-2 inline-flex items-center justify-center align-middle">
+              <span
+                class="bg-primary/20 absolute h-8 w-8 animate-ping rounded-full opacity-75"
+              ></span>
+              <span class="bg-primary/30 absolute h-6 w-6 animate-pulse rounded-full"></span>
+
+              <span
+                v-bind:class="
+                  joinCls(
+                    'relative flex h-5 w-5 items-center justify-center rounded-full',
+                    classNames.icon
+                  )
+                "
+              >
+                <Zap v-bind:size="12" />
+              </span>
+            </div>
+          </div>
         </template>
       </StatInformation>
       <StatInformation title="Role">
@@ -79,9 +108,6 @@ function confirmExit() {
       <ConnectionDetails />
     </template>
     <template #footer>
-      <Button v-if="!websocketState.auto_webrtc" size="small" severity="secondary" fluid>
-        Upgrade to direct
-      </Button>
       <Button v-on:click="confirmExit" severity="danger" size="small" fluid> Leave session </Button>
     </template>
   </Card>

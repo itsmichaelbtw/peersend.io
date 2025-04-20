@@ -5,7 +5,7 @@ defineProps();
 <template>
   <Card
     class="rounded! border border-gray-200 bg-gray-50! shadow-none! select-none"
-    :pt="{
+    v-bind:pt="{
       title: {
         class: 'text-base!'
       },
