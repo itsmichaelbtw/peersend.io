@@ -17,8 +17,12 @@ func BroadcastClientSync(clients []string, broadcast SessionMessageChannel) {
 }
 
 func TransferSessionHost(currentClient *Client, otherClient *Client) error {
-	if currentClient == nil || otherClient == nil {
-		return fmt.Errorf("current or other client is nil")
+	if currentClient == nil {
+		return fmt.Errorf("for some reason, the current client is nil")
+	}
+
+	if otherClient == nil {
+		return fmt.Errorf("no other client found")
 	}
 
 	if !currentClient.host {
