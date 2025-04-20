@@ -60,17 +60,3 @@ func ParseIncomingData(data []byte) (*Message[map[string]any], error) {
 	}
 	return &msg, nil
 }
-
-func SerialiseOutgoingData[T any](msgType PayloadType, data T) []byte {
-	msg := Message[T]{
-		Type: msgType,
-		Data: data,
-	}
-
-	bytes, err := json.Marshal(msg)
-	if err != nil {
-		return []byte(`{"type":"error","data":{"message":"Internal server error"}}`)
-	}
-
-	return bytes
-}

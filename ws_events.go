@@ -7,12 +7,13 @@ import (
 	"time"
 )
 
-func BroadcastClientSync(clients []string, broadcast chan []byte) {
-	payload := SerialiseOutgoingData("sync_online_clients", SyncClientsData{
-		Clients: clients,
-	})
-
-	broadcast <- payload
+func BroadcastClientSync(clients []string, broadcast SessionMessageChannel) {
+	broadcast <- Message[any]{
+		Type: "sync_online_clients",
+		Data: SyncClientsData{
+			Clients: clients,
+		},
+	}
 }
 
 func TransferSessionHost(currentClient *Client, otherClient *Client) error {
@@ -43,17 +44,19 @@ func TransferSessionHost(currentClient *Client, otherClient *Client) error {
 	currentClient.host = false
 	otherClient.host = true
 
-	currentClient.message(
-		SerialiseOutgoingData("host_transfer", HostTransferData{
+	currentClient.message(Message[HostTransferData]{
+		Type: "host_transfer",
+		Data: HostTransferData{
 			IsHost: currentClient.host,
-		}),
-	)
+		},
+	})
 
-	otherClient.message(
-		SerialiseOutgoingData("host_transfer", HostTransferData{
+	otherClient.message(Message[HostTransferData]{
+		Type: "host_transfer",
+		Data: HostTransferData{
 			IsHost: otherClient.host,
-		}),
-	)
+		},
+	})
 
 	log.Printf("[%s] host transferred from [%s]", otherClient.id, currentClient.id)
 	return nil
@@ -67,11 +70,11 @@ func EchoLatencyTimestamp(client *Client, message []byte) {
 		return
 	}
 
-	pongData := PongData{
-		ServerTimestamp: serverTimestamp,
-		PingData: PingData{
-			ClientTimestamp: pingMessage.Data.ClientTimestamp,
+	client.message(Message[PongData]{
+		Type: "pong",
+		Data: PongData{
+			ServerTimestamp: serverTimestamp,
+			PingData:        pingMessage.Data,
 		},
-	}
-	client.message(SerialiseOutgoingData("pong", pongData))
+	})
 }

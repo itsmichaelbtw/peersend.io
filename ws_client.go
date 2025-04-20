@@ -19,12 +19,23 @@ func GenerateClientID() string {
 	return uuid.New().String()
 }
 
-func (c *Client) message(message []byte) error {
+func (c *Client) message(data any) error {
 	if c.closed {
 		return fmt.Errorf("connection closed")
 	}
 
-	return c.conn.WriteMessage(websocket.TextMessage, message)
+	if err := c.conn.WriteJSON(data); err != nil {
+		c.conn.WriteJSON(Message[ErrorData]{
+			Type: ErrorMessageType,
+			Data: ErrorData{
+				Message: "The server tried to broadcast a message, but failed",
+			},
+		})
+
+		return fmt.Errorf("failed to send message: %v", err.Error())
+	}
+
+	return nil
 }
 
 func (c *Client) close() {

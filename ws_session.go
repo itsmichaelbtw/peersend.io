@@ -7,9 +7,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type SessionMessageChannel = chan Message[any]
+
 type Session struct {
 	clients   map[string]*Client
-	broadcast chan []byte
+	broadcast SessionMessageChannel
 	mu        sync.RWMutex
 	server    *Server
 	code      string
@@ -32,7 +34,12 @@ func (s *Session) handleClientMessages(client *Client) {
 		parsedMsg, err := ParseIncomingData(message)
 		if err != nil {
 			log.Printf("[%s] [%s] invalid message format: %v", s.code, client.id, err)
-			client.message(SerialiseOutgoingData(ErrorMessageType, "invalid message format"))
+			client.message(Message[ErrorData]{
+				Type: ErrorMessageType,
+				Data: ErrorData{
+					Message: "invalid message format",
+				},
+			})
 			continue
 		}
 
@@ -47,7 +54,7 @@ func (s *Session) handleClientMessages(client *Client) {
 			continue
 		}
 
-		if err := otherClient.message(message); err != nil {
+		if err := otherClient.message(parsedMsg); err != nil {
 			s.disconnectClient(otherClient)
 			continue
 		}
@@ -67,13 +74,6 @@ func (s *Session) startBroadcastLoop() {
 }
 
 func (s *Session) addClient(client *Client) {
-	if s.isFull() {
-		log.Printf("[%s] [%s] session is full", s.code, client.id)
-		client.message(SerialiseOutgoingData(ErrorMessageType, "session is full"))
-		client.close()
-		return
-	}
-
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

@@ -61,7 +61,7 @@ func (s *Server) createSession() *Session {
 
 	session := Session{
 		clients:   make(map[string]*Client),
-		broadcast: make(chan []byte),
+		broadcast: make(chan Message[any]),
 		server:    s,
 		code:      sessionCode,
 	}
@@ -84,7 +84,7 @@ func (s *Server) deleteSession(code string) {
 }
 
 func (s *Server) establishConnectionSession(conn *websocket.Conn, query HttpQuery) *Session {
-	closeWithMessage := func(code int, reason string) *Session {
+	var closeWithMessage = func(code int, reason string) *Session {
 		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(code, reason))
 		return nil
 	}
@@ -128,12 +128,13 @@ func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if session.isFull() {
-		payload := SerialiseOutgoingData("session_full", SessionFullData{
-			SessionCode:    session.code,
-			MaximumClients: maxClients,
+		conn.WriteJSON(Message[SessionFullData]{
+			Type: "session_full",
+			Data: SessionFullData{
+				SessionCode:    session.code,
+				MaximumClients: maxClients,
+			},
 		})
-
-		conn.WriteMessage(websocket.TextMessage, payload)
 		conn.WriteMessage(websocket.CloseMessage,
 			websocket.FormatCloseMessage(websocket.CloseNormalClosure, "connection: session is full"),
 		)
@@ -143,20 +144,23 @@ func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
 
 	client := session.createClient(conn)
 
-	client.message(SerialiseOutgoingData("session_information", SessionData{
-		SessionCode:    session.code,
-		ClientID:       client.id,
-		MaximumClients: maxClients,
-		ConnectionType: "signal",
-		AutoWebRTC:     autoWebRTCEnabled,
-		EncryptionMode: encryptionMode,
-		HostTransferData: HostTransferData{
-			IsHost: client.host,
+	client.message(Message[SessionData]{
+		Type: "session_information",
+		Data: SessionData{
+			SessionCode:    session.code,
+			ClientID:       client.id,
+			MaximumClients: maxClients,
+			ConnectionType: "signal",
+			AutoWebRTC:     autoWebRTCEnabled,
+			EncryptionMode: encryptionMode,
+			HostTransferData: HostTransferData{
+				IsHost: client.host,
+			},
+			SyncClientsData: SyncClientsData{
+				Clients: session.getClientIDs(),
+			},
 		},
-		SyncClientsData: SyncClientsData{
-			Clients: session.getClientIDs(),
-		},
-	}))
+	})
 
 	go session.startBroadcastLoop()
 	go session.handleClientMessages(client)
