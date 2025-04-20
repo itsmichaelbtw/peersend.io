@@ -6,8 +6,10 @@ import { WEBSOCKET_ENDPOINT } from "@/config/constants";
 import { websocketState as state } from "@/state/websocket";
 import { keyMatchStateUpdate } from "@/utils/update-state";
 import { wsCloseReason } from "@/utils/close-reason";
+import { LatencyMonitor } from "./latency/monitor";
+import { WebSocketLatencyChecker } from "./latency/websocket";
 
-export abstract class WebSocketClient {
+export abstract class WebSocketClient extends LatencyMonitor {
   public static getState() {
     return state;
   }
@@ -16,6 +18,8 @@ export abstract class WebSocketClient {
 
   public static onClose(this: WebSocket, event: CloseEvent) {
     state.is_connecting = false;
+
+    WebSocketClient.stopLatencyMonitoring();
 
     const closeReason = wsCloseReason(event.reason);
 
@@ -71,6 +75,16 @@ export abstract class WebSocketClient {
             "encryption_mode"
           ]);
 
+          WebSocketClient.setupLatencyChecker(new WebSocketLatencyChecker(this));
+
+          break;
+        }
+
+        case "pong": {
+          if (WebSocketClient.latencyChecker) {
+            WebSocketClient.latencyChecker.pong(payload.data);
+          }
+
           break;
         }
 
@@ -81,6 +95,11 @@ export abstract class WebSocketClient {
 
         case "session_full": {
           keyMatchStateUpdate(state, payload.data, ["maximum_clients", "session_code"]);
+          break;
+        }
+
+        case "host_transfer": {
+          keyMatchStateUpdate(state, payload.data, ["is_host"]);
           break;
         }
 
@@ -142,6 +161,7 @@ export abstract class WebSocketClient {
       state.ws.close();
     }
 
+    WebSocketClient.stopLatencyMonitoring();
     WebSocketClient.reset();
   }
 
