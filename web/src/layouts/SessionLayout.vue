@@ -6,6 +6,8 @@ import { websocketState } from "@/state/websocket";
 
 import { useToast } from "primevue/usetoast";
 
+import { capitalise } from "@/utils/capitalise";
+
 const toast = useToast();
 
 watch(
@@ -16,7 +18,7 @@ watch(
         severity: "error",
         life: 2500,
         detail: newError.data.message,
-        summary: newError.type
+        summary: capitalise(newError.type)
       });
     }
   }
