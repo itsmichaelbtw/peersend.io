@@ -2,7 +2,7 @@ import type { WebSocketState } from "@/types/state";
 
 import { reactive } from "vue";
 
-export const websocketState = reactive<WebSocketState>({
+export const DEFAULT_WEBSOCKET_STATE: WebSocketState = {
   ws: null,
   session_code: null,
   clients: [],
@@ -16,4 +16,6 @@ export const websocketState = reactive<WebSocketState>({
   last_error: null,
   encryption_mode: "none",
   connection_type: "none"
-});
+};
+
+export const websocketState = reactive<WebSocketState>(DEFAULT_WEBSOCKET_STATE);

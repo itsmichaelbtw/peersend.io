@@ -1,9 +1,9 @@
 import type { WithNullable } from "@/types/misc";
-import type { IncomingWebSocketMessage } from "@/types/state";
+import type { IncomingWebSocketMessage, WebSocketState } from "@/types/state";
 
 import { router } from "@/router";
 import { WEBSOCKET_ENDPOINT } from "@/config/constants";
-import { websocketState as state } from "@/state/websocket";
+import { DEFAULT_WEBSOCKET_STATE, websocketState as state } from "@/state/websocket";
 import { keyMatchStateUpdate } from "@/utils/update-state";
 import { wsCloseReason } from "@/utils/close-reason";
 import { LatencyMonitor } from "./latency/monitor";
@@ -12,6 +12,19 @@ import { WebSocketLatencyChecker } from "./latency/websocket";
 export abstract class WebSocketClient extends LatencyMonitor {
   public static getState() {
     return state;
+  }
+
+  public static emit(type: string, data: Record<string, any>) {
+    if (!state.ws) {
+      return;
+    }
+
+    state.ws.send(
+      JSON.stringify({
+        type: type,
+        data: data
+      })
+    );
   }
 
   public static onOpen(this: WebSocket, _: Event) {}
@@ -29,12 +42,14 @@ export abstract class WebSocketClient extends LatencyMonitor {
 
     WebSocketClient.disconnect();
 
-    state.last_error = {
-      type: "error",
-      data: {
-        message: event.reason
-      }
-    };
+    if (event.reason) {
+      state.last_error = {
+        type: "error",
+        data: {
+          message: event.reason
+        }
+      };
+    }
   }
 
   public static onError(this: WebSocket, _: Event) {
@@ -150,7 +165,7 @@ export abstract class WebSocketClient extends LatencyMonitor {
       state.last_error = {
         type: "connection_issue",
         data: {
-          message: "Unable to establish connection"
+          message: "unable to establish connection"
         }
       };
     }
@@ -168,13 +183,8 @@ export abstract class WebSocketClient extends LatencyMonitor {
   public static reset() {
     console.warn("Resetting WebSocket state");
 
-    state.ws = null;
-    state.session_code = null;
-    state.is_host = false;
-    state.is_connected = false;
-    state.is_connecting = false;
-    state.client_id = null;
-    state.last_error = null;
-    state.connection_type = "none";
+    keyMatchStateUpdate(state, DEFAULT_WEBSOCKET_STATE, [
+      Object.keys(DEFAULT_WEBSOCKET_STATE) as unknown as keyof WebSocketState
+    ]);
   }
 }
