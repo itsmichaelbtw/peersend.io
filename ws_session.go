@@ -29,6 +29,18 @@ func (s *Session) handleClientMessages(client *Client) {
 			break
 		}
 
+		parsedMsg, err := ParseIncomingData(message)
+		if err != nil {
+			log.Printf("[%s] [%s] invalid message format: %v", s.code, client.id, err)
+			client.message(SerialiseOutgoingData(ErrorMessageType, "invalid message format"))
+			continue
+		}
+
+		if parsedMsg.Type == "ping" {
+			EchoLatencyTimestamp(client, message)
+			continue
+		}
+
 		otherClient := s.getOtherClient(client)
 
 		if otherClient == nil {

@@ -44,6 +44,15 @@ type SessionFullData struct {
 	SessionCode    string `json:"session_code"`
 }
 
+type PingData struct {
+	ClientTimestamp int64 `json:"client_timestamp"`
+}
+
+type PongData struct {
+	ServerTimestamp int64 `json:"server_timestamp"`
+	PingData
+}
+
 func ParseIncomingData(data []byte) (*Message[map[string]any], error) {
 	var msg Message[map[string]any]
 	if err := json.Unmarshal(data, &msg); err != nil {

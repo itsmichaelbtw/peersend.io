@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 )
 
 func SyncClients(clients []string, broadcast chan []byte) {
@@ -55,4 +57,21 @@ func TransferHost(currentClient *Client, otherClient *Client) error {
 
 	log.Printf("[%s] host transferred from [%s]", otherClient.id, currentClient.id)
 	return nil
+}
+
+func EchoLatencyTimestamp(client *Client, message []byte) {
+	serverTimestamp := time.Now().UnixMilli()
+
+	var pingMessage Message[PingData]
+	if err := json.Unmarshal(message, &pingMessage); err != nil {
+		return
+	}
+
+	pongData := PongData{
+		ServerTimestamp: serverTimestamp,
+		PingData: PingData{
+			ClientTimestamp: pingMessage.Data.ClientTimestamp,
+		},
+	}
+	client.message(SerialiseOutgoingData("pong", pongData))
 }
