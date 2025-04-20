@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func SyncClients(clients []string, broadcast chan []byte) {
+func BroadcastClientSync(clients []string, broadcast chan []byte) {
 	payload := SerialiseOutgoingData("sync_online_clients", SyncClientsData{
 		Clients: clients,
 	})
@@ -15,7 +15,7 @@ func SyncClients(clients []string, broadcast chan []byte) {
 	broadcast <- payload
 }
 
-func TransferHost(currentClient *Client, otherClient *Client) error {
+func TransferSessionHost(currentClient *Client, otherClient *Client) error {
 	if currentClient == nil || otherClient == nil {
 		return fmt.Errorf("current or other client is nil")
 	}

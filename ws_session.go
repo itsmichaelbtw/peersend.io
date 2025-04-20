@@ -109,7 +109,7 @@ func (s *Session) disconnectClient(client *Client) {
 	if client.host {
 		otherClient := s.getOtherClient(client)
 		if otherClient != nil {
-			if err := TransferHost(client, otherClient); err != nil {
+			if err := TransferSessionHost(client, otherClient); err != nil {
 				log.Printf("[%s] [%s] failed to transfer host: %v", s.code, client.id, err)
 			}
 		}
@@ -120,7 +120,7 @@ func (s *Session) disconnectClient(client *Client) {
 
 	log.Printf("[%s] [%s] client disconnected", s.code, client.id)
 
-	SyncClients(s.getClientIDs(), s.broadcast)
+	BroadcastClientSync(s.getClientIDs(), s.broadcast)
 
 	go s.cleanup()
 }

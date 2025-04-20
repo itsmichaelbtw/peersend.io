@@ -161,7 +161,7 @@ func (s *Server) handleHttpConnection(w http.ResponseWriter, r *http.Request) {
 	go session.startBroadcastLoop()
 	go session.handleClientMessages(client)
 
-	SyncClients(session.getClientIDs(), session.broadcast)
+	BroadcastClientSync(session.getClientIDs(), session.broadcast)
 }
 
 func SpawnServer() *Server {
