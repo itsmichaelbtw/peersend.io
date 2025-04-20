@@ -34,29 +34,42 @@ func (s *Session) handleClientMessages(client *Client) {
 		parsedMsg, err := ParseIncomingData(message)
 		if err != nil {
 			log.Printf("[%s] [%s] invalid message format: %v", s.code, client.id, err)
+
 			client.message(Message[ErrorData]{
 				Type: ErrorMessageType,
 				Data: ErrorData{
 					Message: "invalid message format",
 				},
 			})
+
 			continue
 		}
 
-		if parsedMsg.Type == "ping" {
+		switch parsedMsg.Type {
+		case "ping":
 			EchoLatencyTimestamp(client, message)
-			continue
-		}
 
-		otherClient := s.getOtherClient(client)
+		case "transfer_host_request":
+			if err := TransferSessionHost(client, s.getOtherClient(client)); err != nil {
+				client.message(Message[ErrorData]{
+					Type: ErrorMessageType,
+					Data: ErrorData{
+						Message: err.Error(),
+					},
+				})
+			}
 
-		if otherClient == nil {
-			continue
-		}
+		default:
+			otherClient := s.getOtherClient(client)
 
-		if err := otherClient.message(parsedMsg); err != nil {
-			s.disconnectClient(otherClient)
-			continue
+			if otherClient == nil {
+				continue
+			}
+
+			if err := otherClient.message(parsedMsg); err != nil {
+				s.disconnectClient(otherClient)
+				continue
+			}
 		}
 	}
 }
