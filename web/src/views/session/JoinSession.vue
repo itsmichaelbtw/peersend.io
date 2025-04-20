@@ -39,6 +39,8 @@ const initialValues: FormValues.JoinSession = {
 const resolver = zodResolver(JoinSessionSchema);
 
 function onFormSubmit(event: FormSubmitEvent): void {
+  console.log("Form submitted", event);
+
   if (event.valid) {
     websocketState.is_connecting = true;
 
@@ -65,7 +67,7 @@ function onFormSubmit(event: FormSubmitEvent): void {
         v-slot="$form"
         v-bind:resolver
         v-bind:initialValues
-        v-bind:submit="onFormSubmit"
+        v-on:submit="onFormSubmit"
         class="space-y-4"
       >
         <div>
