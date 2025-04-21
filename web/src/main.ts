@@ -6,7 +6,10 @@ import { router } from "./router";
 
 import Aura from "@primeuix/themes/aura";
 import PrimeVue from "primevue/config";
+import Tooltip from "primevue/tooltip";
+
 import ToastService from "primevue/toastservice";
+import ConfirmationService from "primevue/confirmationservice";
 
 import StyleClass from "primevue/styleclass";
 
@@ -17,6 +20,7 @@ const app = createApp(PeerSend);
 app
   .use(router)
   .use(ToastService)
+  .use(ConfirmationService)
   .use(PrimeVue, {
     theme: {
       preset: Aura,
@@ -25,5 +29,6 @@ app
       }
     }
   })
+  .directive("tooltip", Tooltip)
   .directive("styleclass", StyleClass)
   .mount("#app");
