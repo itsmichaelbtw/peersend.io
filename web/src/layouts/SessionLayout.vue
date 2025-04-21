@@ -24,6 +24,16 @@ watch(
     }
   }
 );
+
+watch(
+  [
+    () => applicationState.__protocol.websocket.is_connected,
+    () => applicationState.__protocol.rtc.is_connected
+  ],
+  ([websocketConnected, rtcConnected]) => {
+    applicationState.is_connected = websocketConnected || rtcConnected;
+  }
+);
 </script>
 
 <template>
