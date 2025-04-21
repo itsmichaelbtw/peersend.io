@@ -12,7 +12,7 @@ import JoinSession from "@/views/session/JoinSession.vue";
 import ActiveSession from "@/views/session/ActiveSession.vue";
 import SessionFull from "@/views/session/SessionFull.vue";
 
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -37,8 +37,8 @@ const routes: RouteRecordRaw[] = [
         path: "create",
         component: CreateSession,
         beforeEnter(_1, _2, next) {
-          if (websocketState.is_connected && websocketState.session_code) {
-            next(`/session/${websocketState.session_code}`);
+          if (applicationState.is_connected && applicationState.session_code) {
+            next(`/session/${applicationState.session_code}`);
           } else {
             next();
           }
@@ -48,8 +48,8 @@ const routes: RouteRecordRaw[] = [
         path: "join",
         component: JoinSession,
         beforeEnter(_1, _2, next) {
-          if (websocketState.is_connected && websocketState.session_code) {
-            next(`/session/${websocketState.session_code}`);
+          if (applicationState.is_connected && applicationState.session_code) {
+            next(`/session/${applicationState.session_code}`);
           } else {
             next();
           }
@@ -59,7 +59,7 @@ const routes: RouteRecordRaw[] = [
         path: "full",
         component: SessionFull,
         beforeEnter(_1, _2, next) {
-          if (websocketState.is_connected || !websocketState.session_code) {
+          if (applicationState.is_connected || !applicationState.session_code) {
             next("/session/create");
           } else {
             next();
@@ -71,7 +71,7 @@ const routes: RouteRecordRaw[] = [
         name: "active-session",
         component: ActiveSession,
         beforeEnter(_1, _2, next) {
-          if (websocketState.is_connected) {
+          if (applicationState.is_connected) {
             next();
           } else {
             next("/session/create");

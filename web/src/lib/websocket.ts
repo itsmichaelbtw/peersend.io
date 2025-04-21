@@ -1,5 +1,4 @@
 import type { WithNullable } from "@/types/misc";
-import type { ApplicationState } from "@/types/state";
 import type { IncomingTransmissionData } from "@/types/state";
 
 import { router } from "@/router";
@@ -34,12 +33,7 @@ export abstract class WebSocketClient extends LatencyMonitor {
     );
   }
 
-  public static onOpen(this: WebSocket, _: Event) {
-    const websocketState = WebSocketClient.getWebSocketState();
-
-    websocketState.is_connected = true;
-    websocketState.is_connecting = false;
-  }
+  public static onOpen(this: WebSocket, _: Event) {}
 
   public static onClose(this: WebSocket, event: CloseEvent) {
     const websocketState = WebSocketClient.getWebSocketState();
@@ -80,10 +74,6 @@ export abstract class WebSocketClient extends LatencyMonitor {
 
   public static onMessage(this: WebSocket, event: MessageEvent) {
     const websocketState = WebSocketClient.getWebSocketState();
-
-    if (!websocketState.is_connected) {
-      return;
-    }
 
     if (websocketState.is_connecting) {
       websocketState.is_connecting = false;
