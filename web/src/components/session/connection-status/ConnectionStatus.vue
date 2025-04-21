@@ -2,8 +2,8 @@
 import ConfirmDialog from "primevue/confirmdialog";
 
 import StatInformation from "./StatInformation.vue";
-import ConnectionDetails from "./ConnectionDetails.vue";
 import SessionPeers from "./SessionPeers.vue";
+import TechnicalDetails from "./TechnicalDetails.vue";
 
 import { Zap } from "lucide-vue-next";
 import { useConfirm } from "primevue/useconfirm";
@@ -56,7 +56,7 @@ function confirmExit() {
   >
     <template #title>Connection Status</template>
     <template #content>
-      <StatInformation v-if="websocketState.connection_type !== 'none'" title="Connection type">
+      <StatInformation title="Connection type">
         <template v-if="websocketState.connection_type === 'signal'" #stat>
           <p>WebSocket</p>
         </template>
@@ -105,7 +105,7 @@ function confirmExit() {
       </StatInformation>
 
       <SessionPeers />
-      <ConnectionDetails />
+      <TechnicalDetails />
     </template>
     <template #footer>
       <Button v-on:click="confirmExit" severity="danger" size="small" fluid> Leave session </Button>

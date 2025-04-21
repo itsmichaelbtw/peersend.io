@@ -13,7 +13,7 @@ const { classNames, joinCls } = useClsx({
 
 <template>
   <div v-bind:class="joinCls('rounded-md p-2.5 select-none', classNames.container)">
-    <h4 class="mb-2 text-sm font-medium">Connection details</h4>
+    <h4 class="mb-2 text-sm font-medium">Technical details</h4>
     <div class="space-y-1">
       <div class="flex justify-between">
         <span class="text-xs text-gray-500">Protocol</span>
