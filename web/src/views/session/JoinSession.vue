@@ -15,14 +15,16 @@ import { Form } from "@primevue/forms";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
 import { JoinSessionSchema } from "@/config/schemas";
 import { WebSocketClient } from "@/lib/websocket";
-import { websocketState } from "@/state/websocket";
-import { sleep } from "@/utils/sleep";
+import { applicationState } from "@/state/application";
+import { useApplicationState } from "@/composables/use-application-state";
 
 const router = useRouter();
 
-watch(websocketState, () => {
-  if (websocketState.is_connected) {
-    router.push(`/session/${websocketState.session_code}`);
+const { websocketState } = useApplicationState();
+
+watch(applicationState, () => {
+  if (applicationState.is_connected) {
+    router.push(`/session/${applicationState.session_code}`);
   }
 });
 
@@ -39,14 +41,8 @@ const initialValues: FormValues.JoinSession = {
 const resolver = zodResolver(JoinSessionSchema);
 
 function onFormSubmit(event: FormSubmitEvent): void {
-  console.log("Form submitted", event);
-
   if (event.valid) {
-    websocketState.is_connecting = true;
-
-    sleep(500).then(() => {
-      WebSocketClient.connect(event.values.sessionCode);
-    });
+    WebSocketClient.connect(event.values.sessionCode);
   }
 }
 </script>

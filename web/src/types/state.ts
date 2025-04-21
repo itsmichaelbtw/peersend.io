@@ -1,48 +1,31 @@
 import type { WithNullable } from "./misc";
+import type { WebSocketConnectionState, IncomingWebSocketMessageType } from "./websocket";
+import type { WebRTCConnectionState, IncomingWebRTCMessageType } from "./webrtc";
 
-export type EncryptionModes = "none";
-
-export type IncomingWebSocketMessageType =
-  | "session_information"
-  | "sync_online_clients"
-  | "connection_issue"
-  | "message_parse_error"
-  | "session_full"
-  | "error";
-
-export namespace WebSocketData {
-  export interface Session {
-    session_code: string;
-    client_id: string;
-    is_host: boolean;
-    clients: string[];
-    maximum_clients: number;
-  }
-  export interface Signal {
-    is_host: boolean;
-  }
-  export interface Error {
-    message: string;
-  }
+export interface ConnectionErrorData {
+  message: string;
 }
 
-export interface IncomingWebSocketMessage<D extends Record<string, any>> {
-  type: IncomingWebSocketMessageType;
+export type EncryptionModes = "none";
+export interface IncomingTransmissionData<D extends Record<string, any>> {
+  type: IncomingWebSocketMessageType | IncomingWebRTCMessageType;
   data: D;
 }
 
-export interface WebSocketState {
-  ws: WithNullable<WebSocket>;
+export interface ApplicationState {
   session_code: WithNullable<string>;
   is_host: boolean;
   is_connected: boolean;
-  is_connecting: boolean;
   auto_webrtc: boolean;
   encryption_mode: EncryptionModes;
   latency: number;
   client_id: WithNullable<string>;
   clients: string[];
   maximum_clients: number;
-  last_error: WithNullable<IncomingWebSocketMessage<WebSocketData.Error>>;
-  connection_type: "direct" | "signal" | "none";
+  last_error: WithNullable<IncomingTransmissionData<ConnectionErrorData>>;
+  connection_type: "websocket" | "webrtc" | "none";
+  __protocol: {
+    websocket: WebSocketConnectionState;
+    rtc: WebRTCConnectionState;
+  };
 }

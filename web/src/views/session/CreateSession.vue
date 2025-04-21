@@ -6,27 +6,23 @@ import CopyToClipboard from "@/components/CopyToClipboard.vue";
 import { Copy, ArrowRight, Shield, Globe, Clock, Loader2 } from "lucide-vue-next";
 
 import { WebSocketClient } from "@/lib/websocket";
-import { websocketState } from "@/state/websocket";
-import { sleep } from "@/utils/sleep";
+import { applicationState } from "@/state/application";
+import { useApplicationState } from "@/composables/use-application-state";
 
-function onConnect() {
-  websocketState.is_connecting = true;
-
-  sleep(500).then(WebSocketClient.connect);
-}
+const { websocketState } = useApplicationState();
 </script>
 
 <template>
-  <SessionDeck v-if="websocketState.is_connected" heading="Create a Session">
+  <SessionDeck v-if="applicationState.is_connected" heading="Create a Session">
     <template #title>Session created</template>
     <template #subtitle>Share this code with another user to join this session</template>
     <template #content>
       <BackdropGrayCard>
         <template #content>
           <div class="flex flex-row items-center justify-between select-none">
-            <p class="font-mono text-sm" v-cloak>{{ websocketState.session_code }}</p>
+            <p class="font-mono text-sm" v-cloak>{{ applicationState.session_code }}</p>
 
-            <CopyToClipboard v-bind:value="websocketState.session_code">
+            <CopyToClipboard v-bind:value="applicationState.session_code">
               <Button variant="text" severity="secondary">
                 <Copy v-bind:size="20" />
               </Button>
@@ -36,7 +32,7 @@ function onConnect() {
       </BackdropGrayCard>
 
       <div class="flex items-center justify-end">
-        <p class="text-sm text-gray-500">{{ websocketState.clients.length }}/2 connected</p>
+        <p class="text-sm text-gray-500">{{ applicationState.clients.length }}/2 connected</p>
       </div>
 
       <BackdropGrayCard>
@@ -45,17 +41,17 @@ function onConnect() {
           <div class="space-y-1 text-sm">
             <div class="flex justify-between">
               <span class="text-gray-500">Maximum connections:</span>
-              <span>{{ websocketState.maximum_clients }}</span>
+              <span>{{ applicationState.maximum_clients }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-500">Auto WebRTC:</span>
-              <span v-if="websocketState.auto_webrtc" class="text-green-400">Enabled</span>
+              <span v-if="applicationState.auto_webrtc" class="text-green-400">Enabled</span>
               <span v-else class="text-red-400">Disabled</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-500">End-to-end encryption:</span>
-              <span v-if="websocketState.encryption_mode !== 'none'" class="text-green-400">{{
-                websocketState.encryption_mode
+              <span v-if="applicationState.encryption_mode !== 'none'" class="text-green-400">{{
+                applicationState.encryption_mode
               }}</span>
               <span v-else class="text-red-400">Disabled</span>
             </div>
@@ -68,7 +64,7 @@ function onConnect() {
       <RouterLink
         v-bind:to="{
           name: 'active-session',
-          params: { session_code: websocketState.session_code! }
+          params: { session_code: applicationState.session_code! }
         }"
       >
         <Button color="primary" size="small" fluid>
@@ -116,7 +112,7 @@ function onConnect() {
     <template #footer>
       <Button
         v-bind:disabled="websocketState.is_connecting"
-        v-on:click="onConnect"
+        v-on:click="() => WebSocketClient.connect()"
         size="small"
         fluid
       >

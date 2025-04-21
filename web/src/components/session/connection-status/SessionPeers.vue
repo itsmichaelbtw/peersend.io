@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 
 import { UsersRound } from "lucide-vue-next";
 </script>
@@ -12,11 +12,11 @@ import { UsersRound } from "lucide-vue-next";
         <span class="text-sm font-normal">Peers</span>
       </div>
       <span class="text-sm font-light">
-        {{ websocketState.clients.length }}/{{ websocketState.maximum_clients }}
+        {{ applicationState.clients.length }}/{{ applicationState.maximum_clients }}
       </span>
     </div>
     <ProgressBar
-      v-bind:value="(websocketState.clients.length * 100) / 2"
+      v-bind:value="(applicationState.clients.length * 100) / 2"
       v-bind:show-value="false"
       style="height: 8px"
     />

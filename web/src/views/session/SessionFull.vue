@@ -6,7 +6,7 @@ import { RouterLink } from "vue-router";
 import { WifiOff } from "lucide-vue-next";
 
 import { WebSocketClient } from "@/lib/websocket";
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 
 onUnmounted(() => {
   WebSocketClient.disconnect();
@@ -22,16 +22,17 @@ onUnmounted(() => {
       </div>
     </template>
     <template #subtitle
-      >This room is full ({{ websocketState.maximum_clients }}/{{
-        websocketState.maximum_clients
+      >This room is full ({{ applicationState.maximum_clients }}/{{
+        applicationState.maximum_clients
       }})</template
     >
     <template #content>
       <div class="my-4 rounded bg-red-50 p-4 text-red-800">
         <p class="text-sm leading-normal">
-          The session <span class="font-mono font-bold">{{ websocketState.session_code }}</span> is
-          currently full. Each room can only support a maximum of
-          {{ websocketState.maximum_clients }} concurrent connections.
+          The session
+          <span class="font-mono font-bold">{{ applicationState.session_code }}</span> is currently
+          full. Each room can only support a maximum of
+          {{ applicationState.maximum_clients }} concurrent connections.
         </p>
       </div>
     </template>

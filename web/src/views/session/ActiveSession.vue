@@ -9,7 +9,7 @@ import FileTransfer from "@/components/session/file-transfer/FileTransfer.vue";
 import WaitingForConnections from "@/components/session/connection-state/WaitingForConnections.vue";
 import DeveloperControls from "@/components/session/DeveloperControls.vue";
 
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 import { WebSocketClient } from "@/lib/websocket";
 import { onBeforeMount } from "vue";
 import { useRouter } from "vue-router";
@@ -19,14 +19,14 @@ import { Crown, Copy, Wifi, Router, TriangleAlert } from "lucide-vue-next";
 const router = useRouter();
 
 onBeforeMount(() => {
-  if (websocketState.connection_type === "none") {
+  if (applicationState.connection_type === "none") {
     router.push("/session/create");
   }
 });
 </script>
 
 <template>
-  <template v-if="websocketState.is_connected && websocketState.connection_type != 'none'">
+  <template v-if="applicationState.is_connected && applicationState.connection_type != 'none'">
     <Message severity="warn" class="w-full select-none">
       <template #icon>
         <TriangleAlert v-bind:size="20" />
@@ -42,27 +42,27 @@ onBeforeMount(() => {
     <div class="relative flex w-full items-center justify-between select-none">
       <div class="flex items-center justify-between gap-x-2">
         <CopyToClipboard
-          v-if="websocketState.session_code"
-          v-bind:value="websocketState.session_code"
+          v-if="applicationState.session_code"
+          v-bind:value="applicationState.session_code"
         >
           <Button variant="text" severity="contrast" class="text-gray-500 hover:bg-gray-100!">
-            <span class="font-mono text-base">{{ websocketState.session_code }}</span>
+            <span class="font-mono text-base">{{ applicationState.session_code }}</span>
             <Copy v-bind:size="18" class="ml-2" />
           </Button>
         </CopyToClipboard>
 
-        <Badge v-if="websocketState.connection_type === 'signal'" severity="secondary">
+        <Badge v-if="applicationState.connection_type === 'websocket'" severity="secondary">
           <Wifi v-bind:size="14" />
           <span class="ml-2 font-medium">Server Connection</span>
         </Badge>
-        <Badge v-if="websocketState.connection_type === 'direct'" severity="success">
+        <Badge v-if="applicationState.connection_type === 'webrtc'" severity="success">
           <Router v-bind:size="14" />
           <span class="ml-2 font-medium">Direct Connection</span>
         </Badge>
       </div>
 
       <Button
-        v-if="websocketState.is_host && websocketState.connection_type === 'signal'"
+        v-if="applicationState.is_host && applicationState.connection_type === 'websocket'"
         v-on:click="WebSocketClient.emit('transfer_host_request', {})"
         severity="contrast"
         size="small"
@@ -79,17 +79,17 @@ onBeforeMount(() => {
       </div>
 
       <div class="col-span-2">
-        <template v-if="websocketState.is_host">
+        <template v-if="applicationState.is_host">
           <WaitingForConnections
-            v-if="websocketState.clients.length !== websocketState.maximum_clients"
+            v-if="applicationState.clients.length !== applicationState.maximum_clients"
           />
-          <FileTransfer v-else-if="websocketState.connection_type === 'direct'" />
-          <DirectConnectionPrompt v-else-if="websocketState.connection_type === 'signal'" />
+          <FileTransfer v-else-if="applicationState.connection_type === 'webrtc'" />
+          <DirectConnectionPrompt v-else-if="applicationState.connection_type === 'websocket'" />
         </template>
 
         <template v-else>
-          <WaitingForHost v-if="websocketState.connection_type === 'signal'" />
-          <FileTransfer v-else-if="websocketState.connection_type === 'direct'" />
+          <WaitingForHost v-if="applicationState.connection_type === 'websocket'" />
+          <FileTransfer v-else-if="applicationState.connection_type === 'webrtc'" />
         </template>
       </div>
     </div>

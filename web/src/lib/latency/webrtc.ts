@@ -32,7 +32,7 @@ export class WebRTCLatencyChecker extends LatencyChecker {
    * Handle pong response from peer
    */
   public pong(data: PongData): void {
-    const latency = this.calculateLatency(data.client_timestamp);
+    const latency = this.calculateLatency(data);
     this.updateLatency(latency);
   }
 

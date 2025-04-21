@@ -2,7 +2,7 @@
 import SessionHeader from "@/components/header/SessionHeader.vue";
 
 import { watch } from "vue";
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 
 import { useToast } from "primevue/usetoast";
 
@@ -12,7 +12,7 @@ import { capitalise } from "@/utils/capitalise";
 const toast = useToast();
 
 watch(
-  () => websocketState.last_error,
+  () => applicationState.last_error,
   (newError) => {
     if (newError) {
       toast.add({

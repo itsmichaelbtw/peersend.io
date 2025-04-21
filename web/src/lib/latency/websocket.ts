@@ -1,7 +1,7 @@
 import type { PongData } from "./checker";
 
 import { LatencyChecker } from "./checker";
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 
 export class WebSocketLatencyChecker extends LatencyChecker {
   private ws: WebSocket;
@@ -38,6 +38,6 @@ export class WebSocketLatencyChecker extends LatencyChecker {
   }
 
   public updateLatency(latency: number): void {
-    websocketState.latency = latency;
+    applicationState.latency = latency;
   }
 }

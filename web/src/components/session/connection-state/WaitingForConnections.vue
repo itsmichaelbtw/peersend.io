@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 import { UsersRound } from "lucide-vue-next";
 </script>
 
 <template>
   <Card>
     <template #title>
-      Waiting for Clients ({{ websocketState.clients.length }}/{{ websocketState.maximum_clients }})
+      Waiting for Clients ({{ applicationState.clients.length }}/{{
+        applicationState.maximum_clients
+      }})
     </template>
     <template #subtitle> More clients are required to establish a direct connection </template>
     <template #content>

@@ -1,25 +1,32 @@
 import type { WithNullable } from "@/types/misc";
-import type { IncomingWebSocketMessage, WebSocketState } from "@/types/state";
+import type { ApplicationState } from "@/types/state";
+import type { IncomingTransmissionData } from "@/types/state";
 
 import { router } from "@/router";
 import { WEBSOCKET_ENDPOINT } from "@/config/constants";
-import { DEFAULT_WEBSOCKET_STATE, websocketState as state } from "@/state/websocket";
-import { keyMatchStateUpdate } from "@/utils/update-state";
+import { DEFAULT_APPLICATION_STATE, applicationState } from "@/state/application";
 import { wsCloseReason } from "@/utils/close-reason";
 import { LatencyMonitor } from "./latency/monitor";
 import { WebSocketLatencyChecker } from "./latency/websocket";
+import { sleep } from "@/utils/sleep";
 
 export abstract class WebSocketClient extends LatencyMonitor {
   public static getState() {
-    return state;
+    return applicationState;
+  }
+
+  public static getWebSocketState() {
+    return applicationState.__protocol.websocket;
   }
 
   public static emit(type: string, data: Record<string, any>) {
-    if (!state.ws) {
+    const websocketState = WebSocketClient.getWebSocketState();
+
+    if (!websocketState.ws || !websocketState.is_connected) {
       return;
     }
 
-    state.ws.send(
+    websocketState.ws.send(
       JSON.stringify({
         type: type,
         data: data
@@ -27,10 +34,18 @@ export abstract class WebSocketClient extends LatencyMonitor {
     );
   }
 
-  public static onOpen(this: WebSocket, _: Event) {}
+  public static onOpen(this: WebSocket, _: Event) {
+    const websocketState = WebSocketClient.getWebSocketState();
+
+    websocketState.is_connected = true;
+    websocketState.is_connecting = false;
+  }
 
   public static onClose(this: WebSocket, event: CloseEvent) {
-    state.is_connecting = false;
+    const websocketState = WebSocketClient.getWebSocketState();
+
+    websocketState.is_connected = false;
+    websocketState.is_connecting = false;
 
     WebSocketClient.stopLatencyMonitoring();
 
@@ -43,7 +58,7 @@ export abstract class WebSocketClient extends LatencyMonitor {
     WebSocketClient.disconnect();
 
     if (event.reason) {
-      state.last_error = {
+      applicationState.last_error = {
         type: "error",
         data: {
           message: event.reason
@@ -55,7 +70,7 @@ export abstract class WebSocketClient extends LatencyMonitor {
   public static onError(this: WebSocket, _: Event) {
     WebSocketClient.disconnect();
 
-    state.last_error = {
+    applicationState.last_error = {
       type: "connection_issue",
       data: {
         message: "Unable to establish connection"
@@ -64,31 +79,37 @@ export abstract class WebSocketClient extends LatencyMonitor {
   }
 
   public static onMessage(this: WebSocket, event: MessageEvent) {
-    if (state.is_connecting) {
-      state.is_connecting = false;
+    const websocketState = WebSocketClient.getWebSocketState();
+
+    if (!websocketState.is_connected) {
+      return;
     }
 
-    if (state.last_error) {
-      state.last_error = null;
+    if (websocketState.is_connecting) {
+      websocketState.is_connecting = false;
+    }
+
+    if (applicationState.last_error) {
+      applicationState.last_error = null;
     }
 
     try {
-      const payload = JSON.parse(event.data) as IncomingWebSocketMessage<any>;
+      const payload = JSON.parse(event.data) as IncomingTransmissionData<any>;
 
       switch (payload.type) {
         case "session_information": {
-          state.is_connected = true;
+          websocketState.is_connected = true;
+          applicationState.is_connected = true;
 
-          keyMatchStateUpdate(state, payload.data, [
-            "client_id",
-            "clients",
-            "is_host",
-            "maximum_clients",
-            "session_code",
-            "connection_type",
-            "auto_webrtc",
-            "encryption_mode"
-          ]);
+          applicationState.client_id = payload.data.client_id;
+          applicationState.clients = payload.data.clients;
+          applicationState.is_host = payload.data.is_host;
+          applicationState.maximum_clients = payload.data.maximum_clients;
+          applicationState.session_code = payload.data.session_code;
+          applicationState.connection_type = payload.data.connection_type;
+          applicationState.auto_webrtc = payload.data.auto_webrtc;
+          applicationState.encryption_mode = payload.data.encryption_mode;
+          applicationState.connection_type = "websocket";
 
           WebSocketClient.setupLatencyChecker(new WebSocketLatencyChecker(this));
 
@@ -104,22 +125,23 @@ export abstract class WebSocketClient extends LatencyMonitor {
         }
 
         case "sync_online_clients": {
-          keyMatchStateUpdate(state, payload.data, ["clients"]);
+          applicationState.clients = payload.data.clients;
           break;
         }
 
         case "session_full": {
-          keyMatchStateUpdate(state, payload.data, ["maximum_clients", "session_code"]);
+          applicationState.maximum_clients = payload.data.maximum_clients;
+          applicationState.session_code = payload.data.session_code;
           break;
         }
 
         case "host_transfer": {
-          keyMatchStateUpdate(state, payload.data, ["is_host"]);
+          applicationState.is_host = payload.data.is_host;
           break;
         }
 
         case "error": {
-          state.last_error = {
+          applicationState.last_error = {
             type: payload.type,
             data: payload.data
           };
@@ -127,23 +149,25 @@ export abstract class WebSocketClient extends LatencyMonitor {
         }
       }
     } catch (error) {
-      state.last_error = {
+      applicationState.last_error = {
         type: "message_parse_error",
         data: {
           message: "Unable to parse latest message"
         }
       };
-    } finally {
-      state.is_connecting = false;
     }
   }
 
-  public static connect(sessionCode: WithNullable<string>) {
-    if (state.ws || state.is_connected) {
+  public static async connect(sessionCode: WithNullable<string>) {
+    const websocketState = WebSocketClient.getWebSocketState();
+
+    if (websocketState.is_connecting || websocketState.is_connected) {
       return;
     }
 
-    state.is_connecting = true;
+    websocketState.is_connecting = true;
+
+    await sleep(500);
 
     const url = new URL(WEBSOCKET_ENDPOINT);
 
@@ -155,14 +179,14 @@ export abstract class WebSocketClient extends LatencyMonitor {
     }
 
     try {
-      state.ws = new WebSocket(url.toString());
+      websocketState.ws = new WebSocket(url.toString());
 
-      state.ws.onmessage = WebSocketClient.onMessage;
-      state.ws.onerror = WebSocketClient.onError;
-      state.ws.onclose = WebSocketClient.onClose;
-      state.ws.onopen = WebSocketClient.onOpen;
+      websocketState.ws.onmessage = WebSocketClient.onMessage;
+      websocketState.ws.onerror = WebSocketClient.onError;
+      websocketState.ws.onclose = WebSocketClient.onClose;
+      websocketState.ws.onopen = WebSocketClient.onOpen;
     } catch (error) {
-      state.last_error = {
+      applicationState.last_error = {
         type: "connection_issue",
         data: {
           message: "unable to establish connection"
@@ -172,8 +196,10 @@ export abstract class WebSocketClient extends LatencyMonitor {
   }
 
   public static disconnect() {
-    if (state.ws) {
-      state.ws.close();
+    const websocketState = WebSocketClient.getWebSocketState();
+
+    if (websocketState.ws) {
+      websocketState.ws = null;
     }
 
     WebSocketClient.stopLatencyMonitoring();
@@ -183,8 +209,6 @@ export abstract class WebSocketClient extends LatencyMonitor {
   public static reset() {
     console.warn("Resetting WebSocket state");
 
-    keyMatchStateUpdate(state, DEFAULT_WEBSOCKET_STATE, [
-      Object.keys(DEFAULT_WEBSOCKET_STATE) as unknown as keyof WebSocketState
-    ]);
+    Object.assign(applicationState, structuredClone(DEFAULT_APPLICATION_STATE));
   }
 }

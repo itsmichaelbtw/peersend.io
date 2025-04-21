@@ -7,14 +7,14 @@ import TechnicalDetails from "./TechnicalDetails.vue";
 
 import { Zap } from "lucide-vue-next";
 import { useConfirm } from "primevue/useconfirm";
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 
 import { useClsx } from "@/composables/use-clsx";
 
 const { classNames, joinCls } = useClsx({
   icon: {
-    "bg-primary/50": websocketState.connection_type === "direct",
-    "bg-gray-200 dark:bg-gray-600": websocketState.connection_type === "signal"
+    "bg-primary/50": applicationState.connection_type === "webrtc",
+    "bg-gray-200 dark:bg-gray-600": applicationState.connection_type === "websocket"
   }
 });
 
@@ -57,12 +57,12 @@ function confirmExit() {
     <template #title>Connection Status</template>
     <template #content>
       <StatInformation title="Connection type">
-        <template v-if="websocketState.connection_type === 'signal'" #stat>
+        <template v-if="applicationState.connection_type === 'websocket'" #stat>
           <p>WebSocket</p>
         </template>
-        <template v-if="websocketState.connection_type === 'direct'" #stat>
+        <template v-if="applicationState.connection_type === 'webrtc'" #stat>
           <div>
-            <p class="inline-block align-middle">WebRTC (P2P)</p>
+            <p class="inline-block align-middle">WebRTC</p>
             <div class="relative ml-2 inline-flex items-center justify-center align-middle">
               <span
                 class="bg-primary/20 absolute h-8 w-8 animate-ping rounded-full opacity-75"
@@ -85,20 +85,20 @@ function confirmExit() {
       </StatInformation>
       <StatInformation title="Role">
         <template #stat>
-          <p v-if="websocketState.is_host">Host</p>
+          <p v-if="applicationState.is_host">Host</p>
           <p v-else>Guest</p>
         </template>
       </StatInformation>
       <StatInformation title="Auto WebRTC">
         <template #stat>
-          <span v-if="websocketState.auto_webrtc" class="text-green-400">Enabled</span>
+          <span v-if="applicationState.auto_webrtc" class="text-green-400">Enabled</span>
           <span v-else class="text-red-400">Disabled</span>
         </template>
       </StatInformation>
       <StatInformation title="Encryption">
         <template #stat>
-          <span v-if="websocketState.encryption_mode !== 'none'" class="text-green-400">{{
-            websocketState.encryption_mode
+          <span v-if="applicationState.encryption_mode !== 'none'" class="text-green-400">{{
+            applicationState.encryption_mode
           }}</span>
           <span v-else class="text-red-400">Disabled</span>
         </template>
