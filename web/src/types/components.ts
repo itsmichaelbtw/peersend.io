@@ -20,6 +20,16 @@ export namespace ComponentTypes {
         description: string;
       }[];
     }
+
+    export interface StatInformation {
+      title: string;
+      stat?: string;
+    }
+
+    export interface ConnectionUpgradeDialog {
+      visible: boolean;
+      onChange(value: boolean): void;
+    }
   }
 
   export interface BackNavigation {
