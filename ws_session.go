@@ -63,6 +63,12 @@ func (s *Session) handleClientMessages(client *Client) {
 			otherClient := s.getOtherClient(client)
 
 			if otherClient == nil {
+				client.message(Message[ErrorData]{
+					Type: ErrorMessageType,
+					Data: ErrorData{
+						Message: "unable to pass message to other client as there is none",
+					},
+				})
 				continue
 			}
 
