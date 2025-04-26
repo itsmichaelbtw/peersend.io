@@ -1,6 +1,6 @@
 import type { ApplicationState } from "@/types/state";
-import type { WebSocketConnectionState } from "@/types/websocket";
-import type { WebRTCConnectionState } from "@/types/webrtc";
+import type { WebSocketConnectionState, IncomingWebSocketMessageType } from "@/types/websocket";
+import type { WebRTCConnectionState, IncomingWebRTCMessageType } from "@/types/webrtc";
 
 import { reactive } from "vue";
 
@@ -36,3 +36,15 @@ export const DEFAULT_APPLICATION_STATE: ApplicationState = {
 };
 
 export const applicationState = reactive<ApplicationState>(DEFAULT_APPLICATION_STATE);
+
+export function flagApplicationError(
+  message: string,
+  type: IncomingWebSocketMessageType | IncomingWebRTCMessageType = "error"
+) {
+  applicationState.last_error = {
+    type: type,
+    data: {
+      message: message
+    }
+  };
+}

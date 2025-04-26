@@ -12,7 +12,10 @@ import JoinSession from "@/views/session/JoinSession.vue";
 import ActiveSession from "@/views/session/ActiveSession.vue";
 import SessionFull from "@/views/session/SessionFull.vue";
 
+import Compatibility from "@/views/Compatibility.vue";
+
 import { applicationState } from "@/state/application";
+import { checkWebRTCCompatibility } from "@/utils/compatibility";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -26,8 +29,19 @@ const routes: RouteRecordRaw[] = [
     ]
   },
   {
+    path: "/compatibility",
+    component: Compatibility
+  },
+  {
     path: "/session",
     component: SessionLayout,
+    beforeEnter(_1, _2, next) {
+      if (!checkWebRTCCompatibility()) {
+        return next("/compatibility");
+      }
+
+      next();
+    },
     children: [
       {
         path: "",

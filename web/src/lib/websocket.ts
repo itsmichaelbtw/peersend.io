@@ -3,17 +3,18 @@ import type { IncomingTransmissionData } from "@/types/state";
 
 import { router } from "@/router";
 import { WEBSOCKET_ENDPOINT } from "@/config/constants";
-import { DEFAULT_APPLICATION_STATE, applicationState } from "@/state/application";
+import {
+  DEFAULT_APPLICATION_STATE,
+  applicationState,
+  flagApplicationError
+} from "@/state/application";
 import { wsCloseReason } from "@/utils/close-reason";
 import { LatencyMonitor } from "./latency/monitor";
 import { WebSocketLatencyChecker } from "./latency/websocket";
 import { sleep } from "@/utils/sleep";
+import { WebRTCClient } from "./webrtc";
 
 export abstract class WebSocketClient extends LatencyMonitor {
-  public static getState() {
-    return applicationState;
-  }
-
   public static getWebSocketState() {
     return applicationState.__protocol.websocket;
   }
@@ -52,24 +53,14 @@ export abstract class WebSocketClient extends LatencyMonitor {
     WebSocketClient.disconnect();
 
     if (event.reason) {
-      applicationState.last_error = {
-        type: "error",
-        data: {
-          message: event.reason
-        }
-      };
+      flagApplicationError(event.reason);
     }
   }
 
   public static onError(this: WebSocket, _: Event) {
     WebSocketClient.disconnect();
 
-    applicationState.last_error = {
-      type: "connection_issue",
-      data: {
-        message: "Unable to establish connection"
-      }
-    };
+    flagApplicationError("Unable to establish connection", "connection_issue");
   }
 
   public static onMessage(this: WebSocket, event: MessageEvent) {
@@ -130,21 +121,22 @@ export abstract class WebSocketClient extends LatencyMonitor {
           break;
         }
 
+        case "webrtc_offer": {
+          WebRTCClient.handleOffer(payload.data);
+          break;
+        }
+
         case "error": {
-          applicationState.last_error = {
-            type: payload.type,
-            data: payload.data
-          };
+          flagApplicationError(payload.data, payload.type);
+
+          websocketState.is_connecting = false;
+          applicationState.__protocol.rtc.is_connecting = false;
+
           break;
         }
       }
     } catch (error) {
-      applicationState.last_error = {
-        type: "message_parse_error",
-        data: {
-          message: "Unable to parse latest message"
-        }
-      };
+      flagApplicationError("Unable to parse latest message", "message_parse_error");
     }
   }
 
@@ -176,12 +168,7 @@ export abstract class WebSocketClient extends LatencyMonitor {
       websocketState.ws.onclose = WebSocketClient.onClose;
       websocketState.ws.onopen = WebSocketClient.onOpen;
     } catch (error) {
-      applicationState.last_error = {
-        type: "connection_issue",
-        data: {
-          message: "unable to establish connection"
-        }
-      };
+      flagApplicationError("Failed to connect: Server might be offline", "connection_issue");
     }
   }
 
