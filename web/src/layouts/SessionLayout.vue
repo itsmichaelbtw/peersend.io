@@ -2,7 +2,7 @@
 import SessionHeader from "@/components/header/SessionHeader.vue";
 
 import { watch } from "vue";
-import { applicationState } from "@/state/application";
+import { applicationState, socketState, rtcState } from "@/state/application";
 
 import { useToast } from "primevue/usetoast";
 
@@ -26,10 +26,7 @@ watch(
 );
 
 watch(
-  [
-    () => applicationState.__protocol.websocket.is_connected,
-    () => applicationState.__protocol.rtc.is_connected
-  ],
+  [() => socketState.is_connected, () => rtcState.is_connected],
   ([websocketConnected, rtcConnected]) => {
     applicationState.is_connected = websocketConnected || rtcConnected;
   }

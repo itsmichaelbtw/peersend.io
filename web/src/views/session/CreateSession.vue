@@ -6,10 +6,7 @@ import CopyToClipboard from "@/components/CopyToClipboard.vue";
 import { Copy, ArrowRight, Shield, Globe, Clock, Loader2 } from "lucide-vue-next";
 
 import { WebSocketClient } from "@/lib/websocket";
-import { applicationState } from "@/state/application";
-import { useApplicationState } from "@/composables/use-application-state";
-
-const { websocketState } = useApplicationState();
+import { applicationState, socketState } from "@/state/application";
 </script>
 
 <template>
@@ -111,13 +108,13 @@ const { websocketState } = useApplicationState();
 
     <template #footer>
       <Button
-        v-bind:disabled="websocketState.is_connecting"
+        v-bind:disabled="socketState.is_connecting"
         v-on:click="() => WebSocketClient.connect()"
         size="small"
         fluid
       >
-        <Loader2 v-if="websocketState.is_connecting" v-bind:size="18" class="mr-2 animate-spin" />
-        {{ websocketState.is_connecting ? "Creating session..." : "Create session" }}
+        <Loader2 v-if="socketState.is_connecting" v-bind:size="18" class="mr-2 animate-spin" />
+        {{ socketState.is_connecting ? "Creating session..." : "Create session" }}
       </Button>
     </template>
   </SessionDeck>

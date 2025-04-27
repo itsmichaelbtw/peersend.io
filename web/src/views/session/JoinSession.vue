@@ -15,12 +15,9 @@ import { Form } from "@primevue/forms";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
 import { JoinSessionSchema } from "@/config/schemas";
 import { WebSocketClient } from "@/lib/websocket";
-import { applicationState } from "@/state/application";
-import { useApplicationState } from "@/composables/use-application-state";
+import { applicationState, socketState } from "@/state/application";
 
 const router = useRouter();
-
-const { websocketState } = useApplicationState();
 
 watch(applicationState, () => {
   if (applicationState.is_connected) {
@@ -102,18 +99,14 @@ function onFormSubmit(event: FormSubmitEvent): void {
         <div class="mt-4">
           <Button
             type="submit"
-            v-bind:disabled="websocketState.is_connecting"
+            v-bind:disabled="socketState.is_connecting"
             color="primary"
             size="small"
             fluid
           >
-            <Loader2
-              v-if="websocketState.is_connecting"
-              v-bind:size="18"
-              class="mr-2 animate-spin"
-            />
-            {{ websocketState.is_connecting ? "Joining..." : "Join" }}
-            <ArrowRight v-if="!websocketState.is_connecting" v-bind:size="18" />
+            <Loader2 v-if="socketState.is_connecting" v-bind:size="18" class="mr-2 animate-spin" />
+            {{ socketState.is_connecting ? "Joining..." : "Join" }}
+            <ArrowRight v-if="!socketState.is_connecting" v-bind:size="18" />
           </Button>
         </div>
       </Form>

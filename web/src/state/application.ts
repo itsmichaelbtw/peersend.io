@@ -28,14 +28,12 @@ export const DEFAULT_APPLICATION_STATE: ApplicationState = {
   latency: -1,
   last_error: null,
   encryption_mode: "none",
-  connection_type: "none",
-  __protocol: {
-    websocket: DEFAULT_WEBSOCKET_STATE,
-    rtc: DEFAULT_WEBRTC_STATE
-  }
+  connection_type: "none"
 };
 
 export const applicationState = reactive<ApplicationState>(DEFAULT_APPLICATION_STATE);
+export const socketState = reactive<WebSocketConnectionState>(DEFAULT_WEBSOCKET_STATE);
+export const rtcState = reactive<WebRTCConnectionState>(DEFAULT_WEBRTC_STATE);
 
 export function flagApplicationError(
   message: string,

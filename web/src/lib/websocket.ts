@@ -5,7 +5,11 @@ import { router } from "@/router";
 import { WEBSOCKET_ENDPOINT } from "@/config/constants";
 import {
   DEFAULT_APPLICATION_STATE,
+  DEFAULT_WEBRTC_STATE,
+  DEFAULT_WEBSOCKET_STATE,
   applicationState,
+  socketState,
+  rtcState,
   flagApplicationError
 } from "@/state/application";
 import { wsCloseReason } from "@/utils/close-reason";
@@ -15,18 +19,12 @@ import { sleep } from "@/utils/sleep";
 import { WebRTCClient } from "./webrtc";
 
 export abstract class WebSocketClient extends LatencyMonitor {
-  public static getWebSocketState() {
-    return applicationState.__protocol.websocket;
-  }
-
   public static emit(type: string, data: Record<string, any>) {
-    const websocketState = WebSocketClient.getWebSocketState();
-
-    if (!websocketState.ws || !websocketState.is_connected) {
+    if (!socketState.ws || !socketState.is_connected) {
       return;
     }
 
-    websocketState.ws.send(
+    socketState.ws.send(
       JSON.stringify({
         type: type,
         data: data
@@ -37,10 +35,8 @@ export abstract class WebSocketClient extends LatencyMonitor {
   public static onOpen(this: WebSocket, _: Event) {}
 
   public static onClose(this: WebSocket, event: CloseEvent) {
-    const websocketState = WebSocketClient.getWebSocketState();
-
-    websocketState.is_connected = false;
-    websocketState.is_connecting = false;
+    socketState.is_connected = false;
+    socketState.is_connecting = false;
 
     WebSocketClient.stopLatencyMonitoring();
 
@@ -64,10 +60,8 @@ export abstract class WebSocketClient extends LatencyMonitor {
   }
 
   public static onMessage(this: WebSocket, event: MessageEvent) {
-    const websocketState = WebSocketClient.getWebSocketState();
-
-    if (websocketState.is_connecting) {
-      websocketState.is_connecting = false;
+    if (socketState.is_connecting) {
+      socketState.is_connecting = false;
     }
 
     if (applicationState.last_error) {
@@ -79,7 +73,7 @@ export abstract class WebSocketClient extends LatencyMonitor {
 
       switch (payload.type) {
         case "session_information": {
-          websocketState.is_connected = true;
+          socketState.is_connected = true;
           applicationState.is_connected = true;
 
           applicationState.client_id = payload.data.client_id;
@@ -129,8 +123,8 @@ export abstract class WebSocketClient extends LatencyMonitor {
         case "error": {
           flagApplicationError(payload.data, payload.type);
 
-          websocketState.is_connecting = false;
-          applicationState.__protocol.rtc.is_connecting = false;
+          socketState.is_connecting = false;
+          rtcState.is_connecting = false;
 
           break;
         }
@@ -141,13 +135,11 @@ export abstract class WebSocketClient extends LatencyMonitor {
   }
 
   public static async connect(sessionCode: WithNullable<string>) {
-    const websocketState = WebSocketClient.getWebSocketState();
-
-    if (websocketState.is_connecting || websocketState.is_connected) {
+    if (socketState.is_connecting || socketState.is_connected) {
       return;
     }
 
-    websocketState.is_connecting = true;
+    socketState.is_connecting = true;
 
     await sleep(500);
 
@@ -161,22 +153,20 @@ export abstract class WebSocketClient extends LatencyMonitor {
     }
 
     try {
-      websocketState.ws = new WebSocket(url.toString());
+      socketState.ws = new WebSocket(url.toString());
 
-      websocketState.ws.onmessage = WebSocketClient.onMessage;
-      websocketState.ws.onerror = WebSocketClient.onError;
-      websocketState.ws.onclose = WebSocketClient.onClose;
-      websocketState.ws.onopen = WebSocketClient.onOpen;
+      socketState.ws.onmessage = WebSocketClient.onMessage;
+      socketState.ws.onerror = WebSocketClient.onError;
+      socketState.ws.onclose = WebSocketClient.onClose;
+      socketState.ws.onopen = WebSocketClient.onOpen;
     } catch (error) {
       flagApplicationError("Failed to connect: Server might be offline", "connection_issue");
     }
   }
 
   public static disconnect() {
-    const websocketState = WebSocketClient.getWebSocketState();
-
-    if (websocketState.ws) {
-      websocketState.ws = null;
+    if (socketState.ws) {
+      socketState.ws = null;
     }
 
     WebSocketClient.stopLatencyMonitoring();
@@ -186,6 +176,8 @@ export abstract class WebSocketClient extends LatencyMonitor {
   public static reset() {
     console.warn("Resetting WebSocket state");
 
+    Object.assign(rtcState, structuredClone(DEFAULT_WEBRTC_STATE));
+    Object.assign(socketState, structuredClone(DEFAULT_WEBSOCKET_STATE));
     Object.assign(applicationState, structuredClone(DEFAULT_APPLICATION_STATE));
   }
 }

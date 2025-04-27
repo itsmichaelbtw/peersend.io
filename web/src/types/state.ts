@@ -1,6 +1,6 @@
 import type { WithNullable } from "./misc";
-import type { WebSocketConnectionState, IncomingWebSocketMessageType } from "./websocket";
-import type { WebRTCConnectionState, IncomingWebRTCMessageType } from "./webrtc";
+import type { IncomingWebSocketMessageType } from "./websocket";
+import type { IncomingWebRTCMessageType } from "./webrtc";
 
 export interface ConnectionErrorData {
   message: string;
@@ -24,8 +24,4 @@ export interface ApplicationState {
   maximum_clients: number;
   last_error: WithNullable<IncomingTransmissionData<ConnectionErrorData>>;
   connection_type: "websocket" | "webrtc" | "none";
-  __protocol: {
-    websocket: WebSocketConnectionState;
-    rtc: WebRTCConnectionState;
-  };
 }
