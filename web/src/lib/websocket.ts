@@ -54,9 +54,7 @@ export abstract class WebSocketClient extends LatencyMonitor {
   }
 
   public static onError(this: WebSocket, _: Event) {
-    WebSocketClient.disconnect();
-
-    flagApplicationError("Unable to establish connection", "connection_issue");
+    flagApplicationError("Failed to connect: Server might be offline", "connection_issue");
   }
 
   public static onMessage(this: WebSocket, event: MessageEvent) {
@@ -160,7 +158,7 @@ export abstract class WebSocketClient extends LatencyMonitor {
       socketState.ws.onclose = WebSocketClient.onClose;
       socketState.ws.onopen = WebSocketClient.onOpen;
     } catch (error) {
-      flagApplicationError("Failed to connect: Server might be offline", "connection_issue");
+      flagApplicationError("Unable to establish connection", "connection_issue");
     }
   }
 
