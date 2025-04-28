@@ -11,6 +11,7 @@ export type IncomingWebSocketMessageType =
   | "host_transfer"
   | "transfer_host_request"
   | "pong"
+  | "ping"
   | "webrtc_offer"
   | "webrtc_reject"
   | "webrtc_accept"

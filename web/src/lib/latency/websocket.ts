@@ -1,32 +1,21 @@
 import type { PongData } from "./checker";
 
 import { LatencyChecker } from "./checker";
+import { WebSocketClient } from "../websocket";
 import { applicationState } from "@/state/application";
 
 export class WebSocketLatencyChecker extends LatencyChecker {
-  private ws: WebSocket;
-
-  constructor(ws: WebSocket) {
+  constructor() {
     super();
-    this.ws = ws;
   }
 
   /**
    * Send a ping via WebSocket
    */
   public ping(): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      return;
-    }
-
-    const pingMessage = {
-      type: "ping",
-      data: {
-        client_timestamp: Date.now()
-      }
-    };
-
-    this.ws.send(JSON.stringify(pingMessage));
+    WebSocketClient.emit("ping", {
+      client_timestamp: Date.now()
+    });
   }
 
   /**

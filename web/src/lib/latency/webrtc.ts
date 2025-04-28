@@ -1,31 +1,21 @@
 import type { PongData } from "./checker";
 
 import { LatencyChecker } from "./checker";
+import { WebRTCClient } from "../webrtc";
+import { applicationState } from "@/state/application";
 
 export class WebRTCLatencyChecker extends LatencyChecker {
-  private dataChannel: RTCDataChannel;
-
-  constructor(dataChannel: RTCDataChannel) {
+  constructor() {
     super();
-    this.dataChannel = dataChannel;
   }
 
   /**
    * Send a ping via WebRTC data channel
    */
   public ping(): void {
-    if (!this.dataChannel || this.dataChannel.readyState !== "open") {
-      return;
-    }
-
-    // const pingMessage = {
-    //   type: "ping",
-    //   data: {
-    //     timestamp: Date.now()
-    //   }
-    // };
-
-    // this.dataChannel.send(JSON.stringify(pingMessage));
+    WebRTCClient.emit("ping", {
+      client_timestamp: Date.now()
+    });
   }
 
   /**
@@ -37,6 +27,6 @@ export class WebRTCLatencyChecker extends LatencyChecker {
   }
 
   public updateLatency(latency: number): void {
-    console.log(`Latency: ${latency} ms`);
+    applicationState.latency = latency;
   }
 }

@@ -52,7 +52,7 @@ onBeforeMount(() => {
           v-bind:value="applicationState.session_code"
         >
           <button
-            class="cursor-pointer rounded-sm px-2 py-1.5 text-gray-500 hover:bg-gray-200 hover:text-black active:translate-y-1"
+            class="cursor-pointer rounded-sm px-2 py-1.5 text-gray-500 hover:bg-gray-200 hover:text-black"
           >
             <span class="inline-block align-middle font-mono text-base">{{
               applicationState.session_code

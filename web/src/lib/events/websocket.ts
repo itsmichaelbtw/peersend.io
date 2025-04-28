@@ -61,7 +61,7 @@ export abstract class WebSocketEvents {
           applicationState.encryption_mode = payload.data.encryption_mode;
           applicationState.connection_type = "websocket";
 
-          WebSocketClient.setupLatencyChecker(new WebSocketLatencyChecker(this));
+          WebSocketClient.setupLatencyChecker(new WebSocketLatencyChecker());
           break;
 
         case "pong":

@@ -29,12 +29,14 @@ export abstract class WebRTCClient extends LatencyMonitor {
       return;
     }
 
-    rtcState.dataChannel!.send(
-      JSON.stringify({
-        type: type,
-        data: data
-      })
-    );
+    if (rtcState.dataChannel.readyState === "open") {
+      rtcState.dataChannel!.send(
+        JSON.stringify({
+          type: type,
+          data: data
+        })
+      );
+    }
   }
 
   public static async handleICECandidate(candidate: RTCIceCandidate) {
@@ -160,6 +162,10 @@ export abstract class WebRTCClient extends LatencyMonitor {
       rtcState.dataChannel = dataChannel;
       rtcState.peerConnection = peerConnection;
 
+      PeerConnectionEvents.onDataChannel.call(peerConnection, {
+        channel: dataChannel
+      } as any);
+
       WebSocketClient.emit("webrtc_offer", {
         description: peerConnection.localDescription!.toJSON()
       });
@@ -179,16 +185,20 @@ export abstract class WebRTCClient extends LatencyMonitor {
       rtcState.peerConnection.close();
     }
 
+    WebRTCClient.stopLatencyMonitoring();
     WebRTCClient.reset();
+
+    // when disconnecting from RTC, we want to reset
+    // the latency check back to the WebSocketClient
+    WebSocketClient.startLatencyMonitoring();
 
     flagApplicationError("Direct connection has been lost");
   }
 
   public static reset() {
-    console.warn("Resetting WebSocket state");
-
     Object.assign(rtcState, structuredClone(DEFAULT_WEBRTC_STATE));
 
     applicationState.connection_type = "websocket";
+    applicationState.latency = -1;
   }
 }
