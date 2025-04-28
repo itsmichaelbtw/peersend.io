@@ -1,7 +1,7 @@
 import type { WithNullable } from "./misc";
 import type { ConnectionState } from "./connection";
 
-export type IncomingWebRTCMessageType = "webrtc_offer";
+export type IncomingWebRTCMessageType = "";
 
 export interface WebRTCConnectionState extends ConnectionState {
   dataChannel: WithNullable<RTCDataChannel>;

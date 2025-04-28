@@ -8,8 +8,10 @@ import DirectConnectionPrompt from "@/components/session/connection-state/Direct
 import FileTransfer from "@/components/session/file-transfer/FileTransfer.vue";
 import WaitingForConnections from "@/components/session/connection-state/WaitingForConnections.vue";
 import DeveloperControls from "@/components/session/DeveloperControls.vue";
+import UpgradeDialog from "@/components/session/upgrade-dialog/Dialog.vue";
 
 import { applicationState } from "@/state/application";
+import { dialogState } from "@/state/dialog";
 import { WebSocketClient } from "@/lib/websocket";
 import { onBeforeMount } from "vue";
 import { useRouter } from "vue-router";
@@ -26,6 +28,10 @@ onBeforeMount(() => {
 </script>
 
 <template>
+  <UpgradeDialog
+    v-bind:visible="dialogState.upgradeDialogVisible"
+    v-bind:onChange="(visible: boolean) => (dialogState.upgradeDialogVisible = visible)"
+  />
   <template v-if="applicationState.is_connected && applicationState.connection_type != 'none'">
     <Message severity="warn" class="w-full select-none">
       <template #icon>

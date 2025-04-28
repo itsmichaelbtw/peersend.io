@@ -9,7 +9,12 @@ export type IncomingWebSocketMessageType =
   | "message_parse_error"
   | "session_full"
   | "host_transfer"
+  | "transfer_host_request"
   | "pong"
+  | "webrtc_offer"
+  | "webrtc_reject"
+  | "webrtc_accept"
+  | "webrtc_ice_candidate"
   | "error";
 
 export interface WebSocketConnectionState extends ConnectionState {

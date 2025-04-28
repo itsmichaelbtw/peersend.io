@@ -4,7 +4,7 @@ import Select from "primevue/select";
 
 import SelectButton from "primevue/selectbutton";
 
-import { websocketState } from "@/state/websocket";
+import { applicationState } from "@/state/application";
 import { UserCog } from "lucide-vue-next";
 </script>
 
@@ -34,9 +34,9 @@ import { UserCog } from "lucide-vue-next";
           <p className="text-xs text-muted-foreground">Toggle between host and guest views</p>
         </div>
         <div className="flex items-center space-x-2">
-          <span v-if="websocketState.is_host" className="text-xs">Host</span>
+          <span v-if="applicationState.is_host" className="text-xs">Host</span>
           <span v-else className="text-xs">Guest</span>
-          <ToggleSwitch v-model="websocketState.is_host" />
+          <ToggleSwitch v-model="applicationState.is_host" />
         </div>
       </div>
 
@@ -48,10 +48,10 @@ import { UserCog } from "lucide-vue-next";
           <p className="text-xs text-muted-foreground">Simulate connection state</p>
         </div>
         <Select
-          v-model="websocketState.connection_type"
+          v-model="applicationState.connection_type"
           v-bind:options="[
-            { name: 'Signal', code: 'signal' },
-            { name: 'Direct', code: 'direct' },
+            { name: 'WebSocket', code: 'websocket' },
+            { name: 'WebRTC', code: 'webrtc' },
             { name: 'None', code: 'none' }
           ]"
           option-label="name"
@@ -70,7 +70,7 @@ import { UserCog } from "lucide-vue-next";
         </div>
 
         <SelectButton
-          v-model="websocketState.clients.length"
+          v-model="applicationState.clients.length"
           v-bind:options="[1, 2]"
           size="small"
         />

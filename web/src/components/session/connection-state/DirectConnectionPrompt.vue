@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import UpgradeDialog from "../upgrade-dialog/UpgradeDialog.vue";
-
-import { ref } from "vue";
 import { Router } from "lucide-vue-next";
 
-const dialogVisible = ref(false);
+import { dialogState } from "@/state/dialog";
 </script>
 
 <template>
-  <UpgradeDialog
-    v-bind:visible="dialogVisible"
-    v-bind:onChange="(visible: boolean) => (dialogVisible = visible)"
-  />
   <Card>
     <template #title>Establish Direct Connection</template>
     <template #subtitle>File transfers require a peer-to-peer WebRTC connection</template>
@@ -26,7 +19,7 @@ const dialogVisible = ref(false);
           connection first.
         </p>
 
-        <Button size="small" class="mt-8" v-on:click="dialogVisible = true">
+        <Button size="small" class="mt-8" v-on:click="dialogState.upgradeDialogVisible = true">
           Establish Connection
         </Button>
       </div>

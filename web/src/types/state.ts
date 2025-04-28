@@ -25,3 +25,7 @@ export interface ApplicationState {
   last_error: WithNullable<IncomingTransmissionData<ConnectionErrorData>>;
   connection_type: "websocket" | "webrtc" | "none";
 }
+
+export interface DialogState {
+  upgradeDialogVisible: boolean;
+}

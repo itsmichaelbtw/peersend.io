@@ -31,9 +31,13 @@ export const DEFAULT_APPLICATION_STATE: ApplicationState = {
   connection_type: "none"
 };
 
-export const applicationState = reactive<ApplicationState>(DEFAULT_APPLICATION_STATE);
-export const socketState = reactive<WebSocketConnectionState>(DEFAULT_WEBSOCKET_STATE);
-export const rtcState = reactive<WebRTCConnectionState>(DEFAULT_WEBRTC_STATE);
+export const applicationState = reactive<ApplicationState>(
+  structuredClone(DEFAULT_APPLICATION_STATE)
+);
+export const socketState = reactive<WebSocketConnectionState>(
+  structuredClone(DEFAULT_WEBSOCKET_STATE)
+);
+export const rtcState = reactive<WebRTCConnectionState>(structuredClone(DEFAULT_WEBRTC_STATE));
 
 export function flagApplicationError(
   message: string,

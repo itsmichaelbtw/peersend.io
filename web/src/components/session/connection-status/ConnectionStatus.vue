@@ -13,7 +13,7 @@ import { useClsx } from "@/composables/use-clsx";
 
 const { classNames, joinCls } = useClsx({
   icon: {
-    "bg-primary/50": applicationState.connection_type === "webrtc",
+    "bg-primary/10": applicationState.connection_type === "webrtc",
     "bg-gray-200 dark:bg-gray-600": applicationState.connection_type === "websocket"
   }
 });

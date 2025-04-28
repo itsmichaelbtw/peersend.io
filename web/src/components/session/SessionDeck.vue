@@ -10,11 +10,11 @@ defineProps<ComponentTypes.SessionProps.Deck>();
 
 <template>
   <div class="mx-auto w-full max-w-md space-y-6">
-    <BackNavigation :text="heading" :to="backNavigation" />
+    <BackNavigation v-bind:text="heading" v-bind:to="backNavigation" />
 
     <Card
       class="not-sm:rounded-none! not-sm:border-none! not-sm:shadow-none!"
-      :pt="{
+      v-bind:pt="{
         subtitle: {
           class: 'leading-tight'
         },
@@ -43,7 +43,7 @@ defineProps<ComponentTypes.SessionProps.Deck>();
     <div class="mt-6 text-center" v-if="alternative">
       <p class="text-sm text-gray-500">
         {{ alternative.text }}
-        <RouterLink :to="alternative.link" class="text-primary hover:underline">
+        <RouterLink v-bind:to="alternative.link" class="text-primary hover:underline">
           {{ alternative.linkText }}
         </RouterLink>
       </p>
