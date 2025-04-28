@@ -1,191 +1,194 @@
-import { deliverPayload, state } from "./websocket";
-import { reactive } from "vue";
+import type { WithNullable } from "@/types/misc";
 
-const rtcConfiguration: RTCConfiguration = {
+import {
+  applicationState,
+  rtcState,
+  flagApplicationError,
+  DEFAULT_WEBRTC_STATE
+} from "@/state/application";
+import { LatencyMonitor } from "./latency/monitor";
+import { WebSocketClient } from "./websocket";
+import { PeerConnectionEvents } from "./events/webrtc";
+
+import { sleep } from "@/utils/sleep";
+
+const RTC_CONFIGURATION: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }]
 };
 
-let peerConnection: RTCPeerConnection | null = null;
-let dataChannel: RTCDataChannel | null = null;
+function attachListeners(connection: RTCPeerConnection) {
+  connection.onicecandidate = PeerConnectionEvents.onICECandidate;
+  connection.oniceconnectionstatechange = PeerConnectionEvents.onICEConnectionStateChange;
+  connection.onconnectionstatechange = PeerConnectionEvents.onConnectionStateChange;
+  connection.ondatachannel = PeerConnectionEvents.onDataChannel;
+}
 
-export const rtcState = reactive({
-  isConnected: false
-});
-
-export async function initialiseDirectConnection(): Promise<void> {
-  if (!state.is_host) {
-    console.error("Only the host can initiate a direct connection");
-    return;
-  }
-
-  peerConnection = new RTCPeerConnection(rtcConfiguration);
-
-  dataChannel = peerConnection.createDataChannel("messageChannel");
-
-  setupDataChannel(dataChannel);
-  setupPeerConnectionEvents(peerConnection);
-
-  try {
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-
-    if (!peerConnection.localDescription) {
-      throw new Error("Local description is null");
+export abstract class WebRTCClient extends LatencyMonitor {
+  public static emit(type: string, data: Record<string, any>) {
+    if (!rtcState.dataChannel || !rtcState.is_connected) {
+      return;
     }
 
-    // convert these to enums
-    deliverPayload("signal", {
-      type: "webrtc_offer",
-      offer: peerConnection.localDescription?.toJSON()
-    });
-
-    console.log("WebRTC offer created and sent");
-  } catch (error) {
-    console.error("Error creating WebRTC offer:", error);
-  }
-}
-
-export async function handleOffer(offer: RTCSessionDescriptionInit): Promise<void> {
-  if (state.is_host) {
-    console.error("Host should not receive WebRTC offers");
-    return;
+    rtcState.dataChannel!.send(
+      JSON.stringify({
+        type: type,
+        data: data
+      })
+    );
   }
 
-  console.log("Received WebRTC offer:", offer);
-
-  peerConnection = new RTCPeerConnection(rtcConfiguration);
-
-  setupPeerConnectionEvents(peerConnection);
-
-  peerConnection.ondatachannel = (event) => {
-    dataChannel = event.channel;
-    setupDataChannel(dataChannel);
-  };
-
-  try {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-
-    deliverPayload("signal", {
-      type: "webrtc_answer",
-      answer: peerConnection.localDescription
-    });
-
-    console.log("WebRTC answer created and sent");
-  } catch (error) {
-    console.error("Error handling WebRTC offer:", error);
-  }
-}
-
-export async function handleAnswer(answer: RTCSessionDescriptionInit): Promise<void> {
-  if (!state.is_host || !peerConnection) {
-    console.error("Cannot handle answer: not host or no connection");
-    return;
-  }
-
-  console.log("Received WebRTC answer:", answer);
-
-  try {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-    console.log("Remote description set successfully");
-  } catch (error) {
-    console.error("Error handling WebRTC answer:", error);
-  }
-}
-
-export function handleIceCandidate(candidate: RTCIceCandidateInit): void {
-  if (!peerConnection) {
-    console.error("Cannot handle ICE candidate: no connection");
-    return;
-  }
-
-  console.log("Received ICE candidate:", candidate);
-
-  try {
-    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-  } catch (error) {
-    console.error("Error adding ICE candidate:", error);
-  }
-}
-
-function setupPeerConnectionEvents(pc: RTCPeerConnection): void {
-  pc.onicecandidate = (event) => {
-    if (event.candidate) {
-      deliverPayload("signal", {
-        type: "webrtc_ice_candidate",
-        candidate: event.candidate
+  public static async handleICECandidate(candidate: RTCIceCandidate) {
+    if (!rtcState.peerConnection) {
+      WebRTCClient.disconnect();
+      WebSocketClient.emit("webrtc_reject", {
+        reason: "Peer connection faulty"
       });
+
+      return flagApplicationError("WebRTC connection is faulty");
     }
-  };
 
-  pc.onconnectionstatechange = () => {
-    console.log("Connection state:", pc.connectionState);
+    try {
+      await rtcState.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (error: any) {
+      WebRTCClient.disconnect();
+      WebSocketClient.emit("webrtc_reject", {});
 
-    // Update the connection state
-    if (pc.connectionState === "connected") {
-      rtcState.isConnected = true;
-    } else if (
-      pc.connectionState === "disconnected" ||
-      pc.connectionState === "failed" ||
-      pc.connectionState === "closed"
-    ) {
-      rtcState.isConnected = false;
+      flagApplicationError(error?.message || "Invalid ICE candidate received");
     }
-  };
-
-  pc.oniceconnectionstatechange = () => {
-    console.log("ICE connection state:", pc.iceConnectionState);
-  };
-}
-
-function setupDataChannel(channel: RTCDataChannel): void {
-  channel.onopen = () => {
-    console.log("Data channel opened");
-    rtcState.isConnected = true;
-  };
-
-  channel.onclose = () => {
-    console.log("Data channel closed");
-    rtcState.isConnected = false;
-  };
-
-  channel.onmessage = (event) => {
-    console.log("Received message:", event.data);
-  };
-
-  channel.onerror = (error) => {
-    console.error("Data channel error:", error);
-  };
-}
-
-// Add a function to send a message over the data channel
-export function sendMessage(message: string = "Hi, I have connected"): void {
-  if (!dataChannel || dataChannel.readyState !== "open") {
-    console.error("Cannot send message: data channel not open");
-    return;
   }
 
-  dataChannel.send(message);
-  console.log("Message sent:", message);
-}
+  public static async handleOffer(offer: RTCSessionDescriptionInit) {
+    if (applicationState.is_host) {
+      WebRTCClient.disconnect();
+      WebSocketClient.emit("webrtc_reject", {
+        reason: "Host somehow received a WebRTC offer"
+      });
 
-export function isRtcConnected(): boolean {
-  return rtcState.isConnected;
-}
+      return flagApplicationError("Host should not receive WebRTC offers");
+    }
 
-export function closeRtcConnection(): void {
-  if (dataChannel) {
-    dataChannel.close();
-    dataChannel = null;
+    let peerConnection: WithNullable<RTCPeerConnection> = null;
+
+    try {
+      peerConnection = new RTCPeerConnection(RTC_CONFIGURATION);
+      attachListeners(peerConnection);
+
+      rtcState.peerConnection = peerConnection;
+
+      const description = new RTCSessionDescription(offer);
+      await peerConnection.setRemoteDescription(description);
+
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+
+      if (!peerConnection.remoteDescription || !peerConnection.localDescription) {
+        throw new Error("Offer was received but quickly rejected");
+      }
+
+      WebSocketClient.emit("webrtc_accept", {
+        description: peerConnection.localDescription!.toJSON()
+      });
+    } catch (error: any) {
+      WebRTCClient.disconnect();
+      WebSocketClient.emit("webrtc_reject", {});
+
+      flagApplicationError(error?.message || "Incoming WebRTC connection failed to accept offer");
+    }
   }
 
-  if (peerConnection) {
-    peerConnection.close();
-    peerConnection = null;
+  public static async acceptOffer(answer: RTCSessionDescriptionInit) {
+    if (!applicationState.is_host) {
+      WebRTCClient.disconnect();
+      WebSocketClient.emit("webrtc_reject", {
+        reason: "Host connection faulty"
+      });
+
+      return flagApplicationError("Only the host can accept a WebRTC answer");
+    }
+
+    if (!rtcState.peerConnection) {
+      WebRTCClient.disconnect();
+      WebSocketClient.emit("webrtc_reject", {
+        reason: "Host connection faulty"
+      });
+
+      return flagApplicationError("Missing host peer connection");
+    }
+
+    try {
+      const description = new RTCSessionDescription(answer);
+      await rtcState.peerConnection.setRemoteDescription(description);
+    } catch (error: any) {
+      WebRTCClient.disconnect();
+      WebSocketClient.emit("webrtc_reject", {});
+
+      flagApplicationError(error?.message || "Failed to set remote description");
+    }
   }
 
-  rtcState.isConnected = false;
-  console.log("WebRTC connection closed");
+  public static declineOffer(reason?: string) {
+    WebRTCClient.disconnect();
+
+    flagApplicationError(reason || "Connection refused between other peer");
+  }
+
+  public static async connect() {
+    if (!applicationState.is_host) {
+      flagApplicationError("Only a host can initiate a direct connection");
+      return;
+    }
+
+    rtcState.is_connecting = true;
+
+    let peerConnection: WithNullable<RTCPeerConnection> = null;
+
+    try {
+      peerConnection = new RTCPeerConnection(RTC_CONFIGURATION);
+      attachListeners(peerConnection);
+
+      await sleep(500);
+
+      const dataChannel = peerConnection.createDataChannel("peersend.io/rtc");
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      if (!peerConnection.localDescription) {
+        throw new Error("Local description is null. Cannot offer connection");
+      }
+
+      rtcState.dataChannel = dataChannel;
+      rtcState.peerConnection = peerConnection;
+
+      WebSocketClient.emit("webrtc_offer", {
+        description: peerConnection.localDescription!.toJSON()
+      });
+    } catch (error: any) {
+      WebRTCClient.disconnect();
+
+      flagApplicationError(error?.message || "Unable to offer a WebRTC connection");
+    }
+  }
+
+  public static disconnect() {
+    if (rtcState.dataChannel) {
+      rtcState.dataChannel.close();
+    }
+
+    if (rtcState.peerConnection) {
+      rtcState.peerConnection.close();
+    }
+
+    WebRTCClient.reset();
+
+    flagApplicationError("Direct connection has been lost");
+  }
+
+  public static reset() {
+    console.warn("Resetting WebSocket state");
+
+    Object.assign(rtcState, structuredClone(DEFAULT_WEBRTC_STATE));
+
+    applicationState.connection_type = "websocket";
+  }
 }
