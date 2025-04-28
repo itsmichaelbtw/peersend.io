@@ -51,10 +51,14 @@ onBeforeMount(() => {
           v-if="applicationState.session_code"
           v-bind:value="applicationState.session_code"
         >
-          <Button variant="text" severity="contrast" class="text-gray-500 hover:bg-gray-100!">
-            <span class="font-mono text-base">{{ applicationState.session_code }}</span>
-            <Copy v-bind:size="18" class="ml-2" />
-          </Button>
+          <button
+            class="cursor-pointer rounded-sm px-2 py-1.5 text-gray-500 hover:bg-gray-200 hover:text-black active:translate-y-1"
+          >
+            <span class="inline-block align-middle font-mono text-base">{{
+              applicationState.session_code
+            }}</span>
+            <Copy v-bind:size="18" class="ml-2 inline-block align-middle" />
+          </button>
         </CopyToClipboard>
 
         <Badge v-if="applicationState.connection_type === 'websocket'" severity="secondary">

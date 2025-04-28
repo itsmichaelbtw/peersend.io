@@ -20,9 +20,11 @@ import { applicationState, socketState } from "@/state/application";
             <p class="font-mono text-sm" v-cloak>{{ applicationState.session_code }}</p>
 
             <CopyToClipboard v-bind:value="applicationState.session_code">
-              <Button variant="text" severity="secondary">
+              <button
+                class="flex size-10 cursor-pointer items-center justify-center rounded-md hover:bg-gray-200"
+              >
                 <Copy v-bind:size="20" />
-              </Button>
+              </button>
             </CopyToClipboard>
           </div>
         </template>
