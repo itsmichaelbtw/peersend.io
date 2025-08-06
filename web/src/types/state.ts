@@ -2,6 +2,12 @@ import type { WithNullable } from "./misc";
 import type { IncomingWebSocketMessageType } from "./websocket";
 import type { IncomingWebRTCMessageType } from "./webrtc";
 
+export interface CustomFile {
+  id: string;
+  timestamp: number;
+  file: File;
+}
+
 export interface ConnectionErrorData {
   message: string;
 }
@@ -28,4 +34,11 @@ export interface ApplicationState {
 
 export interface DialogState {
   upgradeDialogVisible: boolean;
+}
+
+export interface FileState {
+  incoming_files: CustomFile[];
+  outgoing_files: CustomFile[];
+  is_sending: boolean;
+  is_receiving: boolean;
 }

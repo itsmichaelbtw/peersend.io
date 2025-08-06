@@ -1,13 +1,9 @@
 import path from "path";
+import tsconfigPaths from "vite-tsconfig-paths";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 import { defineConfig } from "vite";
-import { PrimeVueResolver } from "unplugin-vue-components/resolvers";
-
-import tailwindcss from "@tailwindcss/vite";
-import vue from "@vitejs/plugin-vue";
-import tsconfigPaths from "vite-tsconfig-paths";
-
-import Components from "unplugin-vue-components/vite";
 
 export default defineConfig({
   resolve: {
@@ -15,5 +11,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src")
     }
   },
-  plugins: [vue(), tailwindcss(), tsconfigPaths(), Components({ resolvers: [PrimeVueResolver()] })]
+  plugins: [react(), tailwindcss(), tsconfigPaths()]
 });
