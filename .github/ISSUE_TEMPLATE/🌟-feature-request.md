@@ -1,7 +1,7 @@
 ---
 name: "\U0001F31F Feature Request"
 about: Suggest an idea for this project
-title: "[FEATURE] "
+title: "[feature] "
 labels: enchancement
 assignees: ""
 
