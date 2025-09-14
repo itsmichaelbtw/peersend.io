@@ -1,6 +1,10 @@
+import type { CustomDataChannel, CustomRTCPeerConnection, CustomWebSocket } from "@/lib/networking";
 import type { WithNullable } from "./misc";
-import type { IncomingWebSocketMessageType } from "./websocket";
-import type { IncomingWebRTCMessageType } from "./webrtc";
+
+export interface ConnectionState {
+  isConnected: boolean;
+  isConnecting: boolean;
+}
 
 export interface CustomFile {
   id: string;
@@ -9,36 +13,45 @@ export interface CustomFile {
 }
 
 export interface ConnectionErrorData {
+  title: string;
   message: string;
 }
 
+export interface WebRtcConnectionState extends ConnectionState {
+  dataChannel: WithNullable<CustomDataChannel>;
+  peerConnection: WithNullable<CustomRTCPeerConnection>;
+}
+
+export interface WebSocketConnectionState extends ConnectionState {
+  ws: WithNullable<CustomWebSocket>;
+}
+
 export type EncryptionModes = "none";
-export interface IncomingTransmissionData<D extends Record<string, any>> {
-  type: IncomingWebSocketMessageType | IncomingWebRTCMessageType;
-  data: D;
+export type NetworkConnectionTypes = "websocket" | "webrtc" | "none";
+
+export interface AppState {
+  sessionState: SessionState;
+  webrtcState: WebRtcConnectionState;
+  websocketState: WebSocketConnectionState;
 }
 
-export interface ApplicationState {
-  session_code: WithNullable<string>;
-  is_host: boolean;
-  is_connected: boolean;
-  auto_webrtc: boolean;
-  encryption_mode: EncryptionModes;
+export interface SessionState {
+  sessionCode: WithNullable<string>;
+  isHost: boolean;
+  isConnected: boolean;
+  autoWebRTC: boolean;
+  encryptionMode: EncryptionModes;
   latency: number;
-  client_id: WithNullable<string>;
+  clientId: WithNullable<string>;
   clients: string[];
-  maximum_clients: number;
-  last_error: WithNullable<IncomingTransmissionData<ConnectionErrorData>>;
-  connection_type: "websocket" | "webrtc" | "none";
-}
-
-export interface DialogState {
-  upgradeDialogVisible: boolean;
+  maximumClients: number;
+  lastError: WithNullable<ConnectionErrorData>;
+  connectionType: NetworkConnectionTypes;
 }
 
 export interface FileState {
-  incoming_files: CustomFile[];
-  outgoing_files: CustomFile[];
-  is_sending: boolean;
-  is_receiving: boolean;
+  incomingFiles: CustomFile[];
+  outgoingFiles: CustomFile[];
+  isSending: boolean;
+  isReceiving: boolean;
 }
