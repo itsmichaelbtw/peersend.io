@@ -1,10 +1,12 @@
 import type { RecursivePartial } from "@/types/misc";
 
-type Listener<T> = (state: T) => void;
+type State = Record<string, any>;
+type Listener<T extends State> = (state: T) => void;
 
 export type StateUpdate<T> = RecursivePartial<T>;
+export type StateUpdateFunction<T> = (current: T, state: StateUpdate<T>) => void;
 
-class StateStore<T> {
+export abstract class StateStore<T extends State> {
   private state: T;
   private listeners: Set<Listener<T>> = new Set();
 
@@ -25,8 +27,13 @@ class StateStore<T> {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
+
+  public abstract update(state: RecursivePartial<T>): void;
 }
 
-export function createStateStore<T>(initialState: T) {
-  return new StateStore<T>(initialState);
+export function createStateStore<S extends StateStore<T>, T extends State>(
+  Store: new (initialState: T) => S,
+  initialState: T
+) {
+  return new Store(initialState);
 }

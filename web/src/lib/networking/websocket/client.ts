@@ -12,12 +12,7 @@ import {
   DEFAULT_WEBSOCKET_STATE,
   WEBSOCKET_ENDPOINT
 } from "@/config/constants";
-import {
-  getAppState,
-  handleSessionError,
-  isWebSocketConnected,
-  updateState
-} from "@/state/app-state";
+import { appState, handleSessionError, isWebSocketConnected } from "@/state";
 import { sleep } from "@/utils/sleep";
 
 export class WebSocketClient extends NetworkClient<
@@ -34,14 +29,14 @@ export class WebSocketClient extends NetworkClient<
   }
 
   public async connect(sessionCode: WithNullable<string>): Promise<void> {
-    const { websocketState } = getAppState();
+    const { websocketState } = appState.get();
 
     if (isWebSocketConnected() || websocketState.isConnecting) {
       console.warn("WebSocket is already connected or in a connecting state.");
       return;
     }
 
-    updateState({ websocketState: { isConnecting: true } });
+    appState.update({ websocketState: { isConnecting: true } });
     await sleep(500);
 
     try {
@@ -54,7 +49,7 @@ export class WebSocketClient extends NetworkClient<
         url.searchParams.set("mode", "host");
       }
 
-      updateState({ websocketState: { ws: new CustomWebSocket(url.toString()) } });
+      appState.update({ websocketState: { ws: new CustomWebSocket(url.toString()) } });
     } catch (error) {
       handleSessionError({
         title: "Connection Issue",
@@ -64,7 +59,7 @@ export class WebSocketClient extends NetworkClient<
   }
 
   public async disconnect(): Promise<void> {
-    const { websocketState } = getAppState();
+    const { websocketState } = appState.get();
 
     if (websocketState.ws) {
       const readyState = websocketState.ws.readyState;
@@ -79,7 +74,7 @@ export class WebSocketClient extends NetworkClient<
   }
 
   public reset(): void {
-    updateState({
+    appState.update({
       sessionState: DEFAULT_SESSION_STATE,
       webrtcState: DEFAULT_WEBRTC_STATE,
       websocketState: DEFAULT_WEBSOCKET_STATE
@@ -87,7 +82,7 @@ export class WebSocketClient extends NetworkClient<
   }
 
   public emit(event: WebSocketMessages.OutgoingMessage): void {
-    const { websocketState } = getAppState();
+    const { websocketState } = appState.get();
 
     if (!isWebSocketConnected()) {
       console.warn("WebSocket is not connected. Cannot send message.");

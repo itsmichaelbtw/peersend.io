@@ -1,5 +1,6 @@
-import { ArrowUpDownIcon, ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import type { Column } from "@tanstack/react-table";
+
+import { ArrowUpDownIcon, ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 
 interface Props<TData, TValue> {
   title: string;

@@ -1,9 +1,11 @@
+import type { PeerSendFile } from "@/state/types";
+
 import { useMemo } from "react";
 import { SortableHeader } from "../sorting-header";
 import { columnHelper } from "../helper";
 import { formatFileSize } from "../../utils";
 
-export const fileSizeColumn = columnHelper.accessor((row) => row.file, {
+export const fileSizeColumn = columnHelper.accessor((row) => row.metadata, {
   id: "file-size",
   header({ column }) {
     return (
@@ -13,9 +15,9 @@ export const fileSizeColumn = columnHelper.accessor((row) => row.file, {
     );
   },
   cell({ getValue }) {
-    const file = getValue<File>();
+    const metadata = getValue<PeerSendFile["metadata"]>();
     const fileSize = useMemo(() => {
-      return formatFileSize(file.size);
+      return formatFileSize(metadata.size);
     }, []);
 
     return <div className="text-left">{fileSize}</div>;
@@ -24,8 +26,8 @@ export const fileSizeColumn = columnHelper.accessor((row) => row.file, {
   maxSize: 96,
   enableSorting: true,
   sortingFn(a, b) {
-    const sizeA = a.original.file.size;
-    const sizeB = b.original.file.size;
+    const sizeA = a.original.metadata.size;
+    const sizeB = b.original.metadata.size;
 
     return sizeA - sizeB;
   }

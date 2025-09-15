@@ -7,7 +7,7 @@ import { CustomRTCPeerConnection } from "./peer-connection";
 import { events } from "./events";
 
 import { DEFAULT_WEBRTC_STATE } from "@/config/constants";
-import { getAppState, handleSessionError, isWebRtcConnected, updateState } from "@/state/app-state";
+import { appState, handleSessionError, isWebRtcConnected } from "@/state";
 import { sleep } from "@/utils/sleep";
 
 const RTC_CONFIGURATION: RTCConfiguration = {
@@ -25,7 +25,7 @@ export class WebRtcClient extends NetworkClient<
   }
 
   public async connect(): Promise<void> {
-    const { sessionState } = getAppState();
+    const { sessionState } = appState.get();
 
     if (isWebRtcConnected()) {
       return;
@@ -40,7 +40,7 @@ export class WebRtcClient extends NetworkClient<
       return;
     }
 
-    updateState({ webrtcState: { isConnecting: true } });
+    appState.update({ webrtcState: { isConnecting: true } });
     await sleep(500);
 
     try {
@@ -54,7 +54,7 @@ export class WebRtcClient extends NetworkClient<
         throw new Error("Failed to establish a local description");
       }
 
-      updateState({
+      appState.update({
         webrtcState: {
           dataChannel: dc,
           peerConnection: pc
@@ -78,7 +78,7 @@ export class WebRtcClient extends NetworkClient<
   }
 
   public async disconnect(): Promise<void> {
-    const { webrtcState } = getAppState();
+    const { webrtcState } = appState.get();
 
     if (webrtcState.dataChannel) {
       webrtcState.dataChannel.close();
@@ -95,7 +95,7 @@ export class WebRtcClient extends NetworkClient<
   }
 
   public reset(): void {
-    updateState({
+    appState.update({
       sessionState: {
         connectionType: "websocket"
       },
@@ -104,14 +104,18 @@ export class WebRtcClient extends NetworkClient<
   }
 
   public emit(event: WebRtcMessages.OutgoingMessage): void {
-    const { webrtcState } = getAppState();
+    const { webrtcState } = appState.get();
 
     if (!isWebRtcConnected()) {
       return;
     }
 
-    const payload = JSON.stringify(event);
-    webrtcState.dataChannel!.send(payload);
+    if (event.type === "in_file_transit") {
+      webrtcState.dataChannel!.send(event.data);
+    } else {
+      const payload = JSON.stringify(event);
+      webrtcState.dataChannel!.send(payload);
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import type { EncryptionModes, NetworkConnectionTypes } from "@/types/state";
+import type { EncryptionModes, NetworkConnectionTypes } from "@/state/types";
 import type { NetworkMessagePayload } from "../types";
 import type { PongData } from "../core/latency-checker";
 

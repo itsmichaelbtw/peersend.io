@@ -1,6 +1,6 @@
 import type { PongData } from "../core/latency-checker";
 
-import { updateState } from "@/state/app-state";
+import { appState } from "@/state";
 import { LatencyChecker } from "../core/latency-checker";
 import { webrtcClient } from "./client";
 
@@ -20,7 +20,7 @@ export class WebRtcLatencyChecker extends LatencyChecker {
   }
 
   public update_latency(latency: number): void {
-    updateState({
+    appState.update({
       sessionState: {
         latency: latency
       }

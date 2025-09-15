@@ -1,20 +1,32 @@
-import type { PeerSendFile } from "@/context/file-transfer";
+import type { PeerSendFile } from "@/state/types";
 import type { FileWithPath } from "@mantine/dropzone";
 
 import { v4 } from "uuid";
 
-export function createCustomFile(
+export async function createCustomFile(
   file: FileWithPath,
-  transferType: PeerSendFile["transferType"]
-): PeerSendFile {
+  type: PeerSendFile["transfer"]["type"]
+): Promise<PeerSendFile> {
   const id = v4();
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
 
   return {
     id: id,
-    status: "pending",
     timestamp: Date.now(),
-    transferType: transferType,
-    file: file
+    status: "pending",
+    transfer: {
+      type: type,
+      percentage: 0
+    },
+    metadata: {
+      name: file.name,
+      path: file.path,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      bytes: bytes
+    }
   };
 }
 

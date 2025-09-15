@@ -1,7 +1,7 @@
 import type { NetworkClients } from "../utils";
 import type { WebRtcMessages } from "./types";
 
-import { getAppState, handleSessionError, updateState } from "@/state/app-state";
+import { appState, handleSessionError } from "@/state";
 import { getNetworkingClients } from "../utils";
 
 export class CustomDataChannel {
@@ -18,7 +18,7 @@ export class CustomDataChannel {
   }
 
   private on_open(event: Event) {
-    const { sessionState } = getAppState();
+    const { sessionState } = appState.get();
 
     if (sessionState.isHost) {
       return;
@@ -41,11 +41,11 @@ export class CustomDataChannel {
     }
   }
 
-  private on_message(event: MessageEvent) {
-    const { sessionState, webrtcState } = getAppState();
+  private async on_message(event: MessageEvent) {
+    const { sessionState, webrtcState } = appState.get();
 
     if (sessionState.lastError || webrtcState.isConnecting) {
-      updateState({
+      appState.update({
         sessionState: {
           lastError: null
         },
@@ -55,12 +55,28 @@ export class CustomDataChannel {
       });
     }
 
+    switch (true) {
+      case event.data instanceof Blob:
+        const buffer = await event.data.arrayBuffer();
+        this.network_clients.wrtc.message_bus.emit("in_file_transit", buffer);
+        return;
+
+      case event.data instanceof ArrayBuffer:
+        const chunk = new Uint8Array(event.data);
+        this.network_clients.wrtc.message_bus.emit("in_file_transit", chunk);
+        return;
+
+      case event.data instanceof Uint8Array:
+        this.network_clients.wrtc.message_bus.emit("in_file_transit", event.data);
+        return;
+    }
+
     try {
       const { type, data } = JSON.parse(event.data) as WebRtcMessages.IncomingMessage;
       this.network_clients.wrtc.message_bus.emit(type, data);
     } catch (error) {
       handleSessionError({
-        title: "Message Error happened here",
+        title: "Failed to parse incoming WebRTC message",
         message: error instanceof Error ? error.message : "Failed to parse incoming WebRTC message"
       });
     }

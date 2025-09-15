@@ -1,7 +1,7 @@
 import type { WebSocketMessages } from "./types";
 import type { NetworkClients } from "../utils";
 
-import { getAppState, handleSessionError, updateState } from "@/state/app-state";
+import { appState, handleSessionError } from "@/state";
 import { getNetworkingClients } from "../utils";
 
 export class CustomWebSocket extends WebSocket {
@@ -24,7 +24,7 @@ export class CustomWebSocket extends WebSocket {
     this.networking_clients.ws.disconnect();
     this.networking_clients.ws.stop_latency_monitoring();
 
-    updateState({
+    appState.update({
       sessionState: {
         lastError: event.reason
           ? {
@@ -44,10 +44,10 @@ export class CustomWebSocket extends WebSocket {
   }
 
   private on_message(event: MessageEvent) {
-    const { sessionState, websocketState } = getAppState();
+    const { sessionState, websocketState } = appState.get();
 
     if (sessionState.lastError || websocketState.isConnecting) {
-      updateState({
+      appState.update({
         sessionState: {
           lastError: null
         },

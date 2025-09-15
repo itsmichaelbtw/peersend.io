@@ -1,21 +1,24 @@
 import type { FileWithPath, FileRejection } from "@mantine/dropzone";
+import type { PeerSendFile } from "@/state";
 
 import { UploadIcon } from "lucide-react";
 import { Dropzone } from "@mantine/dropzone";
 import { Group, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { useFileTransferContext } from "@/context/file-transfer";
+import { fileTransferState } from "@/state";
 import { createCustomFile } from "./utils";
 
 export function FileUpload() {
-  const { fileTransferDispatch } = useFileTransferContext();
+  async function onDrop(files: FileWithPath[]) {
+    const customFiles: PeerSendFile[] = [];
 
-  function onDrop(files: FileWithPath[]) {
-    fileTransferDispatch({
-      type: "ADD_FILES",
-      payload: {
-        files: files.map((f) => createCustomFile(f, "outgoing"))
-      }
+    for (const file of files) {
+      const customFile = await createCustomFile(file, "outgoing");
+      customFiles.push(customFile);
+    }
+
+    fileTransferState.add({
+      files: customFiles
     });
   }
 

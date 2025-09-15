@@ -1,4 +1,4 @@
-import type { ConnectionErrorData } from "@/types/state";
+import type { ConnectionErrorData } from "@/state/types";
 
 import React, { useEffect } from "react";
 
@@ -6,12 +6,13 @@ import { Outlet } from "react-router";
 import { UsersRoundIcon, CrownIcon } from "lucide-react";
 
 import { Badge } from "@mantine/core";
+import { appState } from "@/state";
 import { notifications } from "@mantine/notifications";
 import { useAppState } from "@/hooks/use-app-state";
 import { capitalise } from "@/utils/capitalise";
 
 export function SessionLayout() {
-  const { sessionState, updateState } = useAppState();
+  const { sessionState } = useAppState();
 
   useEffect(() => {
     if (sessionState.lastError) {
@@ -20,7 +21,7 @@ export function SessionLayout() {
   }, [sessionState.lastError]);
 
   function handleLastError(lastError: ConnectionErrorData) {
-    updateState({
+    appState.update({
       sessionState: {
         lastError: null
       },

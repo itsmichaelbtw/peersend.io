@@ -1,6 +1,6 @@
 import type { NetworkClients } from "../utils";
 
-import { getAppState, updateState } from "@/state/app-state";
+import { appState } from "@/state";
 import { CustomDataChannel } from "./data-channel";
 import { getNetworkingClients } from "../utils";
 
@@ -33,7 +33,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
   private on_icecandidateerror(event: Event) {}
 
   private on_iceconnectionstatechange(event: Event) {
-    const { webrtcState } = getAppState();
+    const { webrtcState } = appState.get();
 
     if (!webrtcState.peerConnection) {
       return;
@@ -41,7 +41,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
   }
 
   private on_connectionstatechange(event: Event) {
-    const { webrtcState } = getAppState();
+    const { webrtcState } = appState.get();
 
     if (!webrtcState.peerConnection) {
       return;
@@ -49,7 +49,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 
     switch (webrtcState.peerConnection.connectionState) {
       case "connected":
-        updateState({
+        appState.update({
           sessionState: {
             connectionType: "webrtc"
           },
@@ -71,7 +71,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
   }
 
   private on_datachannel(event: RTCDataChannelEvent) {
-    updateState({
+    appState.update({
       webrtcState: {
         dataChannel: new CustomDataChannel(event.channel)
       }

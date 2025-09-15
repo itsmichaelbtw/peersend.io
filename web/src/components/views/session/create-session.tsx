@@ -12,9 +12,11 @@ import {
 
 import { Card, Button, Tooltip, CopyButton, ActionIcon, Group, Box, Stack } from "@mantine/core";
 import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate } from "react-router";
 
+import { useNavigate } from "react-router";
 import { useAppState } from "@/hooks/use-app-state";
+
+import { appState } from "@/state";
 import { webSocketClient } from "@/lib/networking";
 
 const VARIANTS = {
@@ -29,14 +31,14 @@ const VARIANTS = {
 };
 
 export function CreateSessionView() {
-  const { sessionState, websocketState, updateState } = useAppState();
+  const { sessionState, websocketState } = useAppState();
 
   const navigate = useNavigate();
   const isFirstRender = useRef(true);
 
   useEffect(() => {
     return () => {
-      updateState({
+      appState.update({
         websocketState: {
           isConnecting: false
         },

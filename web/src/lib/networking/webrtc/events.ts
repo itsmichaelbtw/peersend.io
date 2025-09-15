@@ -1,8 +1,18 @@
 import type { WebRtcEventMap, WebRtcMessages } from "./types";
 import type { NetworkEvents } from "../types";
 
-import { updateState } from "@/state/app-state";
+import { appState, fileTransferState } from "@/state";
 import { webrtcClient } from "./client";
+
+function event_start_file_transit(data: WebRtcEventMap.IncomingEvents["start_file_transit"]) {
+  // need to move file transfer to an external store
+  // since we need to add them here
+  // fileTransferState.add([data]);
+}
+
+function event_in_file_transit(data: WebRtcEventMap.IncomingEvents["in_file_transit"]) {}
+
+function event_end_file_transit(data: WebRtcEventMap.IncomingEvents["end_file_transit"]) {}
 
 function event_pong(data: WebRtcEventMap.IncomingEvents["pong"]) {
   webrtcClient.latency_checker.pong(data);
@@ -19,7 +29,7 @@ function event_ping(data: WebRtcEventMap.IncomingEvents["ping"]) {
 }
 
 function event_error(data: WebRtcEventMap.IncomingEvents["error"]) {
-  updateState({
+  appState.update({
     sessionState: {
       lastError: {
         title: data.type,
@@ -36,7 +46,9 @@ function event_error(data: WebRtcEventMap.IncomingEvents["error"]) {
 }
 
 export const events: NetworkEvents<WebRtcMessages.IncomingMessage> = {
-  file_transit: () => {},
+  start_file_transit: event_start_file_transit,
+  in_file_transit: console.log,
+  end_file_transit: console.log,
   pong: event_pong,
   ping: event_ping,
   error: event_error

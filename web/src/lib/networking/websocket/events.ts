@@ -1,8 +1,9 @@
 import type { WebSocketEventMap, WebSocketMessages } from "./types";
 import type { NetworkEvents } from "../types";
 
+import { appState, handleSessionError } from "@/state";
+
 import { webrtcClient, CustomRTCPeerConnection } from "../webrtc";
-import { getAppState, handleSessionError, updateState } from "@/state/app-state";
 import { webSocketClient } from "./client";
 
 const RTC_CONFIGURATION: RTCConfiguration = {
@@ -10,7 +11,7 @@ const RTC_CONFIGURATION: RTCConfiguration = {
 };
 
 function event_session_information(data: WebSocketEventMap.IncomingEvents["session_information"]) {
-  updateState({
+  appState.update({
     sessionState: {
       isConnected: true,
       clientId: data.client_id,
@@ -41,13 +42,13 @@ function event_pong(data: WebSocketEventMap.IncomingEvents["pong"]) {
 }
 
 function event_sync_online_clients(data: WebSocketEventMap.IncomingEvents["sync_online_clients"]) {
-  const { sessionState } = getAppState();
+  const { sessionState } = appState.get();
 
   if (sessionState.clients.length > data.clients.length) {
     webrtcClient.disconnect();
   }
 
-  updateState({
+  appState.update({
     sessionState: {
       clients: data.clients
     }
@@ -55,7 +56,7 @@ function event_sync_online_clients(data: WebSocketEventMap.IncomingEvents["sync_
 }
 
 function event_host_transferred(data: WebSocketEventMap.IncomingEvents["host_transferred"]) {
-  updateState({
+  appState.update({
     sessionState: {
       isHost: data.is_host
     }
@@ -63,7 +64,7 @@ function event_host_transferred(data: WebSocketEventMap.IncomingEvents["host_tra
 }
 
 async function event_webrtc_offer(data: WebSocketEventMap.IncomingEvents["webrtc_offer"]) {
-  const { sessionState } = getAppState();
+  const { sessionState } = appState.get();
 
   if (sessionState.isHost) {
     webrtcClient.disconnect();
@@ -80,7 +81,7 @@ async function event_webrtc_offer(data: WebSocketEventMap.IncomingEvents["webrtc
   try {
     const pc = new CustomRTCPeerConnection(RTC_CONFIGURATION);
 
-    updateState({
+    appState.update({
       webrtcState: {
         peerConnection: pc
       }
@@ -113,7 +114,7 @@ async function event_webrtc_offer(data: WebSocketEventMap.IncomingEvents["webrtc
 }
 
 async function event_webrtc_accept(data: WebSocketEventMap.IncomingEvents["webrtc_accept"]) {
-  const { sessionState, webrtcState } = getAppState();
+  const { sessionState, webrtcState } = appState.get();
 
   if (!sessionState.isHost) {
     webrtcClient.disconnect();
@@ -154,7 +155,7 @@ async function event_webrtc_accept(data: WebSocketEventMap.IncomingEvents["webrt
 async function event_webrtc_ice_candidate(
   data: WebSocketEventMap.IncomingEvents["webrtc_ice_candidate"]
 ) {
-  const { webrtcState } = getAppState();
+  const { webrtcState } = appState.get();
 
   if (!webrtcState.peerConnection) {
     webrtcClient.disconnect();
@@ -192,7 +193,7 @@ function event_webrtc_reject(data: WebSocketEventMap.IncomingEvents["webrtc_reje
 }
 
 function event_error(data: WebSocketEventMap.IncomingEvents["error"]) {
-  updateState({
+  appState.update({
     sessionState: {
       lastError: {
         title: data.type,

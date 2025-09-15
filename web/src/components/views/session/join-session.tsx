@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import { useAppState } from "@/hooks/use-app-state";
 
+import { appState } from "@/state";
 import { webSocketClient } from "@/lib/networking";
 import { SESSION_CODE_EXAMPLE } from "@/config/constants";
 
@@ -21,7 +22,7 @@ const INFO_LIST_POINTS: string[] = [
 const REGEX = /^X-[A-Z0-9]{6}$/;
 
 export function JoinSessionView() {
-  const { websocketState, sessionState, updateState } = useAppState();
+  const { websocketState, sessionState } = useAppState();
 
   const navigate = useNavigate();
 
@@ -48,7 +49,7 @@ export function JoinSessionView() {
 
   useEffect(() => {
     return () => {
-      updateState({
+      appState.update({
         websocketState: {
           isConnecting: false
         },

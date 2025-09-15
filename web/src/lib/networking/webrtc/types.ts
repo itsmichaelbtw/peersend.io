@@ -1,13 +1,16 @@
+import type { PeerSendFile } from "@/state/types";
 import type { PongData } from "../core/latency-checker";
 import type { NetworkMessagePayload } from "../types";
 
 interface WebRtcCommonEvents {
   ping: Pick<PongData, "client_timestamp">;
   pong: PongData;
-  file_transit: {
-    byteLength: number;
-    totalSize: number;
-    chunk: number[];
+  start_file_transit: Omit<PeerSendFile["metadata"], "bytes"> & {
+    id: string;
+  };
+  in_file_transit: Uint8Array;
+  end_file_transit: {
+    id: string;
   };
 }
 

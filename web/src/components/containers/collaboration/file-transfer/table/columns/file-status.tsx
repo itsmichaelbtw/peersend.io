@@ -1,10 +1,10 @@
-import type { PeerSendFile } from "@/context/file-transfer";
+import type { PeerSendFile } from "@/state/types";
 
-import { Badge } from "@mantine/core";
+import { Badge, Progress, Tooltip } from "@mantine/core";
 import { SortableHeader } from "../sorting-header";
 import { columnHelper } from "../helper";
 
-export const fileStatusColumn = columnHelper.accessor("status", {
+export const fileStatusColumn = columnHelper.accessor((file) => file, {
   id: "file-status",
   header({ column }) {
     return (
@@ -14,12 +14,19 @@ export const fileStatusColumn = columnHelper.accessor("status", {
     );
   },
   cell({ getValue }) {
-    const status = getValue<PeerSendFile["status"]>();
+    const file = getValue<PeerSendFile>();
+
     return (
-      <div className="flex justify-center-safe">
-        <Badge variant={status === "pending" ? "light" : "dot"} color="gray">
-          {status}
-        </Badge>
+      <div className="flex justify-center-safe w-full">
+        {file.status === "in-transit" ? (
+          <Tooltip label={`${file.transfer.percentage}%`}>
+            <Progress value={file.transfer.percentage} h={6} w={90} animated />
+          </Tooltip>
+        ) : (
+          <Badge variant={file.status === "pending" ? "light" : "dot"} color="gray">
+            {file.status}
+          </Badge>
+        )}
       </div>
     );
   },

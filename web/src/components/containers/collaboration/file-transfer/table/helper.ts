@@ -1,4 +1,4 @@
-import type { PeerSendFile } from "@/context/file-transfer";
+import type { PeerSendFile } from "@/state/types";
 
 import { createColumnHelper } from "@tanstack/react-table";
 

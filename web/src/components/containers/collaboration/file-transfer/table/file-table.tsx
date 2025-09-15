@@ -1,5 +1,5 @@
 import type { WithChildren } from "@/types/misc";
-import type { PeerSendFile } from "@/context/file-transfer";
+import type { PeerSendFile } from "@/state/types";
 import type { RowSelectionState } from "@tanstack/react-table";
 
 import React, { useState } from "react";
