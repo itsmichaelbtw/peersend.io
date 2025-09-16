@@ -12,7 +12,7 @@ import {
   DEFAULT_WEBSOCKET_STATE,
   WEBSOCKET_ENDPOINT
 } from "@/config/constants";
-import { appState, handleSessionError, isWebSocketConnected } from "@/state";
+import { appState, isWebSocketConnected } from "@/state";
 import { sleep } from "@/utils/sleep";
 
 export class WebSocketClient extends NetworkClient<
@@ -36,7 +36,7 @@ export class WebSocketClient extends NetworkClient<
       return;
     }
 
-    appState.update({ websocketState: { isConnecting: true } });
+    appState.dispatch("UPDATE", { websocketState: { isConnecting: true } });
     await sleep(500);
 
     try {
@@ -49,9 +49,9 @@ export class WebSocketClient extends NetworkClient<
         url.searchParams.set("mode", "host");
       }
 
-      appState.update({ websocketState: { ws: new CustomWebSocket(url.toString()) } });
+      appState.dispatch("UPDATE", { websocketState: { ws: new CustomWebSocket(url.toString()) } });
     } catch (error) {
-      handleSessionError({
+      appState.dispatch("SET_LAST_ERROR", {
         title: "Connection Issue",
         message: error instanceof Error ? error.message : "Unable to establish connection"
       });
@@ -74,7 +74,7 @@ export class WebSocketClient extends NetworkClient<
   }
 
   public reset(): void {
-    appState.update({
+    appState.dispatch("UPDATE", {
       sessionState: DEFAULT_SESSION_STATE,
       webrtcState: DEFAULT_WEBRTC_STATE,
       websocketState: DEFAULT_WEBSOCKET_STATE

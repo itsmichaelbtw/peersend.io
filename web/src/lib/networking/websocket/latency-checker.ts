@@ -20,7 +20,7 @@ export class WebSocketLatencyChecker extends LatencyChecker {
   }
 
   public update_latency(latency: number): void {
-    appState.update({
+    appState.dispatch("UPDATE", {
       sessionState: {
         latency: latency
       }

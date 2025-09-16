@@ -38,14 +38,7 @@ export function CreateSessionView() {
 
   useEffect(() => {
     return () => {
-      appState.update({
-        websocketState: {
-          isConnecting: false
-        },
-        webrtcState: {
-          isConnecting: false
-        }
-      });
+      appState.dispatch("RESET_CONNECTING_STATES", null);
     };
   }, []);
 

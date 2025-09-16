@@ -49,7 +49,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 
     switch (webrtcState.peerConnection.connectionState) {
       case "connected":
-        appState.update({
+        appState.dispatch("UPDATE", {
           sessionState: {
             connectionType: "webrtc"
           },
@@ -71,7 +71,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
   }
 
   private on_datachannel(event: RTCDataChannelEvent) {
-    appState.update({
+    appState.dispatch("UPDATE", {
       webrtcState: {
         dataChannel: new CustomDataChannel(event.channel)
       }

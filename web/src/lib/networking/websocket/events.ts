@@ -1,7 +1,7 @@
 import type { WebSocketEventMap, WebSocketMessages } from "./types";
 import type { NetworkEvents } from "../types";
 
-import { appState, handleSessionError } from "@/state";
+import { appState } from "@/state";
 
 import { webrtcClient, CustomRTCPeerConnection } from "../webrtc";
 import { webSocketClient } from "./client";
@@ -11,29 +11,7 @@ const RTC_CONFIGURATION: RTCConfiguration = {
 };
 
 function event_session_information(data: WebSocketEventMap.IncomingEvents["session_information"]) {
-  appState.update({
-    sessionState: {
-      isConnected: true,
-      clientId: data.client_id,
-      clients: data.clients,
-      isHost: data.is_host,
-      maximumClients: data.maximum_clients,
-      sessionCode: data.session_code,
-      autoWebRTC: data.auto_webrtc,
-      encryptionMode: data.encryption_mode,
-      connectionType: data.connection_type,
-      lastError: null
-    },
-    websocketState: {
-      isConnected: true,
-      isConnecting: false
-    },
-    webrtcState: {
-      isConnected: false,
-      isConnecting: false
-    }
-  });
-
+  appState.dispatch("SET_SESSION_INFORMATION", data);
   webSocketClient.start_latency_monitoring();
 }
 
@@ -48,19 +26,11 @@ function event_sync_online_clients(data: WebSocketEventMap.IncomingEvents["sync_
     webrtcClient.disconnect();
   }
 
-  appState.update({
-    sessionState: {
-      clients: data.clients
-    }
-  });
+  appState.dispatch("SET_CLIENTS", data);
 }
 
 function event_host_transferred(data: WebSocketEventMap.IncomingEvents["host_transferred"]) {
-  appState.update({
-    sessionState: {
-      isHost: data.is_host
-    }
-  });
+  appState.dispatch("SET_HOST", data);
 }
 
 async function event_webrtc_offer(data: WebSocketEventMap.IncomingEvents["webrtc_offer"]) {
@@ -81,7 +51,7 @@ async function event_webrtc_offer(data: WebSocketEventMap.IncomingEvents["webrtc
   try {
     const pc = new CustomRTCPeerConnection(RTC_CONFIGURATION);
 
-    appState.update({
+    appState.dispatch("UPDATE", {
       webrtcState: {
         peerConnection: pc
       }
@@ -186,26 +156,16 @@ async function event_webrtc_ice_candidate(
 function event_webrtc_reject(data: WebSocketEventMap.IncomingEvents["webrtc_reject"]) {
   webSocketClient.disconnect();
 
-  handleSessionError({
+  appState.dispatch("SET_LAST_ERROR", {
     title: "Direct Connection Failed",
     message: data.reason
   });
 }
 
 function event_error(data: WebSocketEventMap.IncomingEvents["error"]) {
-  appState.update({
-    sessionState: {
-      lastError: {
-        title: data.type,
-        message: data.reason
-      }
-    },
-    websocketState: {
-      isConnecting: false
-    },
-    webrtcState: {
-      isConnecting: false
-    }
+  appState.dispatch("SET_LAST_ERROR", {
+    title: data.type,
+    message: data.reason
   });
 }
 

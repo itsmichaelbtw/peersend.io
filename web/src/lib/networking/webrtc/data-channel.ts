@@ -1,7 +1,7 @@
 import type { NetworkClients } from "../utils";
 import type { WebRtcMessages } from "./types";
 
-import { appState, handleSessionError } from "@/state";
+import { appState } from "@/state";
 import { getNetworkingClients } from "../utils";
 
 export class CustomDataChannel {
@@ -31,7 +31,7 @@ export class CustomDataChannel {
 
   private on_error(event: RTCErrorEvent) {
     if (event.error) {
-      handleSessionError({
+      appState.dispatch("SET_LAST_ERROR", {
         title: "Direct Connection Error",
         message:
           event.error instanceof Error
@@ -45,14 +45,7 @@ export class CustomDataChannel {
     const { sessionState, webrtcState } = appState.get();
 
     if (sessionState.lastError || webrtcState.isConnecting) {
-      appState.update({
-        sessionState: {
-          lastError: null
-        },
-        websocketState: {
-          isConnecting: false
-        }
-      });
+      appState.dispatch("SET_LAST_ERROR", null);
     }
 
     switch (true) {
@@ -75,7 +68,7 @@ export class CustomDataChannel {
       const { type, data } = JSON.parse(event.data) as WebRtcMessages.IncomingMessage;
       this.network_clients.wrtc.message_bus.emit(type, data);
     } catch (error) {
-      handleSessionError({
+      appState.dispatch("SET_LAST_ERROR", {
         title: "Failed to parse incoming WebRTC message",
         message: error instanceof Error ? error.message : "Failed to parse incoming WebRTC message"
       });

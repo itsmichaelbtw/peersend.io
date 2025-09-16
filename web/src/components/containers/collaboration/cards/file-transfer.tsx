@@ -56,9 +56,7 @@ export function FileTransfer() {
                     color="dark"
                     leftSection={<Trash2Icon size={16} />}
                     onClick={() => {
-                      fileTransferState.remove({
-                        files: isUsingSelection ? files : fileGroups.outgoing
-                      });
+                      fileTransferState.remove(isUsingSelection ? files : fileGroups.outgoing);
                     }}
                   >
                     {isUsingSelection ? `Remove (${files.length})` : "Clear"}

@@ -1,7 +1,7 @@
 import type { WebSocketMessages } from "./types";
 import type { NetworkClients } from "../utils";
 
-import { appState, handleSessionError } from "@/state";
+import { appState } from "@/state";
 import { getNetworkingClients } from "../utils";
 
 export class CustomWebSocket extends WebSocket {
@@ -24,20 +24,19 @@ export class CustomWebSocket extends WebSocket {
     this.networking_clients.ws.disconnect();
     this.networking_clients.ws.stop_latency_monitoring();
 
-    appState.update({
-      sessionState: {
-        lastError: event.reason
-          ? {
-              title: "Connection Issue",
-              message: event.reason
-            }
-          : null
-      }
-    });
+    appState.dispatch(
+      "SET_LAST_ERROR",
+      event.reason
+        ? {
+            title: "Connection Issue",
+            message: event.reason
+          }
+        : null
+    );
   }
 
   private on_error() {
-    handleSessionError({
+    appState.dispatch("SET_LAST_ERROR", {
       title: "Connection Issue",
       message: "Failed to connect: The server may be offline"
     });
@@ -47,21 +46,14 @@ export class CustomWebSocket extends WebSocket {
     const { sessionState, websocketState } = appState.get();
 
     if (sessionState.lastError || websocketState.isConnecting) {
-      appState.update({
-        sessionState: {
-          lastError: null
-        },
-        websocketState: {
-          isConnecting: false
-        }
-      });
+      appState.dispatch("SET_LAST_ERROR", null);
     }
 
     try {
       const { type, data } = JSON.parse(event.data) as WebSocketMessages.IncomingMessage;
       this.networking_clients.ws.message_bus.emit(type, data);
     } catch (error) {
-      handleSessionError({
+      appState.dispatch("SET_LAST_ERROR", {
         title: "Message Error happened here",
         message:
           error instanceof Error ? error.message : "Failed to parse incoming WebSocket message"

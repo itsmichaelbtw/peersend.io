@@ -6,7 +6,7 @@ import { FileChunker } from "./file-chunker";
 import { fileBytesStore } from "./file-store";
 
 import { webrtcClient } from "@/lib/networking";
-import { appState, fileTransferState, mergeFileUpdates } from "@/state";
+import { appState, fileTransferState } from "@/state";
 import { sleep } from "@/utils/sleep";
 import { noop } from "@/utils/noop";
 
@@ -106,36 +106,29 @@ export async function initiateFileTransfer(files: PeerSendFile[]) {
     }
 
     const status = await transferFileOverNetwork(file, (percentage) => {
-      fileTransferState.update({
-        files: mergeFileUpdates(files, (file) => {
-          return {
-            transfer: {
-              ...file.transfer,
-              percentage: percentage
-            }
-          };
-        })
+      fileTransferState.dispatch("SET_FILE_PERCENTAGE", {
+        id: file.id,
+        percentage: percentage
       });
     });
 
     await sleep(500);
 
-    fileTransferState.update({
-      files: mergeFileUpdates(files, (file) => {
-        return {
-          status: status === "complete" ? "sent" : "error"
-        };
-      })
+    fileTransferState.dispatch("SET_FILE_STATUS", {
+      id: file.id,
+      status: status === "complete" ? "sent" : "error"
     });
   }
 
-  fileTransferState.update({
-    files: mergeFileUpdates(files, (file) => {
+  fileTransferState.dispatch(
+    "BULK_UPDATE_FILES",
+    files.map((file) => {
       return {
+        ...file,
         status: "in-transit"
       };
     })
-  });
+  );
 
   await sleep(500);
 

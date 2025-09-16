@@ -29,19 +29,9 @@ function event_ping(data: WebRtcEventMap.IncomingEvents["ping"]) {
 }
 
 function event_error(data: WebRtcEventMap.IncomingEvents["error"]) {
-  appState.update({
-    sessionState: {
-      lastError: {
-        title: data.type,
-        message: data.reason
-      }
-    },
-    websocketState: {
-      isConnecting: false
-    },
-    webrtcState: {
-      isConnecting: false
-    }
+  appState.dispatch("SET_LAST_ERROR", {
+    title: data.type,
+    message: data.reason
   });
 }
 

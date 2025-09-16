@@ -1,7 +1,6 @@
-import type { AppState, ConnectionErrorData } from "../types";
+import type { AppState } from "../types";
 
 import { AppStateStore } from "./store";
-import { createStateStore } from "../store";
 
 import {
   DEFAULT_SESSION_STATE,
@@ -15,7 +14,7 @@ const initialState: AppState = {
   websocketState: DEFAULT_WEBSOCKET_STATE
 };
 
-export const appState = createStateStore(AppStateStore, initialState);
+export const appState = new AppStateStore(initialState);
 
 export function getSessionState() {
   return appState.get().sessionState;
@@ -55,13 +54,4 @@ export function isWebRtcConnected() {
   }
 
   return webrtcState.isConnected;
-}
-
-// maybe look at removing this and just use toast directly
-export function handleSessionError(error: ConnectionErrorData) {
-  appState.update({
-    sessionState: {
-      lastError: error
-    }
-  });
 }

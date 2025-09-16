@@ -6,9 +6,9 @@ import { WebRtcLatencyChecker } from "./latency-checker";
 import { CustomRTCPeerConnection } from "./peer-connection";
 import { events } from "./events";
 
-import { DEFAULT_WEBRTC_STATE } from "@/config/constants";
-import { appState, handleSessionError, isWebRtcConnected } from "@/state";
+import { appState, isWebRtcConnected } from "@/state";
 import { sleep } from "@/utils/sleep";
+import { DEFAULT_WEBRTC_STATE } from "@/config/constants";
 
 const RTC_CONFIGURATION: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }]
@@ -32,7 +32,7 @@ export class WebRtcClient extends NetworkClient<
     }
 
     if (!sessionState.isHost) {
-      handleSessionError({
+      appState.dispatch("SET_LAST_ERROR", {
         title: "Connection Error",
         message: "Only the host can initiate a direct connection"
       });
@@ -40,7 +40,7 @@ export class WebRtcClient extends NetworkClient<
       return;
     }
 
-    appState.update({ webrtcState: { isConnecting: true } });
+    appState.dispatch("UPDATE", { webrtcState: { isConnecting: true } });
     await sleep(500);
 
     try {
@@ -54,7 +54,7 @@ export class WebRtcClient extends NetworkClient<
         throw new Error("Failed to establish a local description");
       }
 
-      appState.update({
+      appState.dispatch("UPDATE", {
         webrtcState: {
           dataChannel: dc,
           peerConnection: pc
@@ -69,7 +69,7 @@ export class WebRtcClient extends NetworkClient<
       });
     } catch (error) {
       this.disconnect();
-      handleSessionError({
+      appState.dispatch("SET_LAST_ERROR", {
         title: "Connection Issue",
         message:
           error instanceof Error ? error.message : "Unable to establish a direction connection"
@@ -95,7 +95,7 @@ export class WebRtcClient extends NetworkClient<
   }
 
   public reset(): void {
-    appState.update({
+    appState.dispatch("UPDATE", {
       sessionState: {
         connectionType: "websocket"
       },

@@ -1,16 +1,16 @@
-import type { RecursivePartial } from "@/types/misc";
+import type { DispatchState, ActionMap, ContextReducerActions } from "@/context/context.types";
 
-type State = Record<string, any>;
-type Listener<T extends State> = (state: T) => void;
+import { withDispatchReducer } from "@/context/context.dispatch";
 
-export type StateUpdate<T> = RecursivePartial<T>;
-export type StateUpdateFunction<T> = (current: T, state: StateUpdate<T>) => void;
+type Listener<S extends DispatchState> = (state: S) => void;
 
-export abstract class StateStore<T extends State> {
-  private state: T;
-  private listeners: Set<Listener<T>> = new Set();
+export type StateUpdateFunction<S> = (previous: S) => S;
 
-  constructor(initialState: T) {
+export abstract class StateStore<S extends DispatchState, M extends ActionMap> {
+  private state: S;
+  private listeners: Set<Listener<S>> = new Set();
+
+  constructor(initialState: S) {
     this.state = initialState;
   }
 
@@ -18,22 +18,31 @@ export abstract class StateStore<T extends State> {
     return this.state;
   }
 
-  public set(newState: RecursivePartial<T>) {
-    this.state = { ...this.state, ...newState };
-    this.listeners.forEach((listener) => listener(this.state));
+  protected set(next: StateUpdateFunction<S>): void {
+    const nextState = next(this.state);
+
+    this.state = nextState;
+
+    for (const listener of this.listeners) {
+      listener(this.state);
+    }
   }
 
-  public subscribe(listener: Listener<T>) {
+  public subscribe(listener: Listener<S>) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
 
-  public abstract update(state: RecursivePartial<T>): void;
-}
+  public dispatch<K extends keyof M>(type: K, data: K extends keyof M ? M[K] : Partial<S>): void {
+    const payload = {
+      type,
+      payload: data
+    } as ContextReducerActions<M, S>;
 
-export function createStateStore<S extends StateStore<T>, T extends State>(
-  Store: new (initialState: T) => S,
-  initialState: T
-) {
-  return new Store(initialState);
+    this.set((current) =>
+      withDispatchReducer(current, payload)(() => this.reducer(current, payload))
+    );
+  }
+
+  protected abstract reducer(state: S, action: ContextReducerActions<M, S>): Partial<S>;
 }

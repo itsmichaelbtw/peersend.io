@@ -17,9 +17,7 @@ export function FileUpload() {
       customFiles.push(customFile);
     }
 
-    fileTransferState.add({
-      files: customFiles
-    });
+    fileTransferState.add(customFiles);
   }
 
   // need to verify this

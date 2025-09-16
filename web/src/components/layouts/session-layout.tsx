@@ -21,17 +21,7 @@ export function SessionLayout() {
   }, [sessionState.lastError]);
 
   function handleLastError(lastError: ConnectionErrorData) {
-    appState.update({
-      sessionState: {
-        lastError: null
-      },
-      websocketState: {
-        isConnecting: false
-      },
-      webrtcState: {
-        isConnecting: false
-      }
-    });
+    appState.dispatch("SET_LAST_ERROR", null);
 
     notifications.show({
       id: lastError.title,
