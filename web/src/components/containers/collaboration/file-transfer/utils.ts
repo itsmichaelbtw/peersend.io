@@ -30,6 +30,20 @@ export async function createCustomFile(
   };
 }
 
+export function removeBytesFromFile(file: PeerSendFile): PeerSendFile {
+  if (!file.metadata.bytes) {
+    return file;
+  }
+
+  return {
+    ...file,
+    metadata: {
+      ...file.metadata,
+      bytes: undefined
+    }
+  };
+}
+
 export function truncateFileName(filename: string): string {
   const maxLength = 35;
 

@@ -5,12 +5,12 @@ import { appState } from "@/state";
 import { getNetworkingClients } from "../utils";
 
 export class CustomWebSocket extends WebSocket {
-  private networking_clients: NetworkClients;
+  private network_clients: NetworkClients;
 
   constructor(url: string) {
     super(url);
 
-    this.networking_clients = getNetworkingClients();
+    this.network_clients = getNetworkingClients();
 
     this.addEventListener("open", this.on_open.bind(this));
     this.addEventListener("close", this.on_close.bind(this));
@@ -21,8 +21,8 @@ export class CustomWebSocket extends WebSocket {
   private on_open() {}
 
   private on_close(event: CloseEvent) {
-    this.networking_clients.ws.disconnect();
-    this.networking_clients.ws.stop_latency_monitoring();
+    this.network_clients.ws.disconnect();
+    this.network_clients.ws.stop_latency_monitoring();
 
     appState.dispatch(
       "SET_LAST_ERROR",
@@ -51,7 +51,7 @@ export class CustomWebSocket extends WebSocket {
 
     try {
       const { type, data } = JSON.parse(event.data) as WebSocketMessages.IncomingMessage;
-      this.networking_clients.ws.message_bus.emit(type, data);
+      this.network_clients.ws.message_bus.emit(type, data);
     } catch (error) {
       appState.dispatch("SET_LAST_ERROR", {
         title: "Message Error happened here",

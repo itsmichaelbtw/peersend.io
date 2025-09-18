@@ -70,7 +70,7 @@ export async function transferFileOverNetwork(
 
     for await (const chunk of fileChunker.chunk()) {
       do {
-        await sleep(10);
+        await sleep(50);
       } while (webrtcState.dataChannel!._channel.bufferedAmount > BUFFER_THRESHOLD);
 
       webrtcClient.emit({
@@ -100,26 +100,6 @@ export async function transferFileOverNetwork(
 }
 
 export async function initiateFileTransfer(files: PeerSendFile[]) {
-  async function handleTransfer(file: PeerSendFile, delay: number = 0) {
-    if (delay > 0) {
-      await sleep(delay);
-    }
-
-    const status = await transferFileOverNetwork(file, (percentage) => {
-      fileTransferState.dispatch("SET_FILE_PERCENTAGE", {
-        id: file.id,
-        percentage: percentage
-      });
-    });
-
-    await sleep(500);
-
-    fileTransferState.dispatch("SET_FILE_STATUS", {
-      id: file.id,
-      status: status === "complete" ? "sent" : "error"
-    });
-  }
-
   fileTransferState.dispatch(
     "BULK_UPDATE_FILES",
     files.map((file) => {
@@ -132,8 +112,19 @@ export async function initiateFileTransfer(files: PeerSendFile[]) {
 
   await sleep(500);
 
-  const transferFns = files.map((file, index) => handleTransfer(file, index * 50));
-  await Promise.all(transferFns);
+  for (const file of files) {
+    const status = await transferFileOverNetwork(file, (percentage) => {
+      fileTransferState.dispatch("SET_FILE_PERCENTAGE", {
+        id: file.id,
+        percentage: percentage
+      });
+    });
+
+    fileTransferState.dispatch("SET_FILE_STATUS", {
+      id: file.id,
+      status: status === "complete" ? "sent" : "error"
+    });
+  }
 
   // https://github.com/itsmichaelbtw/peersend.io/issues/15
 }
