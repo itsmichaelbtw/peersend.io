@@ -3,6 +3,7 @@ import type { NetworkClients } from "../utils";
 
 import { appState } from "@/state";
 import { getNetworkingClients } from "../utils";
+import { abortRegistry } from "../core";
 
 export class CustomWebSocket extends WebSocket {
   private network_clients: NetworkClients;
@@ -18,7 +19,9 @@ export class CustomWebSocket extends WebSocket {
     this.addEventListener("message", this.on_message.bind(this));
   }
 
-  private on_open() {}
+  private on_open() {
+    abortRegistry.start();
+  }
 
   private on_close(event: CloseEvent) {
     this.network_clients.ws.disconnect();
@@ -33,6 +36,8 @@ export class CustomWebSocket extends WebSocket {
           }
         : null
     );
+
+    abortRegistry.end();
   }
 
   private on_error() {
