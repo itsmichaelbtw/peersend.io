@@ -1,8 +1,6 @@
-import type { FileChunk, FileType } from "./types";
+import type { FileType } from "../types";
 
-import { v4 } from "uuid";
-
-import { DEFAULT_CHUNK_SIZE } from "./constants";
+import { DEFAULT_CHUNK_SIZE } from "../constants";
 
 export class FileChunker {
   private file: FileType;
@@ -11,7 +9,7 @@ export class FileChunker {
     this.file = file;
   }
 
-  async *chunk(chunkSize: number = DEFAULT_CHUNK_SIZE): AsyncGenerator<FileChunk, void> {
+  async *chunk(chunkSize: number = DEFAULT_CHUNK_SIZE): AsyncGenerator<Uint8Array, void> {
     let buffer: ArrayBuffer;
 
     switch (true) {
@@ -25,9 +23,6 @@ export class FileChunker {
         buffer = this.file;
     }
 
-    const groupId = v4();
-    const totalChunks = Math.ceil(buffer.byteLength / chunkSize);
-
     let offset = 0;
     let index = 0;
 
@@ -36,11 +31,7 @@ export class FileChunker {
       const slice = buffer.slice(offset, end);
       const chunk = new Uint8Array(slice);
 
-      yield {
-        groupId: groupId,
-        bytes: chunk,
-        totalChunks: totalChunks
-      };
+      yield chunk;
 
       offset = end;
       index++;

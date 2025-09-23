@@ -1,0 +1,135 @@
+import type { PeerSendFile } from "@/state/types";
+import type { FileWithPath } from "@mantine/dropzone";
+import type { WebRtcEventMap } from "../networking";
+
+import { parse, v4, stringify } from "uuid";
+
+import { FILE_ID_BYTE_LENGTH } from "./constants";
+
+interface FileTransferIdentifier {
+  asString: string;
+  asBytes: Uint8Array;
+}
+
+export async function createCustomFileFromUpload(file: FileWithPath): Promise<PeerSendFile> {
+  const id = v4();
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  return {
+    id: id,
+    timestamp: Date.now(),
+    status: "pending",
+    transfer: {
+      type: "outgoing",
+      percentage: 0
+    },
+    metadata: {
+      name: file.name,
+      path: file.path,
+      size: file.size,
+      type: file.type,
+      lastModified: file.lastModified,
+      bytes: bytes
+    }
+  };
+}
+
+export function createCustomFileFromTransfer(
+  transfer: WebRtcEventMap.IncomingEvents["start_file_transit"]
+): PeerSendFile {
+  return {
+    id: transfer.id,
+    transfer: {
+      type: "incoming",
+      percentage: 0
+    },
+    timestamp: Date.now(),
+    status: "in-transit",
+    metadata: transfer.metadata
+  };
+}
+
+export function createBufferWithHeader(id: Uint8Array, data: Uint8Array): Uint8Array {
+  if (id.length != FILE_ID_BYTE_LENGTH) {
+    throw new Error(`Invalid file id length: expected ${FILE_ID_BYTE_LENGTH}, got ${id.length}`);
+  }
+
+  const buffer = new Uint8Array(FILE_ID_BYTE_LENGTH + data.length);
+
+  buffer.set(id, 0);
+  buffer.set(data, FILE_ID_BYTE_LENGTH);
+
+  return buffer;
+}
+
+export function createFileTransferIdentifier(): FileTransferIdentifier {
+  const id = v4();
+  const bytes = parse(id);
+
+  return {
+    asString: id,
+    asBytes: bytes
+  };
+}
+
+export function parseTransitBuffer(buffer: Uint8Array) {
+  const id = buffer.slice(0, FILE_ID_BYTE_LENGTH);
+  const chunk = buffer.slice(FILE_ID_BYTE_LENGTH);
+
+  return {
+    fileId: stringify(id),
+    chunk: chunk
+  };
+}
+
+export function removeBytesFromFile(file: PeerSendFile): PeerSendFile {
+  if (!file.metadata.bytes) {
+    return file;
+  }
+
+  return {
+    ...file,
+    metadata: {
+      ...file.metadata,
+      bytes: undefined
+    }
+  };
+}
+
+export function truncateFileName(filename: string): string {
+  const maxLength = 35;
+
+  if (filename.length <= maxLength) {
+    return filename;
+  }
+
+  const lastDotIndex = filename.lastIndexOf(".");
+
+  if (lastDotIndex === -1 || lastDotIndex === 0) {
+    const half = Math.floor((maxLength - 1) / 2);
+    return filename.slice(0, half) + "…" + filename.slice(-half);
+  }
+
+  const name = filename.slice(0, lastDotIndex);
+  const extension = filename.slice(lastDotIndex);
+
+  const availableLength = maxLength - extension.length - 1;
+  const front = Math.ceil(availableLength / 2);
+  const back = Math.floor(availableLength / 2);
+
+  return name.slice(0, front) + "..." + name.slice(-back) + extension;
+}
+
+export function formatFileSize(bytes: number, decimals = 2): string {
+  if (bytes === 0) {
+    return "0 B";
+  }
+
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB", "TB", "PB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  const value = parseFloat((bytes / Math.pow(k, i)).toFixed(decimals));
+  return `${value} ${sizes[i]}`;
+}
