@@ -1,41 +1,64 @@
 interface FileState {
   chunks: Uint8Array[];
+  bytesReceived: number;
   totalSize: number;
-  totalChunks: number;
 }
 
 export class FileAssembler {
   private files = new Map<string, FileState>();
 
-  initFile(fileId: string, totalSize: number, totalChunks: number) {
-    if (!this.files.has(fileId)) {
-      this.files.set(fileId, {
-        chunks: new Array(totalChunks),
-        totalSize,
-        totalChunks
-      });
+  public init(fileId: string, totalSize: number): void {
+    if (this.files.has(fileId)) {
+      return;
     }
+
+    this.files.set(fileId, {
+      chunks: [],
+      bytesReceived: 0,
+      totalSize: totalSize
+    });
   }
 
-  addChunk(fileId: string, index: number, chunk: Uint8Array) {
+  public addChunk(fileId: string, chunk: Uint8Array): void {
     const file = this.files.get(fileId);
-    if (!file) throw new Error(`File ${fileId} not initialized`);
-    file.chunks[index] = chunk;
+
+    if (!file) {
+      throw new Error(`File ${fileId} not initialized`);
+    }
+
+    file.chunks.push(chunk);
+    file.bytesReceived += chunk.byteLength;
   }
 
-  isComplete(fileId: string): boolean {
+  public getProgress(fileId: string): number {
     const file = this.files.get(fileId);
-    if (!file) return false;
-    return file.chunks.length === file.totalChunks && file.chunks.every(Boolean);
+
+    if (!file) {
+      return 0;
+    }
+
+    return Math.round((file.bytesReceived / file.totalSize) * 100);
   }
 
-  reconstruct(fileId: string): Uint8Array {
+  public isComplete(fileId: string): boolean {
     const file = this.files.get(fileId);
+
+    if (!file) {
+      return false;
+    }
+
+    return file.bytesReceived >= file.totalSize;
+  }
+
+  public reconstruct(fileId: string): Uint8Array {
+    const file = this.files.get(fileId);
+
     if (!file || !this.isComplete(fileId)) {
       throw new Error(`Cannot reconstruct file ${fileId}`);
     }
 
     const result = new Uint8Array(file.totalSize);
+
     let offset = 0;
 
     for (const chunk of file.chunks) {
@@ -46,11 +69,13 @@ export class FileAssembler {
     return result;
   }
 
-  reset(fileId: string) {
+  public reset(fileId: string) {
     this.files.delete(fileId);
   }
 
-  resetAll() {
+  public resetAll() {
     this.files.clear();
   }
 }
+
+export const fileAssembler = new FileAssembler();

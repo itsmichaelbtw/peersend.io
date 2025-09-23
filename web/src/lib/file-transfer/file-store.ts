@@ -1,8 +1,13 @@
 export class FileBytesStore {
   private store = new Map<string, Uint8Array>();
 
-  public set(id: string, bytes: Uint8Array) {
+  public set(id: string, bytes: Uint8Array): boolean {
+    if (this.has(id)) {
+      return false;
+    }
+
     this.store.set(id, bytes);
+    return true;
   }
 
   public get(id: string): Uint8Array | undefined {
