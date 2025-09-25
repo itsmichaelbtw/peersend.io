@@ -78,7 +78,7 @@ export class CustomDataChannel {
     }
   }
 
-  public get _channel() {
+  public getDataChannel() {
     return this.channel;
   }
 
