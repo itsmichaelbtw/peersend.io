@@ -3,7 +3,7 @@ import type { PeerSendFile } from "@/state/types";
 import { useMemo } from "react";
 import { SortableHeader } from "../sorting-header";
 import { columnHelper } from "../helper";
-import { formatFileSize } from "../../utils";
+import { formatFileSize } from "@/lib/file-transfer";
 
 export const fileSizeColumn = columnHelper.accessor((row) => row.metadata, {
   id: "file-size",
