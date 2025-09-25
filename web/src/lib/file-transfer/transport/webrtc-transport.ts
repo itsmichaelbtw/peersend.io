@@ -64,14 +64,15 @@ export class WebRtcTransport implements FileTransferTransport {
       data: chunk
     });
 
-    fileTransferState.dispatch("SET_FILE_PERCENTAGE", {
-      id: id,
-      percentage: percentage
-    });
+    if (percentage > 0) {
+      fileTransferState.dispatch("SET_FILE_PERCENTAGE", {
+        id: id,
+        percentage: percentage
+      });
+    }
   }
 
   public async complete(id: string): Promise<void> {
-    // set to complete status
     this.client.emit({
       type: "end_file_transit",
       data: {

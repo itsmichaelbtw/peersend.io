@@ -1,40 +1,21 @@
-import type { FileType } from "../types";
-
 import { DEFAULT_CHUNK_SIZE } from "../constants";
 
 export class FileChunker {
-  private file: FileType;
+  private file: File;
 
-  constructor(file: FileType) {
+  constructor(file: File) {
     this.file = file;
   }
 
   async *chunk(chunkSize: number = DEFAULT_CHUNK_SIZE): AsyncGenerator<Uint8Array, void> {
-    let buffer: ArrayBuffer;
-
-    switch (true) {
-      case this.file instanceof File:
-        buffer = await this.file.arrayBuffer();
-        break;
-      case this.file instanceof Uint8Array:
-        buffer = this.file.buffer as ArrayBuffer;
-        break;
-      default:
-        buffer = this.file;
-    }
-
     let offset = 0;
-    let index = 0;
 
-    while (offset < buffer.byteLength) {
-      const end = Math.min(offset + chunkSize, buffer.byteLength);
-      const slice = buffer.slice(offset, end);
-      const chunk = new Uint8Array(slice);
-
-      yield chunk;
-
+    while (offset < this.file.size) {
+      const end = Math.min(offset + chunkSize, this.file.size);
+      const blob = this.file.slice(offset, end);
+      const buffer = await blob.arrayBuffer();
+      yield new Uint8Array(buffer);
       offset = end;
-      index++;
     }
   }
 }

@@ -3,8 +3,7 @@ import type { RequiredKeys } from "@/types/misc";
 import type { FileTransferState, PeerSendFile } from "../types";
 
 import { StateStore } from "../store";
-import { fileBytesStore } from "@/lib/file-transfer";
-import { removeBytesFromFile } from "@/components/containers/collaboration";
+import { fileStorage } from "@/lib/file-transfer";
 
 type ID = Pick<PeerSendFile, "id">;
 
@@ -28,12 +27,6 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
     }
 
     this.dispatch("BULK_ADD_FILES", files);
-
-    for (const file of files) {
-      if (file.metadata.bytes) {
-        fileBytesStore.set(file.id, file.metadata.bytes);
-      }
-    }
   }
 
   public remove(files: StateActions["BULK_REMOVE_FILES"]): void {
@@ -44,7 +37,7 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
     this.dispatch("BULK_REMOVE_FILES", files);
 
     for (const id in files) {
-      fileBytesStore.delete(id);
+      fileStorage.remove(id);
     }
   }
 
@@ -55,7 +48,7 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
     switch (action.type) {
       case "BULK_ADD_FILES": {
         return {
-          files: state.files.concat(action.payload.map(removeBytesFromFile))
+          files: state.files.concat(action.payload)
         };
       }
 
@@ -63,11 +56,8 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
         return {
           files: state.files.map((file) => {
             const newFile = action.payload.find((f) => f.id === file.id);
-            if (newFile) {
-              return removeBytesFromFile(newFile);
-            }
 
-            return file;
+            return !!newFile ? newFile : file;
           })
         };
       }
@@ -80,11 +70,15 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
 
       case "BULK_SET_FILES": {
         return {
-          files: action.payload.map(removeBytesFromFile)
+          files: action.payload
         };
       }
 
       case "SET_FILE_PERCENTAGE": {
+        if (action.payload.percentage < 0) {
+          return state;
+        }
+
         return {
           files: state.files.map((file) => {
             if (file.id === action.payload.id) {

@@ -2,22 +2,13 @@ import type { PeerSendFile } from "@/state/types";
 import type { FileWithPath } from "@mantine/dropzone";
 import type { WebRtcEventMap } from "../networking";
 
-import { parse, v4, stringify } from "uuid";
+import { v4, stringify } from "uuid";
 
 import { FILE_ID_BYTE_LENGTH } from "./constants";
 
-interface FileTransferIdentifier {
-  asString: string;
-  asBytes: Uint8Array;
-}
-
 export async function createCustomFileFromUpload(file: FileWithPath): Promise<PeerSendFile> {
-  const id = v4();
-  const buffer = await file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-
   return {
-    id: id,
+    id: v4(),
     timestamp: Date.now(),
     status: "pending",
     transfer: {
@@ -29,9 +20,9 @@ export async function createCustomFileFromUpload(file: FileWithPath): Promise<Pe
       path: file.path,
       size: file.size,
       type: file.type,
-      lastModified: file.lastModified,
-      bytes: bytes
-    }
+      lastModified: file.lastModified
+    },
+    nativeFile: file
   };
 }
 
@@ -46,7 +37,8 @@ export function createCustomFileFromTransfer(
     },
     timestamp: Date.now(),
     status: "in-transit",
-    metadata: transfer.metadata
+    metadata: transfer.metadata,
+    nativeFile: null
   };
 }
 
@@ -63,16 +55,6 @@ export function createBufferWithHeader(id: Uint8Array, data: Uint8Array): Uint8A
   return buffer;
 }
 
-export function createFileTransferIdentifier(): FileTransferIdentifier {
-  const id = v4();
-  const bytes = parse(id);
-
-  return {
-    asString: id,
-    asBytes: bytes
-  };
-}
-
 export function parseTransitBuffer(buffer: Uint8Array) {
   const id = buffer.slice(0, FILE_ID_BYTE_LENGTH);
   const chunk = buffer.slice(FILE_ID_BYTE_LENGTH);
@@ -80,20 +62,6 @@ export function parseTransitBuffer(buffer: Uint8Array) {
   return {
     fileId: stringify(id),
     chunk: chunk
-  };
-}
-
-export function removeBytesFromFile(file: PeerSendFile): PeerSendFile {
-  if (!file.metadata.bytes) {
-    return file;
-  }
-
-  return {
-    ...file,
-    metadata: {
-      ...file.metadata,
-      bytes: undefined
-    }
   };
 }
 

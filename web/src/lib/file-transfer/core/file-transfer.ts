@@ -1,9 +1,12 @@
 import type { PeerSendFile } from "@/state/types";
 import type { FileTransferTransport } from "../types";
 
+import { parse } from "uuid";
+
 import { FileChunker } from "./file-chunker";
-import { fileBytesStore } from "./file-store";
-import { createBufferWithHeader, createFileTransferIdentifier } from "../utils";
+import { createBufferWithHeader } from "../utils";
+import { ProgressThrottler } from "../progress-throttler";
+import { sleep } from "@/utils/sleep";
 
 export class FileTransfer {
   private transport: FileTransferTransport;
@@ -15,34 +18,41 @@ export class FileTransfer {
   }
 
   public async transfer(file: PeerSendFile): Promise<void> {
-    const fileBytes = fileBytesStore.get(file.id);
-
-    if (!fileBytes) {
-      await this.transport.error(file.id);
-      return;
+    if (!file.nativeFile) {
+      return await this.transport.error(file.id);
     }
 
-    const id = createFileTransferIdentifier();
-    const fileChunker = new FileChunker(fileBytes);
-    const totalBytes = fileBytes.length;
+    const fileChunker = new FileChunker(file.nativeFile);
+    const throttler = new ProgressThrottler(1, 150);
+
+    const asBytes = parse(file.id);
+    const totalBytes = file.nativeFile.size;
+
+    const now = performance.now();
 
     let bytesSent = 0;
 
     try {
-      await this.transport.start(id.asString, totalBytes, file.metadata);
+      await this.transport.start(file.id, totalBytes, file.metadata);
 
       for await (const chunk of fileChunker.chunk()) {
-        const payload = createBufferWithHeader(id.asBytes, chunk);
-        const percentage = Math.round(((bytesSent + chunk.length) / totalBytes) * 100);
+        let percentage = Math.round(((bytesSent + chunk.length) / totalBytes) * 100);
 
-        await this.transport.chunk(id.asString, payload, percentage);
+        if (!throttler.canUpdate(percentage)) {
+          percentage = -1;
+        }
 
+        await this.transport.chunk(file.id, createBufferWithHeader(asBytes, chunk), percentage);
         bytesSent += chunk.length;
       }
 
-      await this.transport.complete(id.asString);
+      if (performance.now() - now <= 500) {
+        await sleep(500);
+      }
+
+      await this.transport.complete(file.id);
     } catch (error) {
-      await this.transport.error(id.asString);
+      await this.transport.error(file.id);
     }
   }
 
