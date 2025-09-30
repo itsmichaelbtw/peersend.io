@@ -1,4 +1,4 @@
-import type { SessionState, WebRtcConnectionState, WebSocketConnectionState } from "@/types/state";
+import type { SessionState, WebRtcConnectionState, WebSocketConnectionState } from "@/state";
 
 export const SESSION_CODE_EXAMPLE = import.meta.env.VITE_SESSION_CODE_EXAMPLE;
 export const WEBSOCKET_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT;

@@ -54,12 +54,11 @@ export interface FileTransferState {
 export interface PeerSendFile<T extends FileTransferType = FileTransferType> {
   id: string;
   timestamp: number;
-  status: "pending" | "in-transit" | "sent" | "error";
+  status: "pending" | "in-transit" | "sent" | "received" | "error";
   transfer: {
     type: T;
     percentage: number;
   };
-  metadata: Pick<FileWithPath, "name" | "path" | "size" | "type" | "lastModified"> & {
-    bytes?: FileContentBytes;
-  };
+  metadata: Pick<FileWithPath, "name" | "path" | "size" | "type" | "lastModified">;
+  nativeFile: FileWithPath | null;
 }

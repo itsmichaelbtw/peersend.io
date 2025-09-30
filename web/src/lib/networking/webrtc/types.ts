@@ -5,8 +5,10 @@ import type { NetworkMessagePayload } from "../types";
 interface WebRtcCommonEvents {
   ping: Pick<PongData, "client_timestamp">;
   pong: PongData;
-  start_file_transit: Omit<PeerSendFile["metadata"], "bytes"> & {
+  start_file_transit: {
     id: string;
+    transferSize: number;
+    metadata: PeerSendFile["metadata"];
   };
   in_file_transit: Uint8Array;
   end_file_transit: {
