@@ -36,6 +36,7 @@ type HostTransferData struct {
 }
 
 type ErrorData struct {
+	Title   string `json:"title"`
 	Message string `json:"message"`
 }
 

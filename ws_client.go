@@ -28,7 +28,8 @@ func (c *Client) message(data any) error {
 		c.conn.WriteJSON(Message[ErrorData]{
 			Type: ErrorMessageType,
 			Data: ErrorData{
-				Message: "The server tried to broadcast a message, but failed",
+				Title:   "failed to broadcast",
+				Message: "the server tried to broadcast a message but wasn't able to",
 			},
 		})
 

@@ -38,6 +38,7 @@ func (s *Session) handleClientMessages(client *Client) {
 			client.message(Message[ErrorData]{
 				Type: ErrorMessageType,
 				Data: ErrorData{
+					Title:   "message error",
 					Message: "invalid message format",
 				},
 			})
@@ -49,11 +50,12 @@ func (s *Session) handleClientMessages(client *Client) {
 		case "ping":
 			EchoLatencyTimestamp(client, message)
 
-		case "transfer_host_request":
+		case "transfer_host":
 			if err := TransferSessionHost(client, s.getOtherClient(client)); err != nil {
 				client.message(Message[ErrorData]{
 					Type: ErrorMessageType,
 					Data: ErrorData{
+						Title:   "host transfer error",
 						Message: err.Error(),
 					},
 				})
@@ -66,6 +68,7 @@ func (s *Session) handleClientMessages(client *Client) {
 				client.message(Message[ErrorData]{
 					Type: ErrorMessageType,
 					Data: ErrorData{
+						Title:   "failed to broadcast",
 						Message: "unable to pass message to other client as there is none",
 					},
 				})
