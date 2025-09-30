@@ -6,7 +6,12 @@ import { Badge, Box, Button, Card, Center, Group, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { Dropzone } from "@mantine/dropzone";
 import { useFileTransferState } from "@/hooks/use-file-transfer-state";
-import { FileTransfer, WebRtcTransport, createCustomFileFromUpload } from "@/lib/file-transfer";
+import {
+  FileTransfer,
+  WebRtcTransport,
+  createCustomFileFromUpload,
+  smartFileDownload
+} from "@/lib/file-transfer";
 import { webrtcClient } from "@/lib/networking";
 import { appState, fileTransferState } from "@/state";
 
@@ -40,6 +45,10 @@ export function FileTransferCard() {
     // do something here maybe a notif
     // if in transit you can't select the checkbox nor remove it until its done
     // maybe look at cancelling in the future?
+  }
+
+  async function onDownload(files: PeerSendFile[]) {
+    await smartFileDownload(files);
   }
 
   async function onDrop(files: FileWithPath[]) {
@@ -167,7 +176,7 @@ export function FileTransferCard() {
                     size="sm"
                     leftSection={<DownloadIcon size={16} />}
                     onClick={() => {
-                      onSend(isUsingSelection ? files : fileGroups.incoming);
+                      onDownload(isUsingSelection ? files : fileGroups.incoming);
                     }}
                   >
                     Download {isUsingSelection && `(${files.length})`}

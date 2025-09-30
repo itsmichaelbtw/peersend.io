@@ -4,7 +4,9 @@ import type { WebRtcEventMap } from "../networking";
 
 import { v4, stringify } from "uuid";
 
-import { FILE_ID_BYTE_LENGTH } from "./constants";
+import { FILE_ID_BYTE_LENGTH, DOWNLOAD_CONTAINER_ID } from "./constants";
+import { fileStorage } from "./core";
+import { getContainerElementForDownload } from "@/utils/dom";
 
 export async function createCustomFileFromUpload(file: FileWithPath): Promise<PeerSendFile> {
   return {
@@ -103,5 +105,38 @@ export function formatFileSize(bytes: number, decimals = 2): string {
 }
 
 export function calculatePercentage(a: number, b: number): number {
-  return Math.round((a + b) * 100);
+  return Math.round((a / b) * 100);
+}
+
+export function triggerBrowserDownload(file: File): void {
+  const container = getContainerElementForDownload(DOWNLOAD_CONTAINER_ID);
+
+  const url = URL.createObjectURL(file);
+  const element = document.createElement("a");
+
+  element.href = url;
+  element.download = file.name;
+
+  container.appendChild(element);
+
+  try {
+    element.click();
+  } finally {
+    container.removeChild(element);
+    URL.revokeObjectURL(url);
+  }
+}
+export async function smartFileDownload(files: PeerSendFile[]): Promise<void> {
+  for (const file of files) {
+    try {
+      const nativeFile = fileStorage.getNativeFile(file.id, file.metadata);
+
+      // zip or combine or do other things here
+      // https://github.com/itsmichaelbtw/peersend.io/issues/39
+
+      triggerBrowserDownload(nativeFile);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
