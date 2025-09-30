@@ -20,7 +20,7 @@ export function Diagnostics() {
           <div className="flex justify-between">
             <span className="text-xs text-gray-500">Data Channel</span>
             <span className="text-xs font-medium font-mono">
-              {webrtcState.dataChannel._channel.label}
+              {webrtcState.dataChannel.getDataChannel().label}
             </span>
           </div>
         )}

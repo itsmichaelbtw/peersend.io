@@ -1,4 +1,4 @@
 export * from "./collaboration";
 export * from "./connection-upgrade";
 export * from "./cards";
-export * from "./file-transfer";
+export * from "./file-table";

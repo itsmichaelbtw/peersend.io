@@ -25,7 +25,11 @@ export class MessageBus<T extends string> {
     }
 
     for (const handler of this.handlers.get(event)!) {
-      handler(data);
+      try {
+        handler(data);
+      } catch (error) {
+        console.log("there was a problem when handling an emitter");
+      }
     }
   }
 

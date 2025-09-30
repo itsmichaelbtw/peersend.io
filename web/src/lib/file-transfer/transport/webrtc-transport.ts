@@ -47,13 +47,6 @@ export class WebRtcTransport implements FileTransferTransport {
     });
   }
 
-  public async error(id: string): Promise<void> {
-    fileTransferState.dispatch("SET_FILE_STATUS", {
-      id: id,
-      status: "error"
-    });
-  }
-
   public async chunk(id: string, chunk: Uint8Array, percentage: number): Promise<void> {
     if (this.datachannel.bufferedAmount > BUFFER_THRESHOLD) {
       await this.wait();
@@ -83,6 +76,13 @@ export class WebRtcTransport implements FileTransferTransport {
     fileTransferState.dispatch("SET_FILE_STATUS", {
       id: id,
       status: "sent"
+    });
+  }
+
+  public async error(id: string): Promise<void> {
+    fileTransferState.dispatch("SET_FILE_STATUS", {
+      id: id,
+      status: "error"
     });
   }
 }

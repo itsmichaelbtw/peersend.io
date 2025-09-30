@@ -23,3 +23,7 @@ export function getOutgoingFiles() {
 
   return files.filter((f): f is PeerSendFile<"incoming"> => f.transfer.type === "outgoing");
 }
+
+export function getPeersendFile(id: string): PeerSendFile | undefined {
+  return getFileTransferState().files.find((f) => f.id === id);
+}
