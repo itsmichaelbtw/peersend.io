@@ -10,16 +10,16 @@ const RTC_CONFIGURATION: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }]
 };
 
-function event_session_information(data: WebSocketEventMap.IncomingEvents["session_information"]) {
+function event_SessionInformation(data: WebSocketEventMap.IncomingEvents["session_information"]) {
   appState.dispatch("SET_SESSION_INFORMATION", data);
   webSocketClient.start_latency_monitoring();
 }
 
-function event_pong(data: WebSocketEventMap.IncomingEvents["pong"]) {
+function event_Pong(data: WebSocketEventMap.IncomingEvents["pong"]) {
   webSocketClient.latency_checker.pong(data);
 }
 
-function event_sync_online_clients(data: WebSocketEventMap.IncomingEvents["sync_online_clients"]) {
+function event_SyncOnlineClients(data: WebSocketEventMap.IncomingEvents["sync_online_clients"]) {
   const { sessionState } = appState.get();
 
   if (sessionState.clients.length > data.clients.length) {
@@ -29,11 +29,11 @@ function event_sync_online_clients(data: WebSocketEventMap.IncomingEvents["sync_
   appState.dispatch("SET_CLIENTS", data);
 }
 
-function event_host_transferred(data: WebSocketEventMap.IncomingEvents["host_transferred"]) {
+function event_HostTransferred(data: WebSocketEventMap.IncomingEvents["host_transferred"]) {
   appState.dispatch("SET_HOST", data);
 }
 
-async function event_webrtc_offer(data: WebSocketEventMap.IncomingEvents["webrtc_offer"]) {
+async function event_WebRtcOffer(data: WebSocketEventMap.IncomingEvents["webrtc_offer"]) {
   const { sessionState } = appState.get();
 
   if (sessionState.isHost) {
@@ -83,7 +83,7 @@ async function event_webrtc_offer(data: WebSocketEventMap.IncomingEvents["webrtc
   }
 }
 
-async function event_webrtc_accept(data: WebSocketEventMap.IncomingEvents["webrtc_accept"]) {
+async function event_WebRtcAccept(data: WebSocketEventMap.IncomingEvents["webrtc_accept"]) {
   const { sessionState, webrtcState } = appState.get();
 
   if (!sessionState.isHost) {
@@ -122,7 +122,7 @@ async function event_webrtc_accept(data: WebSocketEventMap.IncomingEvents["webrt
   }
 }
 
-async function event_webrtc_ice_candidate(
+async function event_WebRtcIceCandidate(
   data: WebSocketEventMap.IncomingEvents["webrtc_ice_candidate"]
 ) {
   const { webrtcState } = appState.get();
@@ -153,7 +153,7 @@ async function event_webrtc_ice_candidate(
   }
 }
 
-function event_webrtc_reject(data: WebSocketEventMap.IncomingEvents["webrtc_reject"]) {
+function event_WebRtcReject(data: WebSocketEventMap.IncomingEvents["webrtc_reject"]) {
   webSocketClient.disconnect();
 
   appState.dispatch("SET_LAST_ERROR", {
@@ -162,7 +162,7 @@ function event_webrtc_reject(data: WebSocketEventMap.IncomingEvents["webrtc_reje
   });
 }
 
-function event_error(data: WebSocketEventMap.IncomingEvents["error"]) {
+function event_Error(data: WebSocketEventMap.IncomingEvents["error"]) {
   appState.dispatch("SET_LAST_ERROR", {
     title: data.type,
     message: data.reason
@@ -170,13 +170,13 @@ function event_error(data: WebSocketEventMap.IncomingEvents["error"]) {
 }
 
 export const events: NetworkEvents<WebSocketMessages.IncomingMessage> = {
-  session_information: event_session_information,
-  sync_online_clients: event_sync_online_clients,
-  pong: event_pong,
-  host_transferred: event_host_transferred,
-  webrtc_accept: event_webrtc_accept,
-  webrtc_reject: event_webrtc_reject,
-  webrtc_offer: event_webrtc_offer,
-  webrtc_ice_candidate: event_webrtc_ice_candidate,
-  error: event_error
+  session_information: event_SessionInformation,
+  sync_online_clients: event_SyncOnlineClients,
+  pong: event_Pong,
+  host_transferred: event_HostTransferred,
+  webrtc_accept: event_WebRtcAccept,
+  webrtc_reject: event_WebRtcReject,
+  webrtc_offer: event_WebRtcOffer,
+  webrtc_ice_candidate: event_WebRtcIceCandidate,
+  error: event_Error
 };
