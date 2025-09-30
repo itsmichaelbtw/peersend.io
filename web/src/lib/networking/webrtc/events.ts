@@ -1,24 +1,62 @@
 import type { WebRtcEventMap, WebRtcMessages } from "./types";
 import type { NetworkEvents } from "../types";
 
-import { appState, fileTransferState } from "@/state";
+import { appState, fileTransferState, getPeersendFile } from "@/state";
+import {
+  fileStorage,
+  createCustomFileFromTransfer,
+  parseTransitBuffer,
+  ProgressThrottler
+} from "@/lib/file-transfer";
 import { webrtcClient } from "./client";
 
-function event_start_file_transit(data: WebRtcEventMap.IncomingEvents["start_file_transit"]) {
-  // need to move file transfer to an external store
-  // since we need to add them here
-  // fileTransferState.add([data]);
+const throttler = new ProgressThrottler(1, 150);
+
+function event_StartFileTransit(data: WebRtcEventMap.IncomingEvents["start_file_transit"]) {
+  if (!!getPeersendFile(data.id)) {
+    console.error("a file with the same ID already exists");
+    return;
+  }
+
+  const file = createCustomFileFromTransfer(data);
+  fileStorage.init(data.id, data.transferSize);
+  fileTransferState.add([file]);
 }
 
-function event_in_file_transit(data: WebRtcEventMap.IncomingEvents["in_file_transit"]) {}
+function event_InFileTransit(data: WebRtcEventMap.IncomingEvents["in_file_transit"]) {
+  // https://github.com/itsmichaelbtw/peersend.io/issues/37
 
-function event_end_file_transit(data: WebRtcEventMap.IncomingEvents["end_file_transit"]) {}
+  const parsed = parseTransitBuffer(data);
+  const progress = fileStorage.addChunk(parsed.fileId, parsed.chunk);
 
-function event_pong(data: WebRtcEventMap.IncomingEvents["pong"]) {
+  if (throttler.canUpdate(progress)) {
+    fileTransferState.dispatch("SET_FILE_PERCENTAGE", {
+      id: parsed.fileId,
+      percentage: progress
+    });
+  }
+}
+
+function event_EndFileTransit(data: WebRtcEventMap.IncomingEvents["end_file_transit"]) {
+  if (fileStorage.isComplete(data.id)) {
+    fileTransferState.dispatch("SET_FILE_STATUS", {
+      id: data.id,
+      status: "received"
+    });
+  } else {
+    fileStorage.remove(data.id);
+    fileTransferState.dispatch("SET_FILE_STATUS", {
+      id: data.id,
+      status: "error"
+    });
+  }
+}
+
+function event_Pong(data: WebRtcEventMap.IncomingEvents["pong"]) {
   webrtcClient.latency_checker.pong(data);
 }
 
-function event_ping(data: WebRtcEventMap.IncomingEvents["ping"]) {
+function event_Ping(data: WebRtcEventMap.IncomingEvents["ping"]) {
   webrtcClient.emit({
     type: "pong",
     data: {
@@ -28,7 +66,7 @@ function event_ping(data: WebRtcEventMap.IncomingEvents["ping"]) {
   });
 }
 
-function event_error(data: WebRtcEventMap.IncomingEvents["error"]) {
+function event_Error(data: WebRtcEventMap.IncomingEvents["error"]) {
   appState.dispatch("SET_LAST_ERROR", {
     title: data.type,
     message: data.reason
@@ -36,10 +74,10 @@ function event_error(data: WebRtcEventMap.IncomingEvents["error"]) {
 }
 
 export const events: NetworkEvents<WebRtcMessages.IncomingMessage> = {
-  start_file_transit: event_start_file_transit,
-  in_file_transit: console.log,
-  end_file_transit: console.log,
-  pong: event_pong,
-  ping: event_ping,
-  error: event_error
+  start_file_transit: event_StartFileTransit,
+  in_file_transit: event_InFileTransit,
+  end_file_transit: event_EndFileTransit,
+  pong: event_Pong,
+  ping: event_Ping,
+  error: event_Error
 };
