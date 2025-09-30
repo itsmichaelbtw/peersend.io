@@ -1,6 +1,8 @@
 import type { PeerSendFile } from "@/state";
 import type { FileStorageRecord } from "../types";
 
+import { calculatePercentage } from "../utils";
+
 export class FileStorage {
   private files = new Map<string, FileStorageRecord>();
 
@@ -17,7 +19,7 @@ export class FileStorage {
     });
   }
 
-  public addChunk(id: string, chunk: Uint8Array): void {
+  public addChunk(id: string, chunk: Uint8Array): number {
     const file = this.files.get(id);
 
     if (!file) {
@@ -26,6 +28,8 @@ export class FileStorage {
 
     file.chunks.push(chunk);
     file.received += chunk.byteLength;
+
+    return this.getProgress(id);
   }
 
   public getProgress(id: string): number {
@@ -35,17 +39,23 @@ export class FileStorage {
       return 0;
     }
 
-    return Math.round((file.received / file.size) * 100);
+    return calculatePercentage(file.received, file.size);
   }
 
-  public isComplete(id: string, totalSize: number): boolean {
+  public isComplete(id: string): boolean {
     const file = this.files.get(id);
 
     if (!file) {
       return false;
     }
 
-    return file.received >= totalSize;
+    const isComplete = file.received >= file.size;
+
+    if (isComplete) {
+      this.markComplete(id);
+    }
+
+    return isComplete;
   }
 
   public markComplete(id: string, clearMemory = false) {
@@ -69,7 +79,7 @@ export class FileStorage {
       throw new Error(`File ${id} not initialized`);
     }
 
-    if (!this.isComplete(id, metadata.size)) {
+    if (!this.isComplete(id)) {
       throw new Error(`File ${id} is not complete`);
     }
 

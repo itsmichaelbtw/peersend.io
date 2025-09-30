@@ -4,7 +4,7 @@ import type { FileTransferTransport } from "../types";
 import { parse } from "uuid";
 
 import { FileChunker } from "./file-chunker";
-import { createBufferWithHeader } from "../utils";
+import { calculatePercentage, createBufferWithHeader } from "../utils";
 import { ProgressThrottler } from "../progress-throttler";
 import { sleep } from "@/utils/sleep";
 
@@ -36,7 +36,7 @@ export class FileTransfer {
       await this.transport.start(file.id, totalBytes, file.metadata);
 
       for await (const chunk of fileChunker.chunk()) {
-        let percentage = Math.round(((bytesSent + chunk.length) / totalBytes) * 100);
+        let percentage = calculatePercentage(bytesSent + chunk.length, totalBytes);
 
         if (!throttler.canUpdate(percentage)) {
           percentage = -1;
@@ -58,6 +58,7 @@ export class FileTransfer {
 
   public async initiate(): Promise<void> {
     // change this to concurrent in future
+    // https://github.com/itsmichaelbtw/peersend.io/issues/15
 
     for (const file of this.files) {
       await this.transfer(file);

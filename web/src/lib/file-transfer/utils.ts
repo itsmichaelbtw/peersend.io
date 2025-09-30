@@ -101,3 +101,7 @@ export function formatFileSize(bytes: number, decimals = 2): string {
   const value = parseFloat((bytes / Math.pow(k, i)).toFixed(decimals));
   return `${value} ${sizes[i]}`;
 }
+
+export function calculatePercentage(a: number, b: number): number {
+  return Math.round((a + b) * 100);
+}
