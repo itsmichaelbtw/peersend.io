@@ -1,28 +1,68 @@
+import type { FileWithPath, FileRejection } from "@mantine/dropzone";
 import type { PeerSendFile } from "@/state/types";
 
+import { DownloadIcon, SendIcon, Trash2Icon, UploadIcon } from "lucide-react";
 import { Badge, Box, Button, Card, Center, Group, Stack } from "@mantine/core";
-import { DownloadIcon, SendIcon, Trash2Icon } from "lucide-react";
-import { fileTransferState } from "@/state";
+import { notifications } from "@mantine/notifications";
+import { Dropzone } from "@mantine/dropzone";
 import { useFileTransferState } from "@/hooks/use-file-transfer-state";
-import { initiateFileTransfer } from "@/lib/file-transfer";
+import { FileTransfer, WebRtcTransport, createCustomFileFromUpload } from "@/lib/file-transfer";
+import { webrtcClient } from "@/lib/networking";
+import { appState, fileTransferState } from "@/state";
 
-import { FileUpload, FileTable } from "../file-transfer";
+import { FileTable } from "../file-table";
 
-export function FileTransfer() {
+export function FileTransferCard() {
   const { fileGroups } = useFileTransferState();
 
   async function onSend(files: PeerSendFile[]) {
-    const pendingFiles = files.filter((f) => f.status === "pending");
+    const filesToSend = files.filter((f) => f.status === "pending");
 
-    if (pendingFiles.length === 0) {
+    if (filesToSend.length === 0) {
       return;
     }
 
-    await initiateFileTransfer(pendingFiles);
+    const { webrtcState } = appState.get();
+
+    fileTransferState.dispatch(
+      "BULK_UPDATE_FILES",
+      filesToSend.map((file) => ({
+        ...file,
+        status: "in-transit"
+      }))
+    );
+
+    const transport = new WebRtcTransport(webrtcClient, webrtcState.dataChannel!.getDataChannel());
+    const fileTransfer = new FileTransfer(filesToSend, transport);
+
+    await fileTransfer.initiate();
 
     // do something here maybe a notif
     // if in transit you can't select the checkbox nor remove it until its done
     // maybe look at cancelling in the future?
+  }
+
+  async function onDrop(files: FileWithPath[]) {
+    const customFiles: PeerSendFile[] = [];
+
+    for (const file of files) {
+      const customFile = await createCustomFileFromUpload(file);
+      customFiles.push(customFile);
+    }
+
+    fileTransferState.add(customFiles);
+  }
+
+  // need to verify this
+  function onReject(rejections: FileRejection[]) {
+    for (const rejection of rejections) {
+      notifications.show({
+        title: `File Upload Error: ${rejection.file.name}`,
+        message: rejection.errors.join(", "),
+        color: "red",
+        withBorder: true
+      });
+    }
   }
 
   return (
@@ -39,7 +79,17 @@ export function FileTransfer() {
         </Card.Section>
 
         <Card.Section py="sm" className="space-y-3" inheritPadding withBorder>
-          <FileUpload />
+          <Dropzone onDrop={onDrop} onReject={onReject}>
+            <Group justify="center" gap="xl" className="pointer-events-auto" p="lg">
+              <Stack gap={0} align="center">
+                <div className="mb-2 flex p-3 items-center justify-center rounded-full bg-gray-100">
+                  <UploadIcon size={24} className="text-gray-500" />
+                </div>
+                <h3 className="text-lg font-medium">Drag & Drop files</h3>
+                <p className="text-sm text-gray-400">or click to browse from your computer</p>
+              </Stack>
+            </Group>
+          </Dropzone>
           <FileTable files={fileGroups.outgoing}>
             {({ isUsingSelection, files }) => (
               <Group justify="space-between">
@@ -83,7 +133,7 @@ export function FileTransfer() {
           <h2 className="font-semibold text-lg leading-snug">Shared Files</h2>
         </Card.Section>
 
-        <Card.Section py="sm" inheritPadding withBorder>
+        <Card.Section py="sm" className="space-y-3" inheritPadding withBorder>
           <FileTable
             files={fileGroups.incoming}
             emptyComponent={
@@ -107,17 +157,19 @@ export function FileTransfer() {
                     color="dark"
                     leftSection={<Trash2Icon size={16} />}
                     onClick={() => {
-                      // fileTransferDispatch({
-                      //   type: "REMOVE_FILES",
-                      //   payload: {
-                      //     files: files
-                      //   }
-                      // });
+                      fileTransferState.remove(isUsingSelection ? files : fileGroups.incoming);
                     }}
                   >
                     {isUsingSelection ? `Remove (${files.length})` : "Clear"}
                   </Button>
-                  <Button color="teal" size="sm" leftSection={<DownloadIcon size={16} />}>
+                  <Button
+                    color="teal"
+                    size="sm"
+                    leftSection={<DownloadIcon size={16} />}
+                    onClick={() => {
+                      onSend(isUsingSelection ? files : fileGroups.incoming);
+                    }}
+                  >
                     Download {isUsingSelection && `(${files.length})`}
                   </Button>
                 </Group>
