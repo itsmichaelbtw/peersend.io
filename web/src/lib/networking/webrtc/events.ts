@@ -38,6 +38,8 @@ function event_InFileTransit(data: WebRtcEventMap.IncomingEvents["in_file_transi
 }
 
 function event_EndFileTransit(data: WebRtcEventMap.IncomingEvents["end_file_transit"]) {
+  throttler.reset();
+
   if (fileStorage.isComplete(data.id)) {
     fileTransferState.dispatch("SET_FILE_STATUS", {
       id: data.id,
