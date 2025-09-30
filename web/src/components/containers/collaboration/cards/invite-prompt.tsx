@@ -6,7 +6,7 @@ interface Props {
   maximumClients: number;
 }
 
-export function InvitePrompt({ clientsConnected, maximumClients }: Props) {
+export function InvitePromptCard({ clientsConnected, maximumClients }: Props) {
   return (
     <Card shadow="sm" padding="sm" radius="sm" className="select-none" withBorder>
       <Card.Section py="sm" inheritPadding withBorder>

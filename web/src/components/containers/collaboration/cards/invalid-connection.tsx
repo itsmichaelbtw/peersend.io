@@ -1,7 +1,7 @@
 import { Card, Center, Group, Stack } from "@mantine/core";
 import { CloudAlertIcon } from "lucide-react";
 
-export function InvalidConnection() {
+export function InvalidConnectionCard() {
   return (
     <Card shadow="sm" padding="sm" radius="sm" className="select-none" withBorder>
       <Card.Section py="sm" inheritPadding withBorder>

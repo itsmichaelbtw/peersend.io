@@ -2,7 +2,7 @@ import { Button, Card, Center, Group, Stack } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { ClockIcon } from "lucide-react";
 
-export function InitiateDirectConnection() {
+export function InitiateDirectConnectionCard() {
   return (
     <Card shadow="sm" padding="sm" radius="sm" className="select-none" withBorder>
       <Card.Section py="sm" inheritPadding withBorder>

@@ -1,11 +1,11 @@
 import { useAppState } from "@/hooks/use-app-state";
 
 import {
-  InvitePrompt,
-  HostStandby,
-  InitiateDirectConnection,
-  FileTransfer,
-  InvalidConnection
+  InvitePromptCard,
+  HostStandbyCard,
+  InitiateDirectConnectionCard,
+  FileTransferCard,
+  InvalidConnectionCard
 } from "./cards";
 
 export function Collaboration() {
@@ -14,14 +14,14 @@ export function Collaboration() {
   if (sessionState.connectionType === "websocket") {
     if (sessionState.clients.length === sessionState.maximumClients) {
       if (sessionState.isHost) {
-        return <InitiateDirectConnection />;
+        return <InitiateDirectConnectionCard />;
       } else {
-        return <HostStandby />;
+        return <HostStandbyCard />;
       }
     }
 
     return (
-      <InvitePrompt
+      <InvitePromptCard
         clientsConnected={sessionState.clients.length}
         maximumClients={sessionState.maximumClients}
       />
@@ -29,8 +29,8 @@ export function Collaboration() {
   }
 
   if (sessionState.connectionType === "webrtc") {
-    return <FileTransfer />;
+    return <FileTransferCard />;
   }
 
-  return <InvalidConnection />;
+  return <InvalidConnectionCard />;
 }
