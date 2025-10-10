@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "esbenp.prettier-vscode",
-    "Vue.volar"
+    "esbenp.prettier-vscode"
   ]
 }
