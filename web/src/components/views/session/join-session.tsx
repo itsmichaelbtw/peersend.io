@@ -14,134 +14,134 @@ import { webSocketClient } from "@/lib/networking";
 import { SESSION_CODE_EXAMPLE } from "@/config/constants";
 
 const INFO_LIST_POINTS: string[] = [
-  "You'll initially connect to our servers",
-  "When both users are connected, you can upgrade to a direct connection",
-  "File sharing is only available with a direct connection"
+	"You'll initially connect to our servers",
+	"When both users are connected, you can upgrade to a direct connection",
+	"File sharing is only available with a direct connection"
 ];
 
 const REGEX = /^X-[A-Z0-9]{6}$/;
 
 export function JoinSessionView() {
-  const { websocketState, sessionState } = useAppState();
+	const { websocketState, sessionState } = useAppState();
 
-  const navigate = useNavigate();
+	const navigate = useNavigate();
 
-  const field = useField({
-    initialValue: "",
-    validate(value) {
-      if (!value) {
-        return "A session code is required";
-      }
+	const field = useField({
+		initialValue: "",
+		validate(value) {
+			if (!value) {
+				return "A session code is required";
+			}
 
-      if (!REGEX.test(value)) {
-        return `Please enter a valid session code (e.g. ${SESSION_CODE_EXAMPLE})`;
-      }
+			if (!REGEX.test(value)) {
+				return `Please enter a valid session code (e.g. ${SESSION_CODE_EXAMPLE})`;
+			}
 
-      return null;
-    }
-  });
+			return null;
+		}
+	});
 
-  useEffect(() => {
-    if (sessionState.isConnected) {
-      navigate(`/session/${sessionState.sessionCode}`);
-    }
-  }, [sessionState.isConnected, sessionState.sessionCode]);
+	useEffect(() => {
+		if (sessionState.isConnected) {
+			navigate(`/session/${sessionState.sessionCode}`);
+		}
+	}, [sessionState.isConnected, sessionState.sessionCode]);
 
-  useEffect(() => {
-    return () => {
-      appState.dispatch("RESET_CONNECTING_STATES", null);
-    };
-  }, []);
+	useEffect(() => {
+		return () => {
+			appState.dispatch("RESET_CONNECTING_STATES", null);
+		};
+	}, []);
 
-  return (
-    <Card shadow="sm" padding="lg" radius="sm" className="select-none w-md" withBorder>
-      <Card.Section withBorder inheritPadding py="md">
-        <Group gap="sm">
-          <ActionIcon variant="light" size="md" disabled={websocketState.isConnecting}>
-            <ChevronLeftIcon size={22} />
-          </ActionIcon>
-          <h1 className="font-semibold text-lg">Join a session</h1>
-        </Group>
-      </Card.Section>
+	return (
+		<Card shadow="sm" padding="lg" radius="sm" className="select-none w-md" withBorder>
+			<Card.Section withBorder inheritPadding py="md">
+				<Group gap="sm">
+					<ActionIcon variant="light" size="md" disabled={websocketState.isConnecting}>
+						<ChevronLeftIcon size={22} />
+					</ActionIcon>
+					<h1 className="font-semibold text-lg">Join a session</h1>
+				</Group>
+			</Card.Section>
 
-      <Card.Section withBorder inheritPadding py="xl">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, y: 0 }}>
-          <h2 className="font-semibold text-lg leading-snug">Enter session code</h2>
-          <p className="text-black/50 leading-snug">Ask the session host for their unique code</p>
+			<Card.Section withBorder inheritPadding py="xl">
+				<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, y: 0 }}>
+					<h2 className="font-semibold text-lg leading-snug">Enter session code</h2>
+					<p className="text-black/50 leading-snug">Ask the session host for their unique code</p>
 
-          <TextInput
-            {...field.getInputProps()}
-            placeholder={`e.g. ${SESSION_CODE_EXAMPLE}`}
-            className="mt-4"
-          />
+					<TextInput
+						{...field.getInputProps()}
+						placeholder={`e.g. ${SESSION_CODE_EXAMPLE}`}
+						className="mt-4"
+					/>
 
-          <Box p="md" my="md" className="rounded border border-gray-200 bg-gray-50">
-            <h4 className="text-base">What to expect</h4>
-            <ul className="space-y-2 text-sm text-gray-500 mt-2.5">
-              {INFO_LIST_POINTS.map((item, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="bg-[var(--mantine-primary-color-filled)]/15 mt-0.5 rounded-full p-1">
-                    <span className="bg-[var(--mantine-primary-color-filled)]/75 block h-1.5 w-1.5 rounded-full" />
-                  </span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </Box>
+					<Box p="md" my="md" className="rounded border border-gray-200 bg-gray-50">
+						<h4 className="text-base">What to expect</h4>
+						<ul className="space-y-2 text-sm text-gray-500 mt-2.5">
+							{INFO_LIST_POINTS.map((item, index) => (
+								<li key={index} className="flex items-start gap-2">
+									<span className="bg-[var(--mantine-primary-color-filled)]/15 mt-0.5 rounded-full p-1">
+										<span className="bg-[var(--mantine-primary-color-filled)]/75 block h-1.5 w-1.5 rounded-full" />
+									</span>
+									<span>{item}</span>
+								</li>
+							))}
+						</ul>
+					</Box>
 
-          <Button
-            loading={websocketState.isConnecting}
-            size="sm"
-            fullWidth
-            onClick={async () => {
-              !(await field.validate()) && webSocketClient.connect(field.getValue());
-            }}
-          >
-            Enter <ArrowRightIcon size={18} />
-          </Button>
-        </motion.div>
-      </Card.Section>
+					<Button
+						loading={websocketState.isConnecting}
+						size="sm"
+						fullWidth
+						onClick={async () => {
+							!(await field.validate()) && webSocketClient.connect(field.getValue());
+						}}
+					>
+						Enter <ArrowRightIcon size={18} />
+					</Button>
+				</motion.div>
+			</Card.Section>
 
-      <Card.Section withBorder inheritPadding py="xs" className="h-14">
-        <motion.div
-          key={
-            websocketState.isConnecting
-              ? "connecting"
-              : sessionState.isConnected
-                ? "connected"
-                : "idle"
-          }
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          transition={{ duration: 0.1 }}
-        >
-          <Group gap="xs">
-            {websocketState.isConnecting ? (
-              <p className="text-sm text-gray-500 leading-none mt-2.5">Joining...</p>
-            ) : !sessionState.isConnected ? (
-              <React.Fragment>
-                <p className="leading-tight text-sm text-gray-500">Don't have a session code?</p>
-                <Button
-                  variant="transparent"
-                  px={0}
-                  py={0}
-                  classNames={{
-                    label: "text-sm hover:underline"
-                  }}
-                  onClick={() => navigate("/session/create")}
-                >
-                  Create session
-                </Button>
-              </React.Fragment>
-            ) : (
-              <p className="my-3 text-sm text-gray-500 leading-none">
-                This room will expire in 30 minutes if unused
-              </p>
-            )}
-          </Group>
-        </motion.div>
-      </Card.Section>
-    </Card>
-  );
+			<Card.Section withBorder inheritPadding py="xs" className="h-14">
+				<motion.div
+					key={
+						websocketState.isConnecting
+							? "connecting"
+							: sessionState.isConnected
+								? "connected"
+								: "idle"
+					}
+					initial={{ opacity: 0, y: -5 }}
+					animate={{ opacity: 1, y: 0 }}
+					exit={{ opacity: 0, y: -5 }}
+					transition={{ duration: 0.1 }}
+				>
+					<Group gap="xs">
+						{websocketState.isConnecting ? (
+							<p className="text-sm text-gray-500 leading-none mt-2.5">Joining...</p>
+						) : !sessionState.isConnected ? (
+							<React.Fragment>
+								<p className="leading-tight text-sm text-gray-500">Don't have a session code?</p>
+								<Button
+									variant="transparent"
+									px={0}
+									py={0}
+									classNames={{
+										label: "text-sm hover:underline"
+									}}
+									onClick={() => navigate("/session/create")}
+								>
+									Create session
+								</Button>
+							</React.Fragment>
+						) : (
+							<p className="my-3 text-sm text-gray-500 leading-none">
+								This room will expire in 30 minutes if unused
+							</p>
+						)}
+					</Group>
+				</motion.div>
+			</Card.Section>
+		</Card>
+	);
 }

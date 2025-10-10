@@ -11,70 +11,70 @@ import { isBrowserCompatible } from "@/hooks/use-compatibility";
 import { appState } from "@/state";
 
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    Component: MainLayout,
-    children: [
-      {
-        index: true,
-        Component: () => <div>Home Page</div>
-      }
-    ]
-  },
-  {
-    path: "/compatibility",
-    Component: CompatibilityView
-  },
-  {
-    path: "/session",
-    Component: SessionLayout,
-    loader() {
-      if (isBrowserCompatible()) {
-        return null;
-      }
+	{
+		path: "/",
+		Component: MainLayout,
+		children: [
+			{
+				index: true,
+				Component: () => <div>Home Page</div>
+			}
+		]
+	},
+	{
+		path: "/compatibility",
+		Component: CompatibilityView
+	},
+	{
+		path: "/session",
+		Component: SessionLayout,
+		loader() {
+			if (isBrowserCompatible()) {
+				return null;
+			}
 
-      throw redirect("/compatibility");
-    },
-    children: [
-      {
-        index: true,
-        loader() {
-          throw redirect("/session/create");
-        }
-      },
-      {
-        path: "create",
-        loader() {
-          const { sessionState } = appState.get();
+			throw redirect("/compatibility");
+		},
+		children: [
+			{
+				index: true,
+				loader() {
+					throw redirect("/session/create");
+				}
+			},
+			{
+				path: "create",
+				loader() {
+					const { sessionState } = appState.get();
 
-          if (sessionState.isConnected && sessionState.sessionCode) {
-            throw redirect(`/session/${sessionState.sessionCode}`);
-          }
-        },
-        element: <CreateSessionView />
-      },
-      {
-        path: "join",
-        loader() {
-          const { sessionState } = appState.get();
+					if (sessionState.isConnected && sessionState.sessionCode) {
+						throw redirect(`/session/${sessionState.sessionCode}`);
+					}
+				},
+				element: <CreateSessionView />
+			},
+			{
+				path: "join",
+				loader() {
+					const { sessionState } = appState.get();
 
-          if (sessionState.isConnected && sessionState.sessionCode) {
-            throw redirect(`/session/${sessionState.sessionCode}`);
-          }
-        },
-        element: <JoinSessionView />
-      },
-      {
-        path: ":session_code",
-        loader() {
-          const { sessionState } = appState.get();
+					if (sessionState.isConnected && sessionState.sessionCode) {
+						throw redirect(`/session/${sessionState.sessionCode}`);
+					}
+				},
+				element: <JoinSessionView />
+			},
+			{
+				path: ":session_code",
+				loader() {
+					const { sessionState } = appState.get();
 
-          if (!sessionState.isConnected || sessionState.connectionType === "none") {
-            throw redirect("/session/create");
-          }
-        },
-        element: <ActiveSessionView />
-      }
-    ]
-  }
+					if (!sessionState.isConnected || sessionState.connectionType === "none") {
+						throw redirect("/session/create");
+					}
+				},
+				element: <ActiveSessionView />
+			}
+		]
+	}
 ]);

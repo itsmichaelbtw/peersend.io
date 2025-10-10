@@ -18,29 +18,29 @@ import { ConnectionUpgrade } from "./components/containers/collaboration";
 const root = document.getElementById("root")!;
 
 const modals = {
-  initiateDirectConnection: ConnectionUpgrade
+	initiateDirectConnection: ConnectionUpgrade
 };
 
 declare module "@mantine/modals" {
-  export interface MantineModalsOverride {
-    modals: typeof modals;
-  }
+	export interface MantineModalsOverride {
+		modals: typeof modals;
+	}
 }
 
 createRoot(root).render(
-  <StrictMode>
-    <MantineProvider
-      withCssVariables
-      forceColorScheme="light"
-      theme={{
-        primaryColor: "teal",
-        fontFamily: "Geist"
-      }}
-    >
-      <ModalsProvider modals={modals}>
-        <Notifications />
-        <RouterProvider router={router} />
-      </ModalsProvider>
-    </MantineProvider>
-  </StrictMode>
+	<StrictMode>
+		<MantineProvider
+			withCssVariables
+			forceColorScheme="light"
+			theme={{
+				primaryColor: "teal",
+				fontFamily: "Geist"
+			}}
+		>
+			<ModalsProvider modals={modals}>
+				<Notifications />
+				<RouterProvider router={router} />
+			</ModalsProvider>
+		</MantineProvider>
+	</StrictMode>
 );

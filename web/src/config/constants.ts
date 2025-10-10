@@ -10,28 +10,28 @@ export const isDevelopment = import.meta.env.DEV;
 export const isProduction = import.meta.env.PROD;
 
 export const DEFAULT_WEBSOCKET_STATE: WebSocketConnectionState = {
-  ws: null,
-  isConnected: false,
-  isConnecting: false
+	ws: null,
+	isConnected: false,
+	isConnecting: false
 };
 
 export const DEFAULT_WEBRTC_STATE: WebRtcConnectionState = {
-  dataChannel: null,
-  peerConnection: null,
-  isConnected: false,
-  isConnecting: false
+	dataChannel: null,
+	peerConnection: null,
+	isConnected: false,
+	isConnecting: false
 };
 
 export const DEFAULT_SESSION_STATE: SessionState = {
-  sessionCode: null,
-  clients: [],
-  isHost: false,
-  isConnected: false,
-  autoWebRTC: false,
-  clientId: null,
-  maximumClients: 0,
-  latency: -1,
-  lastError: null,
-  encryptionMode: "none",
-  connectionType: "none"
+	sessionCode: null,
+	clients: [],
+	isHost: false,
+	isConnected: false,
+	autoWebRTC: false,
+	clientId: null,
+	maximumClients: 0,
+	latency: -1,
+	lastError: null,
+	encryptionMode: "none",
+	connectionType: "none"
 };

@@ -6,19 +6,19 @@ import { columnHelper } from "../helper";
 import { truncateFileName } from "@/lib/file-transfer";
 
 export const fileNameColumn = columnHelper.accessor((row) => row.metadata, {
-  id: "file-name",
-  header({ column }) {
-    return <SortableHeader title="File Name" column={column} />;
-  },
-  cell({ getValue }) {
-    const metadata = getValue<PeerSendFile["metadata"]>();
-    const fileName = useMemo(() => {
-      return truncateFileName(metadata.name);
-    }, []);
+	id: "file-name",
+	header({ column }) {
+		return <SortableHeader title="File Name" column={column} />;
+	},
+	cell({ getValue }) {
+		const metadata = getValue<PeerSendFile["metadata"]>();
+		const fileName = useMemo(() => {
+			return truncateFileName(metadata.name);
+		}, []);
 
-    return <span>{fileName}</span>;
-  },
-  size: undefined,
-  enableSorting: true,
-  sortDescFirst: true
+		return <span>{fileName}</span>;
+	},
+	size: undefined,
+	enableSorting: true,
+	sortDescFirst: true
 });

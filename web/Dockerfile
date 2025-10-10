@@ -12,9 +12,9 @@ COPY . .
 
 ENV NODE_ENV=development
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 
-CMD ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
+CMD ["sh", "-c", "npm run dev -- --host 0.0.0.0"]
 
 FROM base AS production
 
@@ -24,7 +24,7 @@ COPY web/ ./
 
 ENV NODE_ENV=production
 
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
 FROM nginx:stable-alpine AS deployment

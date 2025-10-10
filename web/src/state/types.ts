@@ -9,56 +9,56 @@ export type NetworkConnectionTypes = "websocket" | "webrtc" | "none";
 export type FileContentBytes = Uint8Array;
 
 export interface ConnectionState {
-  isConnected: boolean;
-  isConnecting: boolean;
+	isConnected: boolean;
+	isConnecting: boolean;
 }
 
 export interface ConnectionErrorData {
-  title: string;
-  message: string;
+	title: string;
+	message: string;
 }
 
 export interface WebRtcConnectionState extends ConnectionState {
-  dataChannel: WithNullable<CustomDataChannel>;
-  peerConnection: WithNullable<CustomRTCPeerConnection>;
+	dataChannel: WithNullable<CustomDataChannel>;
+	peerConnection: WithNullable<CustomRTCPeerConnection>;
 }
 
 export interface WebSocketConnectionState extends ConnectionState {
-  ws: WithNullable<CustomWebSocket>;
+	ws: WithNullable<CustomWebSocket>;
 }
 
 export interface AppState {
-  sessionState: SessionState;
-  webrtcState: WebRtcConnectionState;
-  websocketState: WebSocketConnectionState;
+	sessionState: SessionState;
+	webrtcState: WebRtcConnectionState;
+	websocketState: WebSocketConnectionState;
 }
 
 export interface SessionState {
-  sessionCode: WithNullable<string>;
-  isHost: boolean;
-  isConnected: boolean;
-  autoWebRTC: boolean;
-  encryptionMode: EncryptionModes;
-  latency: number;
-  clientId: WithNullable<string>;
-  clients: string[];
-  maximumClients: number;
-  lastError: WithNullable<ConnectionErrorData>;
-  connectionType: NetworkConnectionTypes;
+	sessionCode: WithNullable<string>;
+	isHost: boolean;
+	isConnected: boolean;
+	autoWebRTC: boolean;
+	encryptionMode: EncryptionModes;
+	latency: number;
+	clientId: WithNullable<string>;
+	clients: string[];
+	maximumClients: number;
+	lastError: WithNullable<ConnectionErrorData>;
+	connectionType: NetworkConnectionTypes;
 }
 
 export interface FileTransferState {
-  files: PeerSendFile[];
+	files: PeerSendFile[];
 }
 
 export interface PeerSendFile<T extends FileTransferType = FileTransferType> {
-  id: string;
-  timestamp: number;
-  status: "pending" | "in-transit" | "sent" | "received" | "error";
-  transfer: {
-    type: T;
-    percentage: number;
-  };
-  metadata: Pick<FileWithPath, "name" | "path" | "size" | "type" | "lastModified">;
-  nativeFile: FileWithPath | null;
+	id: string;
+	timestamp: number;
+	status: "pending" | "in-transit" | "sent" | "received" | "error";
+	transfer: {
+		type: T;
+		percentage: number;
+	};
+	metadata: Pick<FileWithPath, "name" | "path" | "size" | "type" | "lastModified">;
+	nativeFile: FileWithPath | null;
 }
