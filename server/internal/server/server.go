@@ -1,0 +1,97 @@
+package server
+
+import (
+	"net/http"
+
+	"peersend/internal/broadcast"
+	"peersend/internal/domain"
+	"peersend/internal/events"
+	"peersend/internal/events/handlers"
+	"peersend/internal/service"
+
+	"github.com/gorilla/websocket"
+)
+
+type Server struct {
+	SessionService *service.SessionService
+	ClientService  *service.ClientService
+	Broadcaster    *broadcast.Broadcaster
+	Dispatcher     *events.Dispatcher
+	Upgrader       *websocket.Upgrader
+}
+
+func NewServer(sessionService *service.SessionService, clientService *service.ClientService, broadcaster *broadcast.Broadcaster) *Server {
+	eventContext := events.EventContext{
+		SessionService: sessionService,
+		ClientService:  clientService,
+		Broadcaster:    broadcaster,
+	}
+	dispatcher := events.NewDispatcher(&eventContext)
+
+	dispatcher.RegisterHandler(domain.MessageInPing, &handlers.PingEventHandler{})
+	dispatcher.RegisterHandler(domain.MessageInTransferHost, &handlers.TransferHostEventHandler{})
+
+	return &Server{
+		SessionService: sessionService,
+		ClientService:  clientService,
+		Broadcaster:    broadcaster,
+		Dispatcher:     dispatcher,
+		Upgrader: &websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
+	}
+}
+
+func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
+	ctx := r.Context()
+	query := r.URL.Query()
+	sessionCode := query.Get("session_code")
+	mode := query.Get("mode")
+
+	var session *domain.Session
+	var err error
+
+	switch mode {
+	case "host":
+		session, err = s.SessionService.CreateSession()
+	case "join":
+		session, err = s.SessionService.GetSession(sessionCode)
+	default:
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "invalid mode"))
+		conn.Close()
+		return
+	}
+
+	if err != nil || session == nil {
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "could not create or find session"))
+		conn.Close()
+		return
+	}
+
+	client := s.ClientService.NewClient(conn)
+	if err := s.SessionService.AddClient(ctx, session.ID, client); err != nil {
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, err.Error()))
+		conn.Close()
+		return
+	}
+
+	sessionData, _ := s.SessionService.GetSessionData(session.ID, client.ID)
+	s.Broadcaster.MessageClient(ctx, client, domain.NewMessage(domain.MessageOutSessionInformation, sessionData))
+
+	go s.Broadcaster.Start(session)
+
+	connection := NewConnection(ctx, client, session, s.SessionService, s.Dispatcher, s.Broadcaster)
+	connection.Listen()
+}
+
+func (s *Server) ServeWebSocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := s.Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		http.Error(w, "could not upgrade to websocket", http.StatusInternalServerError)
+		return
+	}
+
+	go s.handleConnection(conn, r)
+}

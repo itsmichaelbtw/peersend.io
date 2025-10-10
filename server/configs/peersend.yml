@@ -1,0 +1,10 @@
+server:
+  session_code_length: 6
+  session_code_chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  session_code_prefix: "X-"
+  max_clients: 2
+  max_generation_attempts: 10
+  auto_webrtc_enabled: false
+  encryption_mode: "none"
+  address: "0.0.0.0"
+  port: 8080

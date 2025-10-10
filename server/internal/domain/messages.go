@@ -1,19 +1,20 @@
-package main
-
-import (
-	"encoding/json"
-	"fmt"
-)
-
-type PayloadType string
+package domain
 
 const (
-	ErrorMessageType PayloadType = "error"
+	ErrorMessageType string = "error"
+
+	MessageOutSessionInformation string = "session_information"
+	MessageOutHostTransferred    string = "host_transferred"
+	MessageOutSyncClients        string = "sync_clients"
+	MessageOutPong               string = "pong"
+
+	MessageInPing         string = "ping"
+	MessageInTransferHost string = "transfer_host"
 )
 
 type Message[T any] struct {
-	Type PayloadType `json:"type"`
-	Data T           `json:"data"`
+	Type string `json:"type"`
+	Data T      `json:"data"`
 }
 
 type SessionData struct {
@@ -32,11 +33,10 @@ type SyncClientsData struct {
 }
 
 type HostTransferData struct {
-	IsHost bool `json:"is_host"`
+	HostID string `json:"host_id"`
 }
 
 type ErrorData struct {
-	Title   string `json:"title"`
 	Message string `json:"message"`
 }
 
@@ -54,10 +54,9 @@ type PongData struct {
 	PingData
 }
 
-func ParseIncomingData(data []byte) (*Message[map[string]any], error) {
-	var msg Message[map[string]any]
-	if err := json.Unmarshal(data, &msg); err != nil {
-		return nil, fmt.Errorf("invalid message format: %v", err)
+func NewMessage[T any](messageType string, data T) Message[T] {
+	return Message[T]{
+		Type: messageType,
+		Data: data,
 	}
-	return &msg, nil
 }
