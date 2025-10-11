@@ -9,17 +9,17 @@ FROM base AS development
 
 WORKDIR /usr/src/app
 
-COPY *.go ./
+COPY . .
 
-CMD ["go", "run", "."]
+CMD ["go", "run", "./cmd/peersend/main.go"]
 
 FROM base AS build
 
 WORKDIR /usr/src/app
 
-COPY *.go ./
+COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o server .
+RUN CGO_ENABLED=0 GOOS=linux go build -o server ./cmd/peersend/main.go
 
 FROM alpine:latest AS production
 

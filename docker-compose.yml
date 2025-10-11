@@ -7,13 +7,13 @@ services:
     container_name: go-server
     image: peersend.io/signal
     build:
-      context: ./
+      context: ./server
       dockerfile: Dockerfile
       target: development
     ports:
       - 3001:8080
     volumes:
-      - ./:/usr/src/app
+      - ./server:/usr/src/app
     networks:
       - peersend-network
     tty: true
