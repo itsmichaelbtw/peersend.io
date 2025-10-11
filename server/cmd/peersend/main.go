@@ -13,6 +13,6 @@ func main() {
 	mux := http.NewServeMux()
 	app.SetupRoutes(mux, config.Get())
 
-	log.Println("Server started on :8081")
-	log.Fatal(http.ListenAndServe(":8081", mux))
+	log.Println("Server started on :8080")
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
