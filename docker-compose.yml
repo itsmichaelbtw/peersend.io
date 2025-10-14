@@ -2,10 +2,10 @@ name: peersend-io
 
 services:
   go_server:
-    hostname: signal-server
+    hostname: peersend-server
     restart: unless-stopped
     container_name: go-server
-    image: peersend.io/signal
+    image: peersend.io/server
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -22,7 +22,7 @@ services:
     hostname: peersend-web
     restart: unless-stopped
     container_name: vite-app
-    image: peersend.io/client
+    image: peersend.io/web
     build:
       context: ./web
       dockerfile: Dockerfile
@@ -31,7 +31,7 @@ services:
       - 3500:5173
     environment:
       - VITE_SESSION_CODE_EXAMPLE=X-4FGS6H
-      - VITE_SERVER_ENDPOINT=ws://192.168.1.8:3001/signal
+      - VITE_SERVER_ENDPOINT=ws://peersend-server:8080/peersend
     networks:
       - peersend-network
     volumes:
