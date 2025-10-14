@@ -10,7 +10,8 @@ import (
 )
 
 type Config struct {
-	Server *ServerConfig `yaml:"server"`
+	Server      *ServerConfig `yaml:"server"`
+	Environment string
 }
 
 var (
@@ -37,7 +38,11 @@ func loadConfig(path string) error {
 
 func Load(path string) *Config {
 	once.Do(func() {
-		cfg = &Config{Server: &ServerConfig{}}
+		cfg = &Config{
+			Server:      &ServerConfig{},
+			Environment: GetEnvironment(),
+		}
+
 		if err := loadConfig(path); err != nil {
 			log.Fatalf("config load error: %v", err)
 		}
