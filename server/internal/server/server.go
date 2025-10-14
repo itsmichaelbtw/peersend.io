@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 
 	"peersend/internal/broadcast"
@@ -87,9 +88,14 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 }
 
 func (s *Server) ServeWebSocket(w http.ResponseWriter, r *http.Request) {
+	if !websocket.IsWebSocketUpgrade(r) {
+		w.WriteHeader(http.StatusUpgradeRequired)
+		return
+	}
+
 	conn, err := s.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		http.Error(w, "could not upgrade to websocket", http.StatusInternalServerError)
+		log.Printf("websocket upgrade failed: %v", err)
 		return
 	}
 
