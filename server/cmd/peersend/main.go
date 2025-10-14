@@ -31,6 +31,7 @@ func main() {
 	serverErrors := make(chan error, 1)
 
 	go func() {
+		log.Printf("Running in %s mode", cfg.Environment)
 		log.Printf("Server starting on %s\n", server.Addr)
 		serverErrors <- server.ListenAndServe()
 	}()
