@@ -13,7 +13,7 @@ import (
 	"peersend/internal/service"
 )
 
-func SetupRoutes(mux *http.ServeMux, cfg *config.Config) {
+func Initialise(mux *http.ServeMux, cfg *config.Config) {
 	repo := repository.NewInMemorySessionRepo(cfg.Server.MaxClients)
 	broadcaster := broadcast.NewBroadcaster(repo)
 	eventPublisher := events.NewEventPublisher(broadcaster)

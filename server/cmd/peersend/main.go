@@ -17,7 +17,7 @@ func main() {
 	cfg := config.Load(config.GetConfigPath("SERVER_CONFIG_PATH", "configs/peersend.yml"))
 
 	mux := http.NewServeMux()
-	app.SetupRoutes(mux, cfg)
+	app.Initialise(mux, cfg)
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", cfg.Server.Address, cfg.Server.Port),
