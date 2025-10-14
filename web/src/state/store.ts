@@ -1,6 +1,9 @@
 import type { DispatchState, ActionMap, ContextReducerActions } from "@/context/context.types";
 
 import { withDispatchReducer } from "@/context/context.dispatch";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("StateStore");
 
 type Listener<S extends DispatchState> = (state: S) => void;
 
@@ -34,6 +37,8 @@ export abstract class StateStore<S extends DispatchState, M extends ActionMap> {
 	}
 
 	public dispatch<K extends keyof M>(type: K, data: K extends keyof M ? M[K] : Partial<S>): void {
+		log.debug(`Dispatching action: ${String(type)}`, data);
+
 		const payload = {
 			type,
 			payload: data

@@ -2,9 +2,11 @@ import type { PeerSendFile } from "@/state";
 import type { WebRtcClient } from "@/lib/networking";
 import type { FileTransferTransport } from "../types";
 
-import { fileTransferState } from "@/state";
-
 import { BUFFER_THRESHOLD } from "../constants";
+import { fileTransferState } from "@/state";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("WebRtcTransport");
 
 export class WebRtcTransport implements FileTransferTransport {
 	private client: WebRtcClient;
@@ -24,6 +26,7 @@ export class WebRtcTransport implements FileTransferTransport {
 			this.datachannel.bufferedAmountLowThreshold = BUFFER_THRESHOLD;
 
 			const listener = () => {
+				log.warn("Data channel buffered amount is low");
 				this.datachannel.removeEventListener("bufferedamountlow", listener);
 				resolve();
 			};
@@ -49,6 +52,7 @@ export class WebRtcTransport implements FileTransferTransport {
 
 	public async chunk(id: string, chunk: Uint8Array, percentage: number): Promise<void> {
 		if (this.datachannel.bufferedAmount > BUFFER_THRESHOLD) {
+			log.warn("Data channel buffer exceeded threshold, waiting...");
 			await this.wait();
 		}
 
@@ -79,7 +83,9 @@ export class WebRtcTransport implements FileTransferTransport {
 		});
 	}
 
-	public async error(id: string): Promise<void> {
+	public async error(id: string, message: string): Promise<void> {
+		log.error(`Error during file ${id} transfer: ${message}`);
+
 		fileTransferState.dispatch("SET_FILE_STATUS", {
 			id: id,
 			status: "error"

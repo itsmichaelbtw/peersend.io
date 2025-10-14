@@ -4,6 +4,9 @@ import type { NetworkClients } from "../utils";
 import { appState } from "@/state";
 import { getNetworkingClients } from "../utils";
 import { abortRegistry } from "../core";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("CustomWebSocket");
 
 export class CustomWebSocket extends WebSocket {
 	private network_clients: NetworkClients;
@@ -20,10 +23,13 @@ export class CustomWebSocket extends WebSocket {
 	}
 
 	private on_open() {
+		log.debug("on_open");
 		abortRegistry.start();
 	}
 
 	private on_close(event: CloseEvent) {
+		log.debug("on_close");
+
 		this.network_clients.ws.disconnect();
 		this.network_clients.ws.stop_latency_monitoring();
 
@@ -41,6 +47,8 @@ export class CustomWebSocket extends WebSocket {
 	}
 
 	private on_error() {
+		log.error("on_error");
+
 		appState.dispatch("SET_LAST_ERROR", {
 			title: "Connection Issue",
 			message: "Failed to connect: The server may be offline"
@@ -48,6 +56,8 @@ export class CustomWebSocket extends WebSocket {
 	}
 
 	private on_message(event: MessageEvent) {
+		log.debug("on_message");
+
 		const { sessionState, websocketState } = appState.get();
 
 		if (sessionState.lastError || websocketState.isConnecting) {
@@ -56,6 +66,7 @@ export class CustomWebSocket extends WebSocket {
 
 		try {
 			const { type, data } = JSON.parse(event.data) as WebSocketMessages.IncomingMessage;
+			log.info("Received a message of type:", type);
 			this.network_clients.ws.message_bus.emit(type, data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {

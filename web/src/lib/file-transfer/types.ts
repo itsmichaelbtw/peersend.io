@@ -13,6 +13,6 @@ export interface FileStorageRecord {
 export interface FileTransferTransport {
 	start(id: string, transferSize: number, metadata: PeerSendFile["metadata"]): Promise<void>;
 	chunk(id: string, chunk: Uint8Array, percentage: number): Promise<void>;
-	error(id: string): Promise<void>;
+	error(id: string, message: string): Promise<void>;
 	complete(id: string): Promise<void>;
 }

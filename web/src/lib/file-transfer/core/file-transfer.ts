@@ -7,6 +7,9 @@ import { FileChunker } from "./file-chunker";
 import { calculatePercentage, createBufferWithHeader } from "../utils";
 import { ProgressThrottler } from "../progress-throttler";
 import { sleep } from "@/utils/sleep";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("FileStorage");
 
 export class FileTransfer {
 	private transport: FileTransferTransport;
@@ -18,8 +21,13 @@ export class FileTransfer {
 	}
 
 	public async transfer(file: PeerSendFile): Promise<void> {
+		log.info(`Starting transfer of file ${file.metadata.name}`);
+
 		if (!file.nativeFile) {
-			return await this.transport.error(file.id);
+			return await this.transport.error(
+				file.id,
+				`File ${file.metadata.name} has no native file associated with it`
+			);
 		}
 
 		const fileChunker = new FileChunker(file.nativeFile);
@@ -47,12 +55,15 @@ export class FileTransfer {
 			}
 
 			if (performance.now() - now <= 500) {
+				log.warn("File transferred too quickly, adding artificial delay to improve UX");
 				await sleep(500);
 			}
 
+			log.success(`File transfer has been completed for ${file.metadata.name}`);
 			await this.transport.complete(file.id);
 		} catch (error) {
-			await this.transport.error(file.id);
+			const message = error instanceof Error ? error.message : "An unknown error occurred";
+			await this.transport.error(file.id, message);
 		}
 	}
 

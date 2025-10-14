@@ -14,6 +14,9 @@ import {
 } from "@/config/constants";
 import { appState, isWebSocketConnected } from "@/state";
 import { sleep } from "@/utils/sleep";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("WebSocketClient");
 
 export class WebSocketClient extends NetworkClient<
 	WebSocketMessages.IncomingMessage,
@@ -32,9 +35,11 @@ export class WebSocketClient extends NetworkClient<
 		const { websocketState } = appState.get();
 
 		if (isWebSocketConnected() || websocketState.isConnecting) {
-			console.warn("WebSocket is already connected or in a connecting state.");
+			log.warn("WebSocket is already connected ~ cannot connect again");
 			return;
 		}
+
+		log.info("Attempting to establish a WebSocket connection");
 
 		appState.dispatch("UPDATE", { websocketState: { isConnecting: true } });
 		await sleep(500);
@@ -51,6 +56,9 @@ export class WebSocketClient extends NetworkClient<
 
 			appState.dispatch("UPDATE", { websocketState: { ws: new CustomWebSocket(url.toString()) } });
 		} catch (error) {
+			log.error("Failed to establish a WebSocket connection");
+
+			this.disconnect();
 			appState.dispatch("SET_LAST_ERROR", {
 				title: "Connection Issue",
 				message: error instanceof Error ? error.message : "Unable to establish connection"
@@ -71,6 +79,8 @@ export class WebSocketClient extends NetworkClient<
 
 		this.stop_latency_monitoring();
 		this.reset();
+
+		log.info("Disconnected");
 	}
 
 	public reset(): void {
@@ -79,15 +89,19 @@ export class WebSocketClient extends NetworkClient<
 			webrtcState: DEFAULT_WEBRTC_STATE,
 			websocketState: DEFAULT_WEBSOCKET_STATE
 		});
+
+		log.debug("State has been reset");
 	}
 
 	public emit(event: WebSocketMessages.OutgoingMessage): void {
 		const { websocketState } = appState.get();
 
 		if (!isWebSocketConnected()) {
-			console.warn("WebSocket is not connected. Cannot send message.");
+			log.warn("WebSocket is not connected. Cannot send message.");
 			return;
 		}
+
+		log.info(`Emitting event: ${event.type}`);
 
 		const payload = JSON.stringify(event);
 		websocketState.ws!.send(payload);

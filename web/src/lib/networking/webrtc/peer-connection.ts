@@ -3,6 +3,9 @@ import type { NetworkClients } from "../utils";
 import { appState } from "@/state";
 import { CustomDataChannel } from "./data-channel";
 import { getNetworkingClients } from "../utils";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("CustomRTCPeerConnection");
 
 export class CustomRTCPeerConnection extends RTCPeerConnection {
 	private network_clients: NetworkClients;
@@ -20,6 +23,8 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 	}
 
 	private on_icecandidate(event: RTCPeerConnectionIceEvent) {
+		log.debug("on_icecandidate");
+
 		if (event.candidate) {
 			this.network_clients.ws.emit({
 				type: "webrtc_ice_candidate",
@@ -30,9 +35,13 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		}
 	}
 
-	private on_icecandidateerror(event: Event) {}
+	private on_icecandidateerror(event: Event) {
+		log.error("on_icecandidateerror");
+	}
 
 	private on_iceconnectionstatechange(event: Event) {
+		log.debug("on_iceconnectionstatechange");
+
 		const { webrtcState } = appState.get();
 
 		if (!webrtcState.peerConnection) {
@@ -41,11 +50,15 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 	}
 
 	private on_connectionstatechange(event: Event) {
+		log.debug("on_connectionstatechange");
+
 		const { webrtcState } = appState.get();
 
 		if (!webrtcState.peerConnection) {
 			return;
 		}
+
+		log.debug(`Connection state changed to: ${webrtcState.peerConnection.connectionState}`);
 
 		switch (webrtcState.peerConnection.connectionState) {
 			case "connected":
@@ -71,6 +84,8 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 	}
 
 	private on_datachannel(event: RTCDataChannelEvent) {
+		log.info("Data channel established by remote peer");
+
 		appState.dispatch("UPDATE", {
 			webrtcState: {
 				dataChannel: new CustomDataChannel(event.channel)

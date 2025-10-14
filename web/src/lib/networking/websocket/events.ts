@@ -5,6 +5,9 @@ import { appState } from "@/state";
 
 import { webrtcClient, CustomRTCPeerConnection } from "../webrtc";
 import { webSocketClient } from "./client";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("WebSocketEvents");
 
 const RTC_CONFIGURATION: RTCConfiguration = {
 	iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }]
@@ -19,10 +22,11 @@ function event_Pong(data: WebSocketEventMap.IncomingEvents["pong"]) {
 	webSocketClient.latency_checker.pong(data);
 }
 
-function event_SyncOnlineClients(data: WebSocketEventMap.IncomingEvents["sync_online_clients"]) {
+function event_SyncClients(data: WebSocketEventMap.IncomingEvents["sync_clients"]) {
 	const { sessionState } = appState.get();
 
 	if (sessionState.clients.length > data.clients.length) {
+		log.warn("There was a discrepancy in the client list, resetting direct connections.");
 		webrtcClient.disconnect();
 	}
 
@@ -37,6 +41,7 @@ async function event_WebRtcOffer(data: WebSocketEventMap.IncomingEvents["webrtc_
 	const { sessionState } = appState.get();
 
 	if (sessionState.isHost) {
+		log.error("A host cannot receive a WebRTC offer");
 		webrtcClient.disconnect();
 		webSocketClient.emit({
 			type: "webrtc_reject",
@@ -47,6 +52,8 @@ async function event_WebRtcOffer(data: WebSocketEventMap.IncomingEvents["webrtc_
 
 		return;
 	}
+
+	log.info("Received WebRTC offer, attempting to establish direct connection");
 
 	try {
 		const pc = new CustomRTCPeerConnection(RTC_CONFIGURATION);
@@ -73,6 +80,7 @@ async function event_WebRtcOffer(data: WebSocketEventMap.IncomingEvents["webrtc_
 			}
 		});
 	} catch (error) {
+		log.error("Failed to handle WebRTC offer, disconnecting", error);
 		webSocketClient.disconnect();
 		webSocketClient.emit({
 			type: "webrtc_reject",
@@ -87,6 +95,7 @@ async function event_WebRtcAccept(data: WebSocketEventMap.IncomingEvents["webrtc
 	const { sessionState, webrtcState } = appState.get();
 
 	if (!sessionState.isHost) {
+		log.error("Only a host can accept a WebRTC offer");
 		webrtcClient.disconnect();
 		webSocketClient.emit({
 			type: "webrtc_reject",
@@ -98,6 +107,7 @@ async function event_WebRtcAccept(data: WebSocketEventMap.IncomingEvents["webrtc
 	}
 
 	if (!webrtcState.peerConnection) {
+		log.error("Peer connection does not exist, cannot accept WebRTC offer");
 		webrtcClient.disconnect();
 		webSocketClient.emit({
 			type: "webrtc_reject",
@@ -109,9 +119,13 @@ async function event_WebRtcAccept(data: WebSocketEventMap.IncomingEvents["webrtc
 	}
 
 	try {
+		log.info("Received WebRTC answer, finalising direct connection");
+
 		const description = new RTCSessionDescription(data.description);
 		await webrtcState.peerConnection.setRemoteDescription(description);
 	} catch (error) {
+		log.error("Failed to handle WebRTC answer, disconnecting", error);
+
 		webrtcClient.disconnect();
 		webSocketClient.emit({
 			type: "webrtc_reject",
@@ -128,11 +142,12 @@ async function event_WebRtcIceCandidate(
 	const { webrtcState } = appState.get();
 
 	if (!webrtcState.peerConnection) {
+		log.error("Peer connection does not exist, cannot add ICE candidate");
 		webrtcClient.disconnect();
 		webSocketClient.emit({
 			type: "webrtc_reject",
 			data: {
-				reason: "Direction connection is faulty"
+				reason: "Direct connection is faulty"
 			}
 		});
 		// need to maybe add error messages here for the client
@@ -140,6 +155,8 @@ async function event_WebRtcIceCandidate(
 	}
 
 	try {
+		log.info("Adding received ICE candidate to peer connection");
+
 		const candidate = new RTCIceCandidate(data.candidate);
 		await webrtcState.peerConnection.addIceCandidate(candidate);
 	} catch (error) {
@@ -154,6 +171,7 @@ async function event_WebRtcIceCandidate(
 }
 
 function event_WebRtcReject(data: WebSocketEventMap.IncomingEvents["webrtc_reject"]) {
+	log.error(`WebRTC connection was rejected: ${data.reason}`);
 	webSocketClient.disconnect();
 
 	appState.dispatch("SET_LAST_ERROR", {
@@ -163,6 +181,8 @@ function event_WebRtcReject(data: WebSocketEventMap.IncomingEvents["webrtc_rejec
 }
 
 function event_Error(data: WebSocketEventMap.IncomingEvents["error"]) {
+	log.error(`"WebSocket received an error`);
+
 	appState.dispatch("SET_LAST_ERROR", {
 		title: data.type,
 		message: data.reason
@@ -171,7 +191,7 @@ function event_Error(data: WebSocketEventMap.IncomingEvents["error"]) {
 
 export const events: NetworkEvents<WebSocketMessages.IncomingMessage> = {
 	session_information: event_SessionInformation,
-	sync_online_clients: event_SyncOnlineClients,
+	sync_clients: event_SyncClients,
 	pong: event_Pong,
 	host_transferred: event_HostTransferred,
 	webrtc_accept: event_WebRtcAccept,

@@ -4,6 +4,9 @@ import type { WebRtcMessages } from "./types";
 import { appState } from "@/state";
 import { getNetworkingClients } from "../utils";
 import { abortRegistry } from "../core";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("CustomDataChannel");
 
 export class CustomDataChannel {
 	private network_clients: NetworkClients;
@@ -19,6 +22,8 @@ export class CustomDataChannel {
 	}
 
 	private on_open(event: Event) {
+		log.debug("on_open");
+
 		const { sessionState } = appState.get();
 
 		if (sessionState.isHost) {
@@ -29,10 +34,13 @@ export class CustomDataChannel {
 	}
 
 	private on_close(event: Event) {
+		log.debug("on_close");
 		abortRegistry.end();
 	}
 
 	private on_error(event: RTCErrorEvent) {
+		log.error("on_error", event.error);
+
 		if (event.error) {
 			appState.dispatch("SET_LAST_ERROR", {
 				title: "Direct Connection Error",
@@ -45,6 +53,7 @@ export class CustomDataChannel {
 	}
 
 	private async on_message(event: MessageEvent) {
+		log.debug("on_message");
 		const { sessionState, webrtcState } = appState.get();
 
 		if (sessionState.lastError || webrtcState.isConnecting) {
@@ -54,21 +63,25 @@ export class CustomDataChannel {
 		switch (true) {
 			case event.data instanceof Blob:
 				const buffer = await event.data.arrayBuffer();
+				log.debug("Received a file chunk as instanceof Blob");
 				this.network_clients.wrtc.message_bus.emit("in_file_transit", buffer);
 				return;
 
 			case event.data instanceof ArrayBuffer:
 				const chunk = new Uint8Array(event.data);
+				log.debug("Received a file chunk as instanceof ArrayBuffer");
 				this.network_clients.wrtc.message_bus.emit("in_file_transit", chunk);
 				return;
 
 			case event.data instanceof Uint8Array:
+				log.debug("Received a file chunk as instanceof Uint8Array");
 				this.network_clients.wrtc.message_bus.emit("in_file_transit", event.data);
 				return;
 		}
 
 		try {
 			const { type, data } = JSON.parse(event.data) as WebRtcMessages.IncomingMessage;
+			log.info("Received a message of type:", type);
 			this.network_clients.wrtc.message_bus.emit(type, data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {
@@ -88,6 +101,7 @@ export class CustomDataChannel {
 
 	public send(data: any) {
 		try {
+			log.debug("Sending data to peer via data channel");
 			this.channel.send(data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {

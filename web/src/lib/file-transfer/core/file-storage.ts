@@ -2,12 +2,16 @@ import type { PeerSendFile } from "@/state";
 import type { FileStorageRecord } from "../types";
 
 import { calculatePercentage } from "../utils";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("FileStorage");
 
 export class FileStorage {
 	private files = new Map<string, FileStorageRecord>();
 
 	public init(id: string, size: number): void {
 		if (this.files.has(id)) {
+			log.error(`Attempted to initialise an existing file ${id}`);
 			return;
 		}
 
@@ -17,6 +21,8 @@ export class FileStorage {
 			size: size,
 			complete: false
 		});
+
+		log.info(`File ${id} has been initialised`);
 	}
 
 	public addChunk(id: string, chunk: Uint8Array): number {
@@ -28,6 +34,8 @@ export class FileStorage {
 
 		file.chunks.push(chunk);
 		file.received += chunk.byteLength;
+
+		log.debug(`Chunk has been appended to file ${id}`);
 
 		return this.getProgress(id);
 	}
@@ -65,9 +73,11 @@ export class FileStorage {
 			return;
 		}
 
+		log.info(`File ${id} has been marked as complete`);
 		file.complete = true;
 
 		if (clearMemory) {
+			log.warn(`File ${id} chunks have been cleared from memory`);
 			file.chunks = [];
 		}
 	}
@@ -96,11 +106,13 @@ export class FileStorage {
 	}
 
 	public remove(id: string) {
+		log.warn(`File ${id} has been removed`);
 		this.files.delete(id);
 	}
 
 	/** Clear all records */
 	public reset() {
+		log.warn("All file records have been cleared");
 		this.files.clear();
 	}
 

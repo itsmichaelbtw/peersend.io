@@ -4,6 +4,9 @@ import type { NetworkMessage, NetworkMessagePayload, NetworkEvents } from "./typ
 import { MessageBus } from "./core/message-bus";
 import { LatencyChecker } from "./core/latency-checker";
 import { LatencyMonitor } from "./core/latency-monitor";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("NetworkClient");
 
 export abstract class NetworkClient<
 	I extends NetworkMessagePayload<string, any>,
@@ -21,6 +24,7 @@ export abstract class NetworkClient<
 
 	public register_events(events: NetworkEvents<I>): this {
 		const eventKeys = Object.keys(events) as Array<keyof NetworkEvents<I>>;
+		log.info(`Registering ${eventKeys.length} event handlers`);
 		for (let i = 0; i < eventKeys.length; i++) {
 			const event = eventKeys[i];
 			this.message_bus.on(event, events[event]);

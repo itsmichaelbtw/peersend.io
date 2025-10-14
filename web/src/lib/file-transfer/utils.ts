@@ -3,9 +3,7 @@ import type { FileWithPath } from "@mantine/dropzone";
 import type { WebRtcEventMap } from "../networking";
 
 import { v4, stringify } from "uuid";
-
 import { FILE_ID_BYTE_LENGTH, DOWNLOAD_CONTAINER_ID } from "./constants";
-import { fileStorage } from "./core";
 import { getContainerElementForDownload } from "@/utils/dom";
 
 export async function createCustomFileFromUpload(file: FileWithPath): Promise<PeerSendFile> {
@@ -124,19 +122,5 @@ export function triggerBrowserDownload(file: File): void {
 	} finally {
 		container.removeChild(element);
 		URL.revokeObjectURL(url);
-	}
-}
-export async function smartFileDownload(files: PeerSendFile[]): Promise<void> {
-	for (const file of files) {
-		try {
-			const nativeFile = fileStorage.getNativeFile(file.id, file.metadata);
-
-			// zip or combine or do other things here
-			// https://github.com/itsmichaelbtw/peersend.io/issues/39
-
-			triggerBrowserDownload(nativeFile);
-		} catch (error) {
-			console.error(error);
-		}
 	}
 }

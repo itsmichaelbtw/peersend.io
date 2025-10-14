@@ -29,7 +29,7 @@ export namespace WebSocketEventMap {
 			is_host: boolean;
 			clients: string[];
 		};
-		sync_online_clients: {
+		sync_clients: {
 			clients: string[];
 		};
 		host_transferred: {

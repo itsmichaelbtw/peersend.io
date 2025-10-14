@@ -9,6 +9,9 @@ import { events } from "./events";
 import { appState, isWebRtcConnected } from "@/state";
 import { sleep } from "@/utils/sleep";
 import { DEFAULT_WEBRTC_STATE } from "@/config/constants";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("WebRtcClient");
 
 const RTC_CONFIGURATION: RTCConfiguration = {
 	iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }]
@@ -28,6 +31,7 @@ export class WebRtcClient extends NetworkClient<
 		const { sessionState } = appState.get();
 
 		if (isWebRtcConnected()) {
+			log.warn("WebRTC is already connected ~ cannot connect again");
 			return;
 		}
 
@@ -39,6 +43,8 @@ export class WebRtcClient extends NetworkClient<
 
 			return;
 		}
+
+		log.info("Attempting to establish a WebRTC connection");
 
 		appState.dispatch("UPDATE", { webrtcState: { isConnecting: true } });
 		await sleep(500);
@@ -61,6 +67,8 @@ export class WebRtcClient extends NetworkClient<
 				}
 			});
 
+			log.info("Created an offer and set local description, sending to peer via WebSocket");
+
 			webSocketClient.emit({
 				type: "webrtc_offer",
 				data: {
@@ -68,6 +76,8 @@ export class WebRtcClient extends NetworkClient<
 				}
 			});
 		} catch (error) {
+			log.error("Failed to establish a WebRTC connection");
+
 			this.disconnect();
 			appState.dispatch("SET_LAST_ERROR", {
 				title: "Connection Issue",
@@ -92,6 +102,8 @@ export class WebRtcClient extends NetworkClient<
 		this.reset();
 
 		webSocketClient.start_latency_monitoring();
+
+		log.info("Disconnected");
 	}
 
 	public reset(): void {
@@ -101,14 +113,19 @@ export class WebRtcClient extends NetworkClient<
 			},
 			webrtcState: DEFAULT_WEBRTC_STATE
 		});
+
+		log.debug("State has been reset");
 	}
 
 	public emit(event: WebRtcMessages.OutgoingMessage): void {
 		const { webrtcState } = appState.get();
 
 		if (!isWebRtcConnected()) {
+			log.error(`Cannot emit WebRTC event when not connected: ${event.type}`);
 			return;
 		}
+
+		log.info(`Emitting event: ${event.type}`);
 
 		if (event.type === "in_file_transit") {
 			webrtcState.dataChannel!.send(event.data);

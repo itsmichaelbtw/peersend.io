@@ -9,15 +9,19 @@ import {
 	ProgressThrottler
 } from "@/lib/file-transfer";
 import { webrtcClient } from "./client";
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("WebRtcEvents");
 
 const throttler = new ProgressThrottler(1, 150);
 
 function event_StartFileTransit(data: WebRtcEventMap.IncomingEvents["start_file_transit"]) {
 	if (!!getPeersendFile(data.id)) {
-		console.error("a file with the same ID already exists");
+		log.error(`File with id ${data.id} already exists, ignoring incoming file transfer.`);
 		return;
 	}
 
+	log.info(`Receiving file: ${data.metadata.name} (${data.transferSize} bytes)`);
 	const file = createCustomFileFromTransfer(data);
 	fileStorage.init(data.id, data.transferSize);
 	fileTransferState.add([file]);
@@ -38,6 +42,7 @@ function event_InFileTransit(data: WebRtcEventMap.IncomingEvents["in_file_transi
 }
 
 function event_EndFileTransit(data: WebRtcEventMap.IncomingEvents["end_file_transit"]) {
+	log.info(`Finished receiving file with id ${data.id}`);
 	throttler.reset();
 
 	if (fileStorage.isComplete(data.id)) {
@@ -46,6 +51,7 @@ function event_EndFileTransit(data: WebRtcEventMap.IncomingEvents["end_file_tran
 			status: "received"
 		});
 	} else {
+		log.error(`File with id ${data.id} is incomplete, unable to finalize transfer.`);
 		fileStorage.remove(data.id);
 		fileTransferState.dispatch("SET_FILE_STATUS", {
 			id: data.id,

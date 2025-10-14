@@ -1,65 +1,76 @@
+import { createLogger } from "@/utils/logger";
+
+const log = createLogger("AbortRegistry");
+
 type Tasks = Map<string, AbortController>;
 
 class AbortRegistry {
-  private globalAbort: AbortController | null = null;
-  private tasks: Tasks = new Map();
+	private globalAbort: AbortController | null = null;
+	private tasks: Tasks = new Map();
 
-  private onAbort(): void {
-    for (const controller of this.tasks.values()) {
-      controller.abort();
-    }
+	private onAbort(): void {
+		log.info("Aborting all tasks in the registry");
 
-    this.tasks.clear();
-    this.globalAbort = null;
-  }
+		for (const controller of this.tasks.values()) {
+			controller.abort();
+		}
 
-  public start(): void {
-    if (!!this.globalAbort) {
-      return;
-    }
+		this.tasks.clear();
+		this.globalAbort = null;
+	}
 
-    this.globalAbort = new AbortController();
-    this.globalAbort.signal.addEventListener("abort", this.onAbort.bind(this));
-  }
+	public start(): void {
+		if (!!this.globalAbort) {
+			return;
+		}
 
-  public end(): void {
-    if (!this.globalAbort) {
-      return;
-    }
+		log.info("Starting a new abort registry session");
 
-    this.globalAbort.abort();
-  }
+		this.globalAbort = new AbortController();
+		this.globalAbort.signal.addEventListener("abort", this.onAbort.bind(this));
+	}
 
-  public register(id: string): AbortSignal {
-    if (!this.globalAbort) {
-      throw new Error("No active session exists");
-    }
+	public end(): void {
+		if (!this.globalAbort) {
+			return;
+		}
 
-    const controller = new AbortController();
-    this.tasks.set(id, controller);
-    return controller.signal;
-  }
+		log.info("Ending the current abort registry session");
+		this.globalAbort.abort();
+	}
 
-  public abort(id: string): void {
-    const controller = this.tasks.get(id);
+	public register(id: string): AbortSignal {
+		if (!this.globalAbort) {
+			throw new Error("No active session exists");
+		}
 
-    if (!controller) {
-      return;
-    }
+		log.debug(`Registering task with id: ${id}`);
+		const controller = new AbortController();
+		this.tasks.set(id, controller);
+		return controller.signal;
+	}
 
-    controller.abort();
-    this.tasks.delete(id);
-  }
+	public abort(id: string): void {
+		const controller = this.tasks.get(id);
 
-  public isActive(id: string): boolean {
-    const controller = this.tasks.get(id);
+		if (!controller) {
+			return;
+		}
 
-    if (!controller) {
-      return false;
-    }
+		log.debug(`Aborting task with id: ${id}`);
+		controller.abort();
+		this.tasks.delete(id);
+	}
 
-    return !!controller && !controller.signal.aborted;
-  }
+	public isActive(id: string): boolean {
+		const controller = this.tasks.get(id);
+
+		if (!controller) {
+			return false;
+		}
+
+		return !!controller && !controller.signal.aborted;
+	}
 }
 
 export const abortRegistry = new AbortRegistry();

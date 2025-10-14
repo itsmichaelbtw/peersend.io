@@ -9,7 +9,7 @@ interface StateActions {
 	UPDATE: RecursivePartial<AppState>;
 	SET_LAST_ERROR: ConnectionErrorData | null;
 	SET_SESSION_INFORMATION: WebSocketEventMap.IncomingEvents["session_information"];
-	SET_CLIENTS: WebSocketEventMap.IncomingEvents["sync_online_clients"];
+	SET_CLIENTS: WebSocketEventMap.IncomingEvents["sync_clients"];
 	SET_HOST: WebSocketEventMap.IncomingEvents["host_transferred"];
 	RESET_CONNECTING_STATES: null;
 }
