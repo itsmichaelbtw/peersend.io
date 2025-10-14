@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -46,10 +47,14 @@ func NewServer(sessionService *service.SessionService, clientService *service.Cl
 }
 
 func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
-	ctx := r.Context()
+	ctx, cancelWs := context.WithCancel(context.Background())
+	defer cancelWs()
+
 	query := r.URL.Query()
 	sessionCode := query.Get("session_code")
 	mode := query.Get("mode")
+
+	log.Printf("new websocket connection, mode: %s, session_code: %s", mode, sessionCode)
 
 	var session *domain.Session
 	var err error
@@ -79,12 +84,14 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 	}
 
 	sessionData, _ := s.SessionService.GetSessionData(session.ID, client.ID)
-	s.Broadcaster.MessageClient(ctx, client, domain.NewMessage(domain.MessageOutSessionInformation, sessionData))
+	if err := s.Broadcaster.MessageClient(ctx, client, domain.NewMessage(domain.MessageOutSessionInformation, sessionData)); err != nil {
+		log.Printf("failed to send session information: %v", err)
+	}
 
-	go s.Broadcaster.Start(session)
+	go s.Broadcaster.Start(ctx, session)
 
-	connection := NewConnection(ctx, client, session, s.SessionService, s.Dispatcher, s.Broadcaster)
-	connection.Listen()
+	connection := NewConnection(client, session, s.SessionService, s.Dispatcher, s.Broadcaster)
+	connection.Listen(ctx)
 }
 
 func (s *Server) ServeWebSocket(w http.ResponseWriter, r *http.Request) {

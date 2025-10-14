@@ -12,7 +12,6 @@ import (
 )
 
 type Connection struct {
-	ctx            context.Context
 	client         *domain.Client
 	session        *domain.Session
 	sessionService *service.SessionService
@@ -21,7 +20,6 @@ type Connection struct {
 }
 
 func NewConnection(
-	ctx context.Context,
 	client *domain.Client,
 	session *domain.Session,
 	sessionService *service.SessionService,
@@ -29,7 +27,6 @@ func NewConnection(
 	broadcaster *broadcast.Broadcaster,
 ) *Connection {
 	return &Connection{
-		ctx:            ctx,
 		client:         client,
 		session:        session,
 		sessionService: sessionService,
@@ -38,12 +35,14 @@ func NewConnection(
 	}
 }
 
-func (c *Connection) destroyConnection() {
+func (c *Connection) destroyConnection(ctx context.Context) {
+	log.Printf("destroying connection for client %s in session %s", c.client.ID, c.session.ID)
+
 	if c.client.Conn != nil {
 		c.client.Conn.Close()
 	}
 
-	if err := c.sessionService.RemoveClient(c.ctx, c.session.ID, c.client.ID); err != nil {
+	if err := c.sessionService.RemoveClient(ctx, c.session.ID, c.client.ID); err != nil {
 		log.Printf("failed to remove client %s from session %s: %v", c.client.ID, c.session.ID, err)
 	}
 }
@@ -65,24 +64,25 @@ func (c *Connection) passMessage(rawMessage []byte) {
 	}
 }
 
-func (c *Connection) Listen() {
-	defer c.destroyConnection()
+func (c *Connection) Listen(ctx context.Context) {
+	defer c.destroyConnection(ctx)
 
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
+			log.Printf("connection closed for client %s: %v", c.client.ID, ctx.Err())
 			return
+
 		default:
 			_, rawMessage, err := c.client.Conn.ReadMessage()
 			if err != nil {
-				log.Printf("client %s disconnected: %s", c.client.ID, err)
 				return
 			}
 
 			if err := c.dispatcher.Dispatch(c.client, rawMessage); err != nil {
 				if errors.Is(err, events.ErrNoHandlerRegistered) {
 					c.passMessage(rawMessage)
-					return
+					continue
 				}
 
 				log.Printf("failed to dispatch message from client %s: %v", c.client.ID, err)
