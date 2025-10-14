@@ -48,7 +48,7 @@ export class WebSocketClient extends NetworkClient<
 			const url = new URL(this.url);
 
 			if (sessionCode) {
-				url.searchParams.set("sessionCode", sessionCode);
+				url.searchParams.set("session_code", sessionCode);
 				url.searchParams.set("mode", "join");
 			} else {
 				url.searchParams.set("mode", "host");
