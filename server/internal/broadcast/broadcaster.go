@@ -23,6 +23,26 @@ func NewBroadcaster(sessionRepo domain.SessionRepository) *Broadcaster {
 	}
 }
 
+func (b *Broadcaster) broadcastToSession(ctx context.Context, session *domain.Session, message any) error {
+	if session == nil {
+		return errors.New("cannot broadcast to session as the session is nil")
+	}
+
+	// need to lock the session
+	for _, client := range session.Clients {
+		go func(c *domain.Client) {
+			if err := b.MessageClient(ctx, c, message); err != nil {
+				b.logger.Warn().
+					Err(err).
+					Str("client_id", c.ID).
+					Msg("failed to broadcast to client")
+			}
+		}(client)
+	}
+
+	return nil
+}
+
 func (b *Broadcaster) BroadcastSyncClients(ctx context.Context, sessionID string, clientIDs []string) error {
 	session, err := b.sessionRepo.GetSession(sessionID)
 	if err != nil {
@@ -69,26 +89,6 @@ func (b *Broadcaster) MessageClient(ctx context.Context, client *domain.Client, 
 
 	if err := client.Conn.WriteJSON(msg); err != nil {
 		return fmt.Errorf("failed to send message: %w", err)
-	}
-
-	return nil
-}
-
-func (b *Broadcaster) broadcastToSession(ctx context.Context, session *domain.Session, message any) error {
-	if session == nil {
-		return errors.New("cannot broadcast to session as the session is nil")
-	}
-
-	// need to lock the session
-	for _, client := range session.Clients {
-		go func(c *domain.Client) {
-			if err := b.MessageClient(ctx, c, message); err != nil {
-				b.logger.Warn().
-					Err(err).
-					Str("client_id", c.ID).
-					Msg("failed to broadcast to client")
-			}
-		}(client)
 	}
 
 	return nil
