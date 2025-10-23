@@ -62,6 +62,9 @@ func (c *Connection) passMessage(rawMessage []byte) {
 		return
 	}
 
+	otherClient.Mu.Lock()
+	defer otherClient.Mu.Unlock()
+
 	if err := otherClient.Conn.WriteMessage(1, rawMessage); err != nil {
 		c.logger.Warn().
 			Err(err).

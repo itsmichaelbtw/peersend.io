@@ -58,6 +58,9 @@ func (b *Broadcaster) MessageClient(ctx context.Context, client *domain.Client, 
 		return errors.New("cannot message client as the connection is closed")
 	}
 
+	client.Mu.Lock()
+	defer client.Mu.Unlock()
+
 	if deadline, ok := ctx.Deadline(); ok {
 		if err := client.Conn.SetWriteDeadline(deadline); err != nil {
 			return fmt.Errorf("failed to set write deadline: %w", err)
