@@ -12,20 +12,20 @@ type TransferHostEventHandler struct{}
 
 func (h *TransferHostEventHandler) Handle(eventContext *events.EventContext, client *domain.Client, incomingData any) error {
 	if client.SessionID == "" {
-		return errors.New("client has no session")
+		return errors.New("cannot transfer host: client is not in a session")
 	}
 
 	otherClient, err := eventContext.SessionService.GetOtherClient(client.SessionID, client.ID)
 	if err != nil {
-		return fmt.Errorf("get other client: %w", err)
+		return fmt.Errorf("failed to find transfer target in session %s: %w", client.SessionID, err)
 	}
 
 	if otherClient == nil {
-		return errors.New("no other client found in session")
+		return fmt.Errorf("cannot transfer host in session %s: no other client available", client.SessionID)
 	}
 
 	if err := eventContext.SessionService.TransferHost(context.Background(), client.SessionID, client.ID, otherClient.ID); err != nil {
-		return fmt.Errorf("transfer host: %w", err)
+		return fmt.Errorf("failed to transfer host from %s to %s in session %s: %w", client.ID, otherClient.ID, client.SessionID, err)
 	}
 
 	return nil

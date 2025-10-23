@@ -4,27 +4,29 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
+	"github.com/rs/zerolog"
+
+	"peersend/internal/config"
 	"peersend/internal/domain"
 )
 
 type Broadcaster struct {
 	sessionRepo domain.SessionRepository
+	logger      zerolog.Logger
 }
 
 func NewBroadcaster(sessionRepo domain.SessionRepository) *Broadcaster {
 	return &Broadcaster{
 		sessionRepo: sessionRepo,
+		logger:      config.WithComponent("broadcaster"),
 	}
 }
 
 func (b *Broadcaster) BroadcastSyncClients(ctx context.Context, sessionID string, clientIDs []string) error {
-	log.Printf("broadcasting client sync for session %s", sessionID)
-
 	session, err := b.sessionRepo.GetSession(sessionID)
 	if err != nil {
-		return fmt.Errorf("get session for sync clients broadcast: %w", err)
+		return fmt.Errorf("failed to get session %s for sync broadcast: %w", sessionID, err)
 	}
 
 	message := domain.NewMessage(domain.MessageOutSyncClients, domain.SyncClientsData{
@@ -35,11 +37,9 @@ func (b *Broadcaster) BroadcastSyncClients(ctx context.Context, sessionID string
 }
 
 func (b *Broadcaster) BroadcastHostTransferred(ctx context.Context, sessionID string, newHostID string) error {
-	log.Printf("broadcasting host transfer for session %s", sessionID)
-
 	session, err := b.sessionRepo.GetSession(sessionID)
 	if err != nil {
-		return fmt.Errorf("get session for host transfer broadcast: %w", err)
+		return fmt.Errorf("failed to get session %s for host transfer broadcast: %w", sessionID, err)
 	}
 
 	message := domain.NewMessage(domain.MessageOutHostTransferred, domain.HostTransferData{
@@ -50,8 +50,12 @@ func (b *Broadcaster) BroadcastHostTransferred(ctx context.Context, sessionID st
 }
 
 func (b *Broadcaster) MessageClient(ctx context.Context, client *domain.Client, msg any) error {
-	if client == nil || client.Conn == nil {
-		return errors.New("client or connection is nil")
+	if client == nil {
+		return errors.New("cannot message client has the client is nil")
+	}
+
+	if client.Conn == nil {
+		return errors.New("cannot message client as the connection is closed")
 	}
 
 	if deadline, ok := ctx.Deadline(); ok {
@@ -61,7 +65,7 @@ func (b *Broadcaster) MessageClient(ctx context.Context, client *domain.Client, 
 	}
 
 	if err := client.Conn.WriteJSON(msg); err != nil {
-		return fmt.Errorf("failed to send message to client %s: %w", client.ID, err)
+		return fmt.Errorf("failed to send message: %w", err)
 	}
 
 	return nil
@@ -69,14 +73,17 @@ func (b *Broadcaster) MessageClient(ctx context.Context, client *domain.Client, 
 
 func (b *Broadcaster) broadcastToSession(ctx context.Context, session *domain.Session, message any) error {
 	if session == nil {
-		return fmt.Errorf("session is nil")
+		return errors.New("cannot broadcast to session as the session is nil")
 	}
 
 	// need to lock the session
 	for _, client := range session.Clients {
 		go func(c *domain.Client) {
 			if err := b.MessageClient(ctx, c, message); err != nil {
-				log.Printf("failed to broadcast to client %s: %v", c.ID, err)
+				b.logger.Warn().
+					Err(err).
+					Str("client_id", c.ID).
+					Msg("failed to broadcast to client")
 			}
 		}(client)
 	}
@@ -88,16 +95,17 @@ func (b *Broadcaster) Start(ctx context.Context, session *domain.Session) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("stopping broadcaster for session %s: context done", session.ID)
 			return
 		case message, ok := <-session.Broadcast:
 			if !ok {
-				log.Printf("stopping broadcaster for session %s: broadcast channel closed", session.ID)
 				return
 			}
 
 			if err := b.broadcastToSession(ctx, session, message); err != nil {
-				log.Printf("failed to broadcast message to session %s: %v", session.ID, err)
+				b.logger.Warn().
+					Err(err).
+					Str("session_id", session.ID).
+					Msg("broadcast failed")
 			}
 		}
 	}

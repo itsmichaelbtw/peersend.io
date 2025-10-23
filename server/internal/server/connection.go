@@ -3,9 +3,11 @@ package server
 import (
 	"context"
 	"errors"
-	"log"
+
+	"github.com/rs/zerolog"
 
 	"peersend/internal/broadcast"
+	"peersend/internal/config"
 	"peersend/internal/domain"
 	"peersend/internal/events"
 	"peersend/internal/service"
@@ -17,6 +19,7 @@ type Connection struct {
 	sessionService *service.SessionService
 	dispatcher     *events.Dispatcher
 	broadcaster    *broadcast.Broadcaster
+	logger         zerolog.Logger
 }
 
 func NewConnection(
@@ -32,35 +35,39 @@ func NewConnection(
 		sessionService: sessionService,
 		dispatcher:     dispatcher,
 		broadcaster:    broadcaster,
+		logger: config.WithComponent("connection").With().
+			Str("client_id", client.ID).
+			Str("session_id", session.ID).
+			Logger(),
 	}
 }
 
 func (c *Connection) destroyConnection(ctx context.Context) {
-	log.Printf("destroying connection for client %s in session %s", c.client.ID, c.session.ID)
-
 	if c.client.Conn != nil {
-		c.client.Conn.Close()
+		_ = c.client.Conn.Close()
 	}
 
 	if err := c.sessionService.RemoveClient(ctx, c.session.ID, c.client.ID); err != nil {
-		log.Printf("failed to remove client %s from session %s: %v", c.client.ID, c.session.ID, err)
+		c.logger.Error().
+			Err(err).
+			Str("session_id", c.session.ID).
+			Str("client_id", c.client.ID).
+			Msg("failed to clean up client from session")
 	}
 }
 
 func (c *Connection) passMessage(rawMessage []byte) {
 	otherClient, err := c.sessionService.GetOtherClient(c.client.SessionID, c.client.ID)
-	if err != nil {
-		log.Printf("failed to get other client: %v", err)
-		return
-	}
-
-	if otherClient == nil {
-		log.Printf("no other client to pass message to")
+	if err != nil || otherClient == nil {
 		return
 	}
 
 	if err := otherClient.Conn.WriteMessage(1, rawMessage); err != nil {
-		log.Printf("pass message failed %s: %v", otherClient.ID, err)
+		c.logger.Warn().
+			Err(err).
+			Str("to_client_id", otherClient.ID).
+			Str("session_id", c.session.ID).
+			Msg("failed to relay message to peer")
 	}
 }
 
@@ -70,13 +77,25 @@ func (c *Connection) Listen(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("connection closed for client %s: %v", c.client.ID, ctx.Err())
+			c.logger.Debug().
+				Err(ctx.Err()).
+				Msg("connection terminated by context cancellation")
 			return
 
 		default:
-			_, rawMessage, err := c.client.Conn.ReadMessage()
+			messageType, rawMessage, err := c.client.Conn.ReadMessage()
 			if err != nil {
+				c.logger.Info().
+					Err(err).
+					Msg("websocket read failed, terminating connection")
 				return
+			}
+
+			if messageType != 1 {
+				c.logger.Warn().
+					Int("message_type", messageType).
+					Msg("received non-text message, ignoring")
+				continue
 			}
 
 			if err := c.dispatcher.Dispatch(c.client, rawMessage); err != nil {
@@ -85,7 +104,9 @@ func (c *Connection) Listen(ctx context.Context) {
 					continue
 				}
 
-				log.Printf("failed to dispatch message from client %s: %v", c.client.ID, err)
+				c.logger.Error().
+					Err(err).
+					Msg("message dispatch failed")
 			}
 		}
 	}

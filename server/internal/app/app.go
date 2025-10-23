@@ -3,6 +3,8 @@ package app
 import (
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
 	http_api "peersend/internal/api/http"
 	websocket_api "peersend/internal/api/websocket"
 	"peersend/internal/broadcast"
@@ -28,4 +30,6 @@ func Initialise(mux *http.ServeMux, cfg *config.Config) {
 
 	mux.HandleFunc("/exchange", wsHandler.ServeWebSocket)
 	mux.HandleFunc("/health", httpHandler.Health)
+
+	log.Info().Msg("app has been initialised")
 }

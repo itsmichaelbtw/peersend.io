@@ -3,13 +3,18 @@ package events
 import (
 	"encoding/json"
 	"fmt"
-	"peersend/internal/domain"
 	"sync"
+
+	"github.com/rs/zerolog"
+
+	"peersend/internal/config"
+	"peersend/internal/domain"
 )
 
 type Dispatcher struct {
 	handlers     map[string]EventHandler[any]
 	eventContext *EventContext
+	logger       zerolog.Logger
 	mu           sync.RWMutex
 }
 
@@ -17,6 +22,7 @@ func NewDispatcher(eventContext *EventContext) *Dispatcher {
 	return &Dispatcher{
 		handlers:     make(map[string]EventHandler[any]),
 		eventContext: eventContext,
+		logger:       config.WithComponent("dispatcher"),
 	}
 }
 
@@ -44,6 +50,13 @@ func (d *Dispatcher) Dispatch(client *domain.Client, rawMessage []byte) error {
 		var message domain.Message[any]
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
 			return fmt.Errorf("failed to unmarshal message payload: %w", err)
+		}
+
+		if message.Type != "ping" {
+			d.logger.Debug().
+				Str("event_type", envelope.Type).
+				Str("client_id", client.ID).
+				Msg("dispatching event")
 		}
 
 		return h.Handle(d.eventContext, client, message.Data)

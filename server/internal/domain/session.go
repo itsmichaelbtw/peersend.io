@@ -5,6 +5,7 @@ type Session struct {
 	Clients   map[string]*Client
 	HostID    string
 	Broadcast chan Message[any]
+	CreatedAt int64
 }
 
 type SessionRepository interface {

@@ -2,16 +2,17 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 
+	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog"
+
 	"peersend/internal/broadcast"
+	"peersend/internal/config"
 	"peersend/internal/domain"
 	"peersend/internal/events"
 	"peersend/internal/events/handlers"
 	"peersend/internal/service"
-
-	"github.com/gorilla/websocket"
 )
 
 type Server struct {
@@ -20,6 +21,7 @@ type Server struct {
 	Broadcaster    *broadcast.Broadcaster
 	Dispatcher     *events.Dispatcher
 	Upgrader       *websocket.Upgrader
+	logger         zerolog.Logger
 }
 
 func NewServer(sessionService *service.SessionService, clientService *service.ClientService, broadcaster *broadcast.Broadcaster) *Server {
@@ -43,6 +45,7 @@ func NewServer(sessionService *service.SessionService, clientService *service.Cl
 				return true
 			},
 		},
+		logger: config.WithComponent("server"),
 	}
 }
 
@@ -54,38 +57,83 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 	sessionCode := query.Get("session_code")
 	mode := query.Get("mode")
 
-	log.Printf("new websocket connection, mode: %s, session_code: %s", mode, sessionCode)
+	s.logger.Info().
+		Str("mode", mode).
+		Str("session_code", sessionCode).
+		Msg("new websocket connection")
 
 	var session *domain.Session
 	var err error
 
+	// need to clean up the session is created but errors occur below
+
 	switch mode {
 	case "host":
 		session, err = s.SessionService.CreateSession()
+		if err != nil {
+			s.logger.Error().Err(err).Msg("failed to create new session for host")
+			conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "failed to create new session"))
+			conn.Close()
+			return
+		}
 	case "join":
 		session, err = s.SessionService.GetSession(sessionCode)
+		if err != nil {
+			s.logger.Error().Err(err).Str("session_code", sessionCode).Msg("failed to find session for join request")
+			conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "session not found or no longer available"))
+			conn.Close()
+			return
+		}
 	default:
-		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "invalid mode"))
+		s.logger.Error().Str("mode", mode).Msg("invalid connection mode specified")
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "invalid mode - must be 'host' or 'join'"))
 		conn.Close()
 		return
 	}
 
-	if err != nil || session == nil {
-		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "could not create or find session"))
+	if session == nil {
+		s.logger.Error().Msg("session is nil after creation/retrieval")
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "internal server error"))
 		conn.Close()
 		return
 	}
 
 	client := s.ClientService.NewClient(conn)
 	if err := s.SessionService.AddClient(ctx, session.ID, client); err != nil {
-		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, err.Error()))
+		s.logger.Error().
+			Err(err).
+			Str("session_id", session.ID).
+			Str("client_id", client.ID).
+			Msg("failed to add client to session")
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(
+			websocket.CloseNormalClosure,
+			"unable to join session - session may be full",
+		))
 		conn.Close()
 		return
 	}
 
-	sessionData, _ := s.SessionService.GetSessionData(session.ID, client.ID)
+	sessionData, err := s.SessionService.GetSessionData(session.ID, client.ID)
+	if err != nil {
+		s.logger.Error().
+			Err(err).
+			Str("session_id", session.ID).
+			Str("client_id", client.ID).
+			Msg("failed to get session data")
+		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(
+			websocket.CloseNormalClosure,
+			"failed to initialize session data",
+		))
+		conn.Close()
+		return
+	}
+
 	if err := s.Broadcaster.MessageClient(ctx, client, domain.NewMessage(domain.MessageOutSessionInformation, sessionData)); err != nil {
-		log.Printf("failed to send session information: %v", err)
+		s.logger.Error().
+			Err(err).
+			Str("session_id", session.ID).
+			Str("client_id", client.ID).
+			Msg("failed to send initial session information to client")
 	}
 
 	go s.Broadcaster.Start(ctx, session)
@@ -102,7 +150,7 @@ func (s *Server) ServeWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := s.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("websocket upgrade failed: %v", err)
+		s.logger.Warn().Err(err).Msg("websocket upgrade failed")
 		return
 	}
 

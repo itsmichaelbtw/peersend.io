@@ -2,15 +2,16 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sync"
 
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
 	Server      *ServerConfig `yaml:"server"`
+	Logger      *LoggerConfig `yaml:"logger"`
 	Environment string
 }
 
@@ -40,19 +41,22 @@ func Load(path string) *Config {
 	once.Do(func() {
 		cfg = &Config{
 			Server:      &ServerConfig{},
+			Logger:      &LoggerConfig{},
 			Environment: GetEnvironment(),
 		}
 
 		if err := loadConfig(path); err != nil {
-			log.Fatalf("config load error: %v", err)
+			log.Fatal().Err(err).Msg("config load error")
 		}
+
+		InitLogger(cfg.Logger)
 	})
 	return cfg
 }
 
 func Get() *Config {
 	if cfg == nil {
-		log.Fatal("config not loaded; call config.Load() first before calling config.Get()")
+		log.Fatal().Msg("config not loaded; call config.Load() first before calling config.Get()")
 	}
 
 	return cfg

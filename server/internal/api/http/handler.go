@@ -2,10 +2,12 @@ package http_api
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"peersend/internal/config"
 	"time"
+
+	"github.com/rs/zerolog"
+
+	"peersend/internal/config"
 )
 
 type HealthResponse struct {
@@ -17,11 +19,13 @@ type HealthResponse struct {
 
 type Handler struct {
 	environment string
+	logger      zerolog.Logger
 }
 
 func NewHandler(env string) *Handler {
 	return &Handler{
 		environment: env,
+		logger:      config.WithComponent("http_handler"),
 	}
 }
 
@@ -33,6 +37,13 @@ func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	requestIP := r.Header.Get("X-Forwarded-For")
+	if requestIP == "" {
+		requestIP = r.RemoteAddr
+	}
+
+	h.logger.Debug().Str("ip", requestIP).Msg("health check request")
+
 	health := HealthResponse{
 		Version:     config.Version,
 		Environment: h.environment,
@@ -42,7 +53,7 @@ func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(health); err != nil {
-		fmt.Printf("Error encoding health response: %v\n", err)
+		h.logger.Error().Err(err).Msg("error encoding health response")
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

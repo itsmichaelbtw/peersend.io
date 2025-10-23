@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,6 +10,8 @@ import (
 	"peersend/internal/config"
 	"syscall"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -31,8 +32,10 @@ func main() {
 	serverErrors := make(chan error, 1)
 
 	go func() {
-		log.Printf("Running in %s mode", cfg.Environment)
-		log.Printf("Server starting on %s\n", server.Addr)
+		log.Info().
+			Str("environment", cfg.Environment).
+			Str("address", server.Addr).
+			Msg("server starting")
 		serverErrors <- server.ListenAndServe()
 	}()
 
@@ -41,18 +44,18 @@ func main() {
 
 	select {
 	case err := <-serverErrors:
-		log.Fatalf("Error starting server: %v", err)
+		log.Fatal().Err(err).Msg("error starting server")
 
 	case sig := <-shutdown:
-		log.Printf("Starting shutdown, signal: %v\n", sig)
+		log.Info().Str("signal", sig.String()).Msg("starting shutdown")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {
-			log.Printf("Could not stop server gracefully: %v\n", err)
+			log.Warn().Err(err).Msg("could not stop server gracefully")
 			if err := server.Close(); err != nil {
-				log.Printf("Could not force close server: %v\n", err)
+				log.Error().Err(err).Msg("could not force close server")
 			}
 		}
 	}

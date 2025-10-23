@@ -2,6 +2,7 @@ package repository
 
 import (
 	"sync"
+	"time"
 
 	"peersend/internal/config"
 	"peersend/internal/domain"
@@ -60,6 +61,7 @@ func (r *InMemorySessionRepo) CreateSession() (*domain.Session, error) {
 		ID:        id,
 		Clients:   make(map[string]*domain.Client),
 		Broadcast: make(chan domain.Message[any]),
+		CreatedAt: time.Now().Unix(),
 	}
 	r.sessions[id] = session
 	return session, nil
