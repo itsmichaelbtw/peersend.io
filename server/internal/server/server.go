@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
@@ -154,5 +155,20 @@ func (s *Server) ServeWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go s.handleConnection(conn, r)
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				stack := debug.Stack()
+				s.logger.Error().
+					Interface("panic", r).
+					Str("stack", string(stack)).
+					Msg("websocket handler or broadcaster panic recovered - attempting cleanup")
+
+				if err := conn.Close(); err != nil {
+					s.logger.Error().Err(err).Msg("failed to close connection after panic")
+				}
+			}
+		}()
+		s.handleConnection(conn, r)
+	}()
 }
