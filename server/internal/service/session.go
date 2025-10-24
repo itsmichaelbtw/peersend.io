@@ -197,7 +197,7 @@ func (s *SessionService) GetSessionData(sessionID, clientID string) (*domain.Ses
 		SessionCode:    session.ID,
 		ClientID:       clientID,
 		MaximumClients: cfg.Server.MaxClients,
-		ConnectionType: "websocket",
+		ConnectionType: domain.WebSocketConnectionType,
 		EncryptionMode: cfg.Server.EncryptionMode,
 		AutoWebRTC:     cfg.Server.AutoWebRTCEnabled,
 		HostTransferData: domain.HostTransferData{

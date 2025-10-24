@@ -1,7 +1,8 @@
 package domain
 
 const (
-	ErrorMessageType string = "error"
+	WebSocketConnectionType string = "websocket"
+	ErrorMessageType        string = "error"
 
 	MessageOutSessionInformation string = "session_information"
 	MessageOutHostTransferred    string = "host_transferred"
