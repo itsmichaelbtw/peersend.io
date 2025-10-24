@@ -42,8 +42,19 @@ func (s *SessionService) GetSession(id string) (*domain.Session, error) {
 }
 
 func (s *SessionService) AddClient(ctx context.Context, sessionID string, client *domain.Client) error {
+	session, err := s.repo.GetSession(sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to get session %s when adding client: %w", sessionID, err)
+	}
+
 	if err := s.repo.AddClient(sessionID, client); err != nil {
 		return fmt.Errorf("failed to add client %s to session %s: %w", client.ID, sessionID, err)
+	}
+
+	if session.HostID == "" {
+		if err := s.repo.SetHost(sessionID, client.ID); err != nil {
+			return fmt.Errorf("failed to set host for session %s: %w", sessionID, err)
+		}
 	}
 
 	client.SessionID = sessionID
@@ -148,7 +159,9 @@ func (s *SessionService) TransferHost(ctx context.Context, sessionID, fromClient
 		return ErrNoTargetForHostTransfer
 	}
 
-	session.HostID = toClientID
+	if err := s.repo.SetHost(sessionID, toClientID); err != nil {
+		return fmt.Errorf("failed to set host for session %s: %w", sessionID, err)
+	}
 
 	if err := s.publisher.PublishHostTransferredEvent(ctx, sessionID, toClientID); err != nil {
 		s.logger.Warn().

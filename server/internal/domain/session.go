@@ -18,4 +18,5 @@ type SessionRepository interface {
 	GetClientIDs(sessionID string) ([]string, error)
 	IsFull(sessionID string) (bool, error)
 	IsEmpty(sessionID string) (bool, error)
+	SetHost(sessionID, clientID string) error
 }

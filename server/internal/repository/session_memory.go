@@ -160,3 +160,20 @@ func (r *InMemorySessionRepo) IsEmpty(sessionID string) (bool, error) {
 	}
 	return len(session.Clients) == 0, nil
 }
+
+func (r *InMemorySessionRepo) SetHost(sessionID, clientID string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	session, err := r.getSession(sessionID)
+	if err != nil {
+		return err
+	}
+
+	if _, exists := session.Clients[clientID]; !exists {
+		return ErrClientNotFound
+	}
+
+	session.HostID = clientID
+	return nil
+}
