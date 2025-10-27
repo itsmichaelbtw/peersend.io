@@ -42,7 +42,7 @@ func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 		requestIP = r.RemoteAddr
 	}
 
-	h.logger.Debug().Str("ip", requestIP).Msg("health check request")
+	h.logger.Info().Str("ip", requestIP).Msg("health check request")
 
 	health := HealthResponse{
 		Version:     config.Version,

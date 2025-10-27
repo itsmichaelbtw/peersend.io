@@ -48,11 +48,7 @@ func (c *Connection) destroyConnection(ctx context.Context) {
 	}
 
 	if err := c.sessionService.RemoveClient(ctx, c.session.ID, c.client.ID); err != nil {
-		c.logger.Error().
-			Err(err).
-			Str("session_id", c.session.ID).
-			Str("client_id", c.client.ID).
-			Msg("failed to clean up client from session")
+		c.logger.Error().Err(err).Str("session_id", c.session.ID).Str("client_id", c.client.ID).Msg("failed to clean up client from session")
 	}
 }
 
@@ -66,11 +62,7 @@ func (c *Connection) passMessage(rawMessage []byte) {
 	defer otherClient.Mu.Unlock()
 
 	if err := otherClient.Conn.WriteMessage(1, rawMessage); err != nil {
-		c.logger.Warn().
-			Err(err).
-			Str("to_client_id", otherClient.ID).
-			Str("session_id", c.session.ID).
-			Msg("failed to relay message to peer")
+		c.logger.Warn().Err(err).Str("to_client_id", otherClient.ID).Str("session_id", c.session.ID).Msg("failed to relay message to peer")
 	}
 }
 
@@ -80,24 +72,18 @@ func (c *Connection) Listen(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			c.logger.Debug().
-				Err(ctx.Err()).
-				Msg("connection terminated by context cancellation")
+			c.logger.Debug().Err(ctx.Err()).Msg("connection terminated by context cancellation")
 			return
 
 		default:
 			messageType, rawMessage, err := c.client.Conn.ReadMessage()
 			if err != nil {
-				c.logger.Info().
-					Err(err).
-					Msg("websocket read failed, terminating connection")
+				c.logger.Info().Err(err).Msg("websocket read failed, terminating connection")
 				return
 			}
 
 			if messageType != 1 {
-				c.logger.Warn().
-					Int("message_type", messageType).
-					Msg("received non-text message, ignoring")
+				c.logger.Warn().Int("message_type", messageType).Msg("received non-text message, ignoring")
 				continue
 			}
 
@@ -107,9 +93,8 @@ func (c *Connection) Listen(ctx context.Context) {
 					continue
 				}
 
-				c.logger.Error().
-					Err(err).
-					Msg("message dispatch failed")
+				// need to understand when to send errors to the client
+				c.logger.Error().Err(err).Bytes("raw_message", rawMessage).Msg("message dispatch failed")
 			}
 		}
 	}

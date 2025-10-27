@@ -58,10 +58,7 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 	sessionCode := query.Get("session_code")
 	mode := query.Get("mode")
 
-	s.logger.Info().
-		Str("mode", mode).
-		Str("session_code", sessionCode).
-		Msg("new websocket connection")
+	s.logger.Info().Str("mode", mode).Str("session_code", sessionCode).Msg("new websocket connection")
 
 	var session *domain.Session
 	var err error
@@ -101,11 +98,7 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 
 	client := s.ClientService.NewClient(conn)
 	if err := s.SessionService.AddClient(ctx, session.ID, client); err != nil {
-		s.logger.Error().
-			Err(err).
-			Str("session_id", session.ID).
-			Str("client_id", client.ID).
-			Msg("failed to add client to session")
+		s.logger.Error().Err(err).Str("session_id", session.ID).Str("client_id", client.ID).Msg("failed to add client to session")
 		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(
 			websocket.CloseNormalClosure,
 			"unable to join session - session may be full",
@@ -116,11 +109,7 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 
 	sessionData, err := s.SessionService.GetSessionData(session.ID, client.ID)
 	if err != nil {
-		s.logger.Error().
-			Err(err).
-			Str("session_id", session.ID).
-			Str("client_id", client.ID).
-			Msg("failed to get session data")
+		s.logger.Error().Err(err).Str("session_id", session.ID).Str("client_id", client.ID).Msg("failed to get session data")
 		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(
 			websocket.CloseNormalClosure,
 			"failed to initialize session data",
@@ -130,11 +119,7 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 	}
 
 	if err := s.Broadcaster.MessageClient(ctx, client, domain.NewMessage(domain.MessageOutSessionInformation, sessionData)); err != nil {
-		s.logger.Error().
-			Err(err).
-			Str("session_id", session.ID).
-			Str("client_id", client.ID).
-			Msg("failed to send initial session information to client")
+		s.logger.Error().Err(err).Str("session_id", session.ID).Str("client_id", client.ID).Msg("failed to send initial session information to client")
 	}
 
 	connection := NewConnection(client, session, s.SessionService, s.Dispatcher, s.Broadcaster)
@@ -157,10 +142,7 @@ func (s *Server) ServeWebSocket(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {
 				stack := debug.Stack()
-				s.logger.Error().
-					Interface("panic", r).
-					Str("stack", string(stack)).
-					Msg("websocket handler or broadcaster panic recovered - attempting cleanup")
+				s.logger.Error().Interface("panic", r).Str("stack", string(stack)).Msg("websocket handler or broadcaster panic recovered - attempting cleanup")
 
 				if err := conn.Close(); err != nil {
 					s.logger.Error().Err(err).Msg("failed to close connection after panic")
