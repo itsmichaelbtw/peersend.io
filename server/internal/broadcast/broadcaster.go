@@ -93,23 +93,3 @@ func (b *Broadcaster) MessageClient(ctx context.Context, client *domain.Client, 
 
 	return nil
 }
-
-func (b *Broadcaster) Start(ctx context.Context, session *domain.Session) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case message, ok := <-session.Broadcast:
-			if !ok {
-				return
-			}
-
-			if err := b.broadcastToSession(ctx, session, message); err != nil {
-				b.logger.Warn().
-					Err(err).
-					Str("session_id", session.ID).
-					Msg("broadcast failed")
-			}
-		}
-	}
-}

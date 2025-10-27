@@ -137,8 +137,6 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 			Msg("failed to send initial session information to client")
 	}
 
-	go s.Broadcaster.Start(ctx, session)
-
 	connection := NewConnection(client, session, s.SessionService, s.Dispatcher, s.Broadcaster)
 	connection.Listen(ctx)
 }
