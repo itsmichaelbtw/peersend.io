@@ -33,8 +33,8 @@ func NewServer(sessionService *service.SessionService, clientService *service.Cl
 	}
 	dispatcher := events.NewDispatcher(&eventContext)
 
-	dispatcher.RegisterHandler(domain.MessageInPing, &handlers.PingEventHandler{})
-	dispatcher.RegisterHandler(domain.MessageInTransferHost, &handlers.TransferHostEventHandler{})
+	dispatcher.RegisterHandler(domain.MessageInPing, handlers.NewPingEventHandler())
+	dispatcher.RegisterHandler(domain.MessageInTransferHost, handlers.NewTransferHostEventHandler())
 
 	return &Server{
 		SessionService: sessionService,

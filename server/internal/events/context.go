@@ -17,5 +17,5 @@ type EventContext struct {
 }
 
 type EventHandler[T any] interface {
-	Handle(ctx *EventContext, client *domain.Client, incomingData T) error
+	Handle(ctx *EventContext, client *domain.Client, incomingData []byte) error
 }

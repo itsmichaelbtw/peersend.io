@@ -47,19 +47,11 @@ func (d *Dispatcher) Dispatch(client *domain.Client, rawMessage []byte) error {
 
 	switch h := handler.(type) {
 	case EventHandler[any]:
-		var message domain.Message[any]
-		if err := json.Unmarshal(rawMessage, &message); err != nil {
-			return fmt.Errorf("failed to unmarshal message payload: %w", err)
+		if envelope.Type != "ping" {
+			d.logger.Info().Str("event_type", envelope.Type).Str("client_id", client.ID).Msg("dispatching event")
 		}
 
-		if message.Type != "ping" {
-			d.logger.Debug().
-				Str("event_type", envelope.Type).
-				Str("client_id", client.ID).
-				Msg("dispatching event")
-		}
-
-		return h.Handle(d.eventContext, client, message.Data)
+		return h.Handle(d.eventContext, client, rawMessage)
 	default:
 		return fmt.Errorf("handler type assertion failed for %s", envelope.Type)
 	}

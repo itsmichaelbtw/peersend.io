@@ -4,13 +4,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"peersend/internal/config"
 	"peersend/internal/domain"
 	"peersend/internal/events"
+
+	"github.com/rs/zerolog"
 )
 
-type TransferHostEventHandler struct{}
+var _ events.EventHandler[any] = (*TransferHostEventHandler)(nil)
 
-func (h *TransferHostEventHandler) Handle(eventContext *events.EventContext, client *domain.Client, incomingData any) error {
+type TransferHostEventHandler struct {
+	logger zerolog.Logger
+}
+
+func NewTransferHostEventHandler() *TransferHostEventHandler {
+	return &TransferHostEventHandler{
+		logger: config.WithComponent("transfer_host_event_handler"),
+	}
+}
+
+func (h *TransferHostEventHandler) Handle(eventContext *events.EventContext, client *domain.Client, incomingData []byte) error {
 	if client.SessionID == "" {
 		return errors.New("cannot transfer host: client is not in a session")
 	}
