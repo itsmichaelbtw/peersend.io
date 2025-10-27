@@ -28,14 +28,15 @@ func (b *Broadcaster) broadcastToSession(ctx context.Context, session *domain.Se
 		return errors.New("cannot broadcast to session as the session is nil")
 	}
 
-	// need to lock the session
-	for _, client := range session.Clients {
+	clients, err := b.sessionRepo.GetClients(session.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get clients for session %s during broadcast: %w", session.ID, err)
+	}
+
+	for _, client := range clients {
 		go func(c *domain.Client) {
 			if err := b.MessageClient(ctx, c, message); err != nil {
-				b.logger.Warn().
-					Err(err).
-					Str("client_id", c.ID).
-					Msg("failed to broadcast to client")
+				b.logger.Warn().Err(err).Str("client_id", c.ID).Msg("failed to broadcast to client")
 			}
 		}(client)
 	}
