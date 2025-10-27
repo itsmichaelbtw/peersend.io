@@ -42,22 +42,24 @@ func (s *SessionService) GetSession(id string) (*domain.Session, error) {
 }
 
 func (s *SessionService) AddClient(ctx context.Context, sessionID string, client *domain.Client) error {
-	session, err := s.repo.GetSession(sessionID)
-	if err != nil {
-		return fmt.Errorf("failed to get session %s when adding client: %w", sessionID, err)
-	}
-
 	if err := s.repo.AddClient(sessionID, client); err != nil {
 		return fmt.Errorf("failed to add client %s to session %s: %w", client.ID, sessionID, err)
 	}
 
-	if session.HostID == "" {
+	hostID, err := s.repo.GetHostID(sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to check host status for session %s: %w", sessionID, err)
+	}
+
+	if hostID == "" {
 		if err := s.repo.SetHost(sessionID, client.ID); err != nil {
 			return fmt.Errorf("failed to set host for session %s: %w", sessionID, err)
 		}
 	}
 
-	client.SessionID = sessionID
+	if err := s.repo.SetClientSessionID(sessionID, client.ID); err != nil {
+		return fmt.Errorf("failed to set session ID for client %s in session %s: %w", client.ID, sessionID, err)
+	}
 
 	clientIDs, err := s.repo.GetClientIDs(sessionID)
 	if err != nil {
@@ -65,36 +67,19 @@ func (s *SessionService) AddClient(ctx context.Context, sessionID string, client
 	}
 
 	if err := s.publisher.PublishSyncClientsEvent(ctx, sessionID, clientIDs); err != nil {
-		s.logger.Warn().
-			Err(err).
-			Str("session_id", sessionID).
-			Msg("failed to publish sync clients event")
+		s.logger.Warn().Err(err).Str("session_id", sessionID).Msg("failed to publish sync clients event")
 	}
 
-	s.logger.Info().
-		Str("session_id", sessionID).
-		Str("client_id", client.ID).
-		Int("client_count", len(clientIDs)).
-		Msg("client joined session")
+	s.logger.Info().Str("session_id", sessionID).Str("client_id", client.ID).Int("client_count", len(clientIDs)).Msg("client joined session")
 
 	return nil
 }
 
 func (s *SessionService) RemoveClient(ctx context.Context, sessionID, clientID string) error {
-	session, err := s.repo.GetSession(sessionID)
-	if err != nil {
-		return fmt.Errorf("failed to get session %s for client removal: %w", sessionID, err)
-	}
-
-	if session.HostID == clientID {
-		otherClient, err := s.repo.GetOtherClient(sessionID, clientID)
-		if err == nil && otherClient != nil {
+	if isHost, _ := s.repo.IsHost(sessionID, clientID); isHost {
+		if otherClient, err := s.repo.GetOtherClient(sessionID, clientID); err == nil && otherClient != nil {
 			if err := s.TransferHost(ctx, sessionID, clientID, otherClient.ID); err != nil {
-				s.logger.Warn().
-					Err(err).
-					Str("session_id", sessionID).
-					Str("client_id", clientID).
-					Msg("failed to transfer host on disconnect")
+				s.logger.Warn().Err(err).Str("session_id", sessionID).Str("client_id", clientID).Msg("failed to transfer host on disconnect")
 			}
 		}
 	}
@@ -103,8 +88,7 @@ func (s *SessionService) RemoveClient(ctx context.Context, sessionID, clientID s
 		return fmt.Errorf("failed to remove client %s from session %s: %w", clientID, sessionID, err)
 	}
 
-	isEmpty, _ := s.repo.IsEmpty(sessionID)
-	if isEmpty {
+	if isEmpty, _ := s.repo.IsEmpty(sessionID); isEmpty {
 		return s.CleanupSession(ctx, sessionID)
 	}
 
@@ -114,48 +98,37 @@ func (s *SessionService) RemoveClient(ctx context.Context, sessionID, clientID s
 	}
 
 	if err := s.publisher.PublishSyncClientsEvent(ctx, sessionID, clientIDs); err != nil {
-		s.logger.Warn().
-			Err(err).
-			Str("session_id", sessionID).
-			Msg("failed to publish sync clients event")
+		s.logger.Warn().Err(err).Str("session_id", sessionID).Msg("failed to publish sync clients event")
 	}
 
-	s.logger.Info().
-		Str("session_id", sessionID).
-		Str("client_id", clientID).
-		Int("remaining_clients", len(clientIDs)).
-		Msg("client left session")
+	s.logger.Info().Str("session_id", sessionID).Str("client_id", clientID).Int("remaining_clients", len(clientIDs)).Msg("client left session")
 
 	return nil
 }
 
 func (s *SessionService) CleanupSession(ctx context.Context, sessionID string) error {
-	session, err := s.repo.GetSession(sessionID)
-	if err != nil {
-		return fmt.Errorf("failed to get session %s for cleanup: %w", sessionID, err)
-	}
-
-	if session.Broadcast != nil {
-		close(session.Broadcast)
-	}
-
+	// check if clients exist and if so just close the connection
 	s.repo.DeleteSession(sessionID)
 	s.logger.Info().Str("session_id", sessionID).Msg("session destroyed")
-
 	return nil
 }
 
 func (s *SessionService) TransferHost(ctx context.Context, sessionID, fromClientID, toClientID string) error {
-	session, err := s.repo.GetSession(sessionID)
+	isHost, err := s.repo.IsHost(sessionID, fromClientID)
 	if err != nil {
-		return fmt.Errorf("failed to get session %s for host transfer: %w", sessionID, err)
+		return fmt.Errorf("failed to check host status for session %s: %w", sessionID, err)
 	}
 
-	if session.HostID != fromClientID {
+	if !isHost {
 		return ErrOnlyHostCanTransfer
 	}
 
-	if _, exists := session.Clients[toClientID]; !exists {
+	client, err := s.repo.GetClient(sessionID, toClientID)
+	if err != nil {
+		return fmt.Errorf("failed to check if target client exists in session %s: %w", sessionID, err)
+	}
+
+	if client == nil {
 		return ErrNoTargetForHostTransfer
 	}
 
@@ -164,18 +137,10 @@ func (s *SessionService) TransferHost(ctx context.Context, sessionID, fromClient
 	}
 
 	if err := s.publisher.PublishHostTransferredEvent(ctx, sessionID, toClientID); err != nil {
-		s.logger.Warn().
-			Err(err).
-			Str("session_id", sessionID).
-			Str("new_host_id", toClientID).
-			Msg("failed to publish host transferred event")
+		s.logger.Warn().Err(err).Str("session_id", sessionID).Str("new_host_id", toClientID).Msg("failed to publish host transferred event")
 	}
 
-	s.logger.Info().
-		Str("session_id", sessionID).
-		Str("from_client_id", fromClientID).
-		Str("to_client_id", toClientID).
-		Msg("host transferred")
+	s.logger.Info().Str("session_id", sessionID).Str("from_client_id", fromClientID).Str("to_client_id", toClientID).Msg("host transferred")
 
 	return nil
 }
@@ -184,6 +149,11 @@ func (s *SessionService) GetSessionData(sessionID, clientID string) (*domain.Ses
 	session, err := s.repo.GetSession(sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get session %s: %w", sessionID, err)
+	}
+
+	hostID, err := s.repo.GetHostID(sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get host ID for session %s: %w", sessionID, err)
 	}
 
 	clientIDs, err := s.repo.GetClientIDs(sessionID)
@@ -201,7 +171,7 @@ func (s *SessionService) GetSessionData(sessionID, clientID string) (*domain.Ses
 		EncryptionMode: cfg.Server.EncryptionMode,
 		AutoWebRTC:     cfg.Server.AutoWebRTCEnabled,
 		HostTransferData: domain.HostTransferData{
-			HostID: session.HostID,
+			HostID: hostID,
 		},
 		SyncClientsData: domain.SyncClientsData{
 			Clients: clientIDs,

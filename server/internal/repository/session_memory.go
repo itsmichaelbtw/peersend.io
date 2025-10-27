@@ -60,7 +60,6 @@ func (r *InMemorySessionRepo) CreateSession() (*domain.Session, error) {
 	session := &domain.Session{
 		ID:        id,
 		Clients:   make(map[string]*domain.Client),
-		Broadcast: make(chan domain.Message[any]),
 		CreatedAt: time.Now().Unix(),
 	}
 	r.sessions[id] = session
@@ -76,7 +75,6 @@ func (r *InMemorySessionRepo) GetSession(id string) (*domain.Session, error) {
 func (r *InMemorySessionRepo) DeleteSession(id string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-
 	delete(r.sessions, id)
 }
 
@@ -108,6 +106,21 @@ func (r *InMemorySessionRepo) RemoveClient(sessionID, clientID string) error {
 	return nil
 }
 
+func (r *InMemorySessionRepo) GetClient(sessionID, clientID string) (*domain.Client, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	session, err := r.getSession(sessionID)
+	if err != nil {
+		return nil, err
+	}
+	client, exists := session.Clients[clientID]
+	if !exists {
+		return nil, ErrClientNotFound
+	}
+	return client, nil
+}
+
 func (r *InMemorySessionRepo) GetOtherClient(sessionID, clientID string) (*domain.Client, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -124,6 +137,22 @@ func (r *InMemorySessionRepo) GetOtherClient(sessionID, clientID string) (*domai
 	return nil, ErrNoOtherClient
 }
 
+func (r *InMemorySessionRepo) GetClients(sessionID string) ([]*domain.Client, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	session, err := r.getSession(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	clients := make([]*domain.Client, 0, len(session.Clients))
+	for _, client := range session.Clients {
+		clients = append(clients, client)
+	}
+	return clients, nil
+}
+
 func (r *InMemorySessionRepo) GetClientIDs(sessionID string) ([]string, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -132,6 +161,7 @@ func (r *InMemorySessionRepo) GetClientIDs(sessionID string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	ids := make([]string, 0, len(session.Clients))
 	for id := range session.Clients {
 		ids = append(ids, id)
@@ -175,5 +205,45 @@ func (r *InMemorySessionRepo) SetHost(sessionID, clientID string) error {
 	}
 
 	session.HostID = clientID
+	return nil
+}
+
+func (r *InMemorySessionRepo) GetHostID(sessionID string) (string, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	session, err := r.getSession(sessionID)
+	if err != nil {
+		return "", err
+	}
+	return session.HostID, nil
+}
+
+func (r *InMemorySessionRepo) IsHost(sessionID, clientID string) (bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	session, err := r.getSession(sessionID)
+	if err != nil {
+		return false, err
+	}
+	return session.HostID == clientID, nil
+}
+
+func (r *InMemorySessionRepo) SetClientSessionID(sessionID, clientID string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	session, err := r.getSession(sessionID)
+	if err != nil {
+		return err
+	}
+
+	client, exists := session.Clients[clientID]
+	if !exists {
+		return ErrClientNotFound
+	}
+
+	client.SessionID = sessionID
 	return nil
 }
