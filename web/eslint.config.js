@@ -1,23 +1,63 @@
-import js from "@eslint/js";
-import globals from "globals";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
-import tseslint from "typescript-eslint";
-import { globalIgnores } from "eslint/config";
+import { fileURLToPath } from "node:url";
 
-export default tseslint.config([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs["recommended-latest"],
-      reactRefresh.configs.vite
-    ],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser
-    }
-  }
-]);
+import globals from "globals";
+import js from "@eslint/js";
+import tsParser from "@typescript-eslint/parser";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import reactPlugin from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import prettier from "eslint-config-prettier";
+
+export default [
+	{
+		ignores: ["dist/**", "node_modules/**"]
+	},
+	{
+		...js.configs.recommended,
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: "module",
+			globals: { ...globals.browser, ...globals.es2022 }
+		}
+	},
+	{
+		files: ["**/*.ts", "**/*.tsx"],
+		languageOptions: {
+			parser: tsParser,
+			parserOptions: {
+				project: ["./tsconfig.app.json", "./tsconfig.node.json"],
+				tsconfigRootDir: fileURLToPath(new URL(".", import.meta.url)),
+				ecmaVersion: 2022,
+				sourceType: "module",
+				ecmaFeatures: { jsx: true }
+			}
+		},
+		plugins: {
+			"@typescript-eslint": tsPlugin,
+			react: reactPlugin,
+			"react-hooks": reactHooks
+		},
+		settings: {
+			react: { version: "detect" }
+		},
+		rules: {
+			...tsPlugin.configs["recommended"].rules,
+			...tsPlugin.configs["recommended-requiring-type-checking"].rules,
+			...reactPlugin.configs["recommended"].rules,
+			...reactHooks.configs["recommended"].rules,
+			...prettier.rules,
+			"@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+			"@typescript-eslint/explicit-function-return-type": "off",
+			"@typescript-eslint/explicit-module-boundary-types": "off",
+			"react/react-in-jsx-scope": "off",
+			"react/prop-types": "off",
+			"no-console": "warn",
+			"no-debugger": "error",
+			eqeqeq: ["error", "always"],
+			curly: ["error", "multi-line"],
+			"react/self-closing-comp": "warn",
+			"react/jsx-boolean-value": ["warn", "never"],
+			"react/jsx-curly-brace-presence": ["warn", { props: "never", children: "never" }]
+		}
+	}
+];
