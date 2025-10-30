@@ -57,7 +57,8 @@ jobs:
         run: |
           echo "### ESLint Status" >> $GITHUB_STEP_SUMMARY
           set +e
-          npm run lint -- ${{ needs.get-changes.outputs.changed-files }}
+          FILES=$(echo "${{ needs.get-changes.outputs.changed-files }}" | sed 's|^web/||')
+          npm run lint -- $FILES
           ESLINT_EXIT=$?
           set -e
           if [ $ESLINT_EXIT -eq 0 ]; then
