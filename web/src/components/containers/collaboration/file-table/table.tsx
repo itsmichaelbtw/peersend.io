@@ -3,7 +3,7 @@ import type { PeerSendFile } from "@/state/types";
 import type { RowSelectionState } from "@tanstack/react-table";
 
 import React, { useState } from "react";
-import { Box, Table } from "@mantine/core";
+import { Table } from "@mantine/core";
 import {
 	useReactTable,
 	flexRender,
@@ -17,7 +17,6 @@ import {
 	fileSizeColumn,
 	fileTimestampColumn,
 	fileStatusColumn,
-	fileActionsColumn,
 	selectionColumn
 } from "./columns";
 
