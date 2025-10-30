@@ -56,8 +56,6 @@ jobs:
         working-directory: ./web
         run: |
           set +e
-
-          echo "### ESLint Status" >> $GITHUB_STEP_SUMMARY
           npm run lint
           ESLINT_EXIT=$?
           if [ $ESLINT_EXIT -eq 0 ]; then
@@ -66,7 +64,6 @@ jobs:
             echo "- ❌ ESLint failed" >> $GITHUB_STEP_SUMMARY
           fi
 
-          echo "### Type Check Status" >> $GITHUB_STEP_SUMMARY
           npm run type-check
           TSC_EXIT=$?
           if [ $TSC_EXIT -eq 0 ]; then
