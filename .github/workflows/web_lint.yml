@@ -49,9 +49,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-deps
+        working-directory: ./web
 
       - name: Run ESLint
         id: eslint
+        working-directory: ./web
         run: |
           echo "### ESLint Status" >> $GITHUB_STEP_SUMMARY
           set +e
@@ -81,9 +83,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-deps
+        working-directory: ./web
 
       - name: Run TypeScript Type Check
         id: tsc
+        working-directory: ./web
         run: |
           echo "### Type Check Status" >> $GITHUB_STEP_SUMMARY
           set +e
