@@ -48,7 +48,7 @@ jobs:
           node-version: 20.18.2
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-deps
 
       - name: Run ESLint
         id: eslint
@@ -80,7 +80,7 @@ jobs:
           node-version: 20.18.2
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-deps
 
       - name: Run TypeScript Type Check
         id: tsc
