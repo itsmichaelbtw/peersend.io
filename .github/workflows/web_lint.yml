@@ -33,8 +33,8 @@ jobs:
             echo "No TypeScript files changed." >> $GITHUB_STEP_SUMMARY
           fi
 
-  lint:
-    name: ESLint Changed Files
+  lint-and-type-check:
+    name: Lint & TypeScript Type Check
     runs-on: ubuntu-latest
     needs: get-changes
     if: ${{ needs.get-changes.outputs.changed-files != '' }}
@@ -55,10 +55,8 @@ jobs:
         id: eslint
         working-directory: ./web
         run: |
-          echo "### ESLint Status" >> $GITHUB_STEP_SUMMARY
           set +e
-          FILES=$(echo "${{ needs.get-changes.outputs.changed-files }}" | sed 's|^web/||')
-          npm run lint -- $FILES
+          npm run lint
           ESLINT_EXIT=$?
           set -e
           if [ $ESLINT_EXIT -eq 0 ]; then
@@ -68,36 +66,17 @@ jobs:
             exit $ESLINT_EXIT
           fi
 
-  type-check:
-    name: TypeScript Type Check
-    runs-on: ubuntu-latest
-    needs: get-changes
-    if: ${{ needs.get-changes.outputs.changed-files != '' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 20.18.2
-
-      - name: Install dependencies
-        run: npm install --legacy-deps
-        working-directory: ./web
-
       - name: Run TypeScript Type Check
         id: tsc
         working-directory: ./web
         run: |
-          echo "### Type Check Status" >> $GITHUB_STEP_SUMMARY
           set +e
           npm run type-check
           TSC_EXIT=$?
           set -e
           if [ $TSC_EXIT -eq 0 ]; then
-            echo "- ✅ TypeScript type check succeeded" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Type check succeeded" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- ❌ TypeScript type check failed" >> $GITHUB_STEP_SUMMARY
+            echo "- ❌ Type check failed" >> $GITHUB_STEP_SUMMARY
             exit $TSC_EXIT
           fi
