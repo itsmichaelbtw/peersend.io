@@ -25,12 +25,12 @@ jobs:
         id: set-files
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.(ts|tsx)$' || true)
-          echo "files=$CHANGED_FILES" >> "$GITHUB_OUTPUT"
-          echo "### Changed TypeScript files" >> "$GITHUB_SUMMARY"
+          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "### Changed TypeScript files" >> $GITHUB_STEP_SUMMARY
           if [ -n "$CHANGED_FILES" ]; then
-            echo "$CHANGED_FILES" | sed 's/^/- /' >> "$GITHUB_SUMMARY"
+            echo "$CHANGED_FILES" | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
           else
-            echo "No TypeScript files changed." >> "$GITHUB_SUMMARY"
+            echo "No TypeScript files changed." >> $GITHUB_STEP_SUMMARY
           fi
 
   lint:
@@ -53,15 +53,15 @@ jobs:
       - name: Run ESLint
         id: eslint
         run: |
-          echo "### ESLint Status" >> $GITHUB_SUMMARY
+          echo "### ESLint Status" >> $GITHUB_STEP_SUMMARY
           set +e
           npm run lint -- ${{ needs.get-changes.outputs.changed-files }}
           ESLINT_EXIT=$?
           set -e
           if [ $ESLINT_EXIT -eq 0 ]; then
-            echo "- ✅ ESLint succeeded" >> $GITHUB_SUMMARY
+            echo "- ✅ ESLint succeeded" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- ❌ ESLint failed" >> $GITHUB_SUMMARY
+            echo "- ❌ ESLint failed" >> $GITHUB_STEP_SUMMARY
             exit $ESLINT_EXIT
           fi
 
@@ -85,14 +85,14 @@ jobs:
       - name: Run TypeScript Type Check
         id: tsc
         run: |
-          echo "### Type Check Status" >> $GITHUB_SUMMARY
+          echo "### Type Check Status" >> $GITHUB_STEP_SUMMARY
           set +e
           npm run type-check
           TSC_EXIT=$?
           set -e
           if [ $TSC_EXIT -eq 0 ]; then
-            echo "- ✅ TypeScript type check succeeded" >> $GITHUB_SUMMARY
+            echo "- ✅ TypeScript type check succeeded" >> $GITHUB_STEP_SUMMARY
           else
-            echo "- ❌ TypeScript type check failed" >> $GITHUB_SUMMARY
+            echo "- ❌ TypeScript type check failed" >> $GITHUB_STEP_SUMMARY
             exit $TSC_EXIT
           fi
