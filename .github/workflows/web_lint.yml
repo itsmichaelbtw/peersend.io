@@ -51,32 +51,32 @@ jobs:
         run: npm install --legacy-deps
         working-directory: ./web
 
-      - name: Run ESLint
-        id: eslint
+      - name: Run ESLint and Type Check
+        id: lint-and-type
         working-directory: ./web
         run: |
           set +e
+
+          echo "### ESLint Status" >> $GITHUB_STEP_SUMMARY
           npm run lint
           ESLINT_EXIT=$?
-          set -e
           if [ $ESLINT_EXIT -eq 0 ]; then
             echo "- ✅ ESLint succeeded" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ ESLint failed" >> $GITHUB_STEP_SUMMARY
-            exit $ESLINT_EXIT
           fi
 
-      - name: Run TypeScript Type Check
-        id: tsc
-        working-directory: ./web
-        run: |
-          set +e
+          echo "### Type Check Status" >> $GITHUB_STEP_SUMMARY
           npm run type-check
           TSC_EXIT=$?
-          set -e
           if [ $TSC_EXIT -eq 0 ]; then
             echo "- ✅ Type check succeeded" >> $GITHUB_STEP_SUMMARY
           else
             echo "- ❌ Type check failed" >> $GITHUB_STEP_SUMMARY
-            exit $TSC_EXIT
+          fi
+
+          set -e
+
+          if [ $ESLINT_EXIT -ne 0 ] || [ $TSC_EXIT -ne 0 ]; then
+            exit 1
           fi
