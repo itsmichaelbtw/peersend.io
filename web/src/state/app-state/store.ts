@@ -44,7 +44,7 @@ export class AppStateStore extends StateStore<AppState, StateActions> {
 						isConnected: true,
 						clientId: action.payload.client_id,
 						clients: action.payload.clients,
-						isHost: action.payload.is_host,
+						isHost: action.payload.host_id === action.payload.client_id,
 						maximumClients: action.payload.maximum_clients,
 						sessionCode: action.payload.session_code,
 						autoWebRTC: action.payload.auto_webrtc,
@@ -74,7 +74,7 @@ export class AppStateStore extends StateStore<AppState, StateActions> {
 			case "SET_HOST": {
 				return this.update({
 					sessionState: {
-						isHost: action.payload.is_host
+						isHost: action.payload.host_id === state.sessionState.clientId
 					}
 				});
 			}

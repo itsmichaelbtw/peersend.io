@@ -35,11 +35,11 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		}
 	}
 
-	private on_icecandidateerror(event: Event) {
+	private on_icecandidateerror() {
 		log.error("on_icecandidateerror");
 	}
 
-	private on_iceconnectionstatechange(event: Event) {
+	private on_iceconnectionstatechange() {
 		log.debug("on_iceconnectionstatechange");
 
 		const { webrtcState } = appState.get();
@@ -49,7 +49,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		}
 	}
 
-	private on_connectionstatechange(event: Event) {
+	private on_connectionstatechange() {
 		log.debug("on_connectionstatechange");
 
 		const { webrtcState } = appState.get();

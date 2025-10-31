@@ -21,7 +21,7 @@ export class CustomDataChannel {
 		this.channel.addEventListener("message", this.on_message.bind(this));
 	}
 
-	private on_open(event: Event) {
+	private on_open() {
 		log.debug("on_open");
 
 		const { sessionState } = appState.get();
@@ -33,7 +33,7 @@ export class CustomDataChannel {
 		this.network_clients.wrtc.start_latency_monitoring();
 	}
 
-	private on_close(event: Event) {
+	private on_close() {
 		log.debug("on_close");
 		abortRegistry.end();
 	}
@@ -61,22 +61,25 @@ export class CustomDataChannel {
 		}
 
 		switch (true) {
-			case event.data instanceof Blob:
+			case event.data instanceof Blob: {
 				const buffer = await event.data.arrayBuffer();
 				log.debug("Received a file chunk as instanceof Blob");
 				this.network_clients.wrtc.message_bus.emit("in_file_transit", buffer);
 				return;
+			}
 
-			case event.data instanceof ArrayBuffer:
+			case event.data instanceof ArrayBuffer: {
 				const chunk = new Uint8Array(event.data);
 				log.debug("Received a file chunk as instanceof ArrayBuffer");
 				this.network_clients.wrtc.message_bus.emit("in_file_transit", chunk);
 				return;
+			}
 
-			case event.data instanceof Uint8Array:
+			case event.data instanceof Uint8Array: {
 				log.debug("Received a file chunk as instanceof Uint8Array");
 				this.network_clients.wrtc.message_bus.emit("in_file_transit", event.data);
 				return;
+			}
 		}
 
 		try {
