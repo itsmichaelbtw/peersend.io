@@ -18,12 +18,12 @@ export class CustomWebSocket extends WebSocket {
 	}
 
 	private onOpen() {
-		log.debug("onOpen");
+		log.debug("onOpen event received");
 		abortRegistry.start();
 	}
 
 	private onClose(event: CloseEvent) {
-		log.debug("onClose");
+		log.debug("onClose event received");
 
 		getWebSocketClient().disconnect();
 
@@ -41,7 +41,7 @@ export class CustomWebSocket extends WebSocket {
 	}
 
 	private onError() {
-		log.error("onError");
+		log.error("onError event received");
 
 		appState.dispatch("SET_LAST_ERROR", {
 			title: "Connection Issue",
@@ -50,7 +50,7 @@ export class CustomWebSocket extends WebSocket {
 	}
 
 	private onMessage(event: MessageEvent) {
-		log.debug("onMessage");
+		log.debug("onMessage event received");
 
 		const { sessionState, websocketState } = appState.get();
 

@@ -32,10 +32,7 @@ export class MessageBus<T extends string> {
 			return;
 		}
 
-		const handlers = this.handlers.get(event);
-		log.info(`Emitting event: ${event} to ${handlers?.length} handlers`);
-
-		for (const handler of handlers!) {
+		for (const handler of this.handlers.get(event)!) {
 			try {
 				void (handler as MessageBusHandler<D>)(data);
 			} catch (error) {
