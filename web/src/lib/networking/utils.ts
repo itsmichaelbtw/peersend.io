@@ -6,9 +6,17 @@ let webSocketClient: WebSocketClient | null = null;
 let webRTCClient: WebRTCClient | null = null;
 
 export function getWebRTCClient(): WebRTCClient {
-	return webRTCClient ? webRTCClient : new WebRTCClient();
+	if (webRTCClient === null) {
+		webRTCClient = new WebRTCClient();
+	}
+
+	return webRTCClient;
 }
 
 export function getWebSocketClient(): WebSocketClient {
-	return webSocketClient ? webSocketClient : new WebSocketClient(WEBSOCKET_ENDPOINT);
+	if (webSocketClient === null) {
+		webSocketClient = new WebSocketClient(WEBSOCKET_ENDPOINT);
+	}
+
+	return webSocketClient;
 }
