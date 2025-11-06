@@ -25,7 +25,13 @@ jobs:
         id: set-files
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '\.(ts|tsx)$' || true)
-          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+
+          {
+            echo "files<<EOF"
+            echo "$CHANGED_FILES"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
           if [ -n "$CHANGED_FILES" ]; then
             echo "### Changed TypeScript files" >> $GITHUB_STEP_SUMMARY
             echo "$CHANGED_FILES" | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
