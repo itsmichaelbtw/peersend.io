@@ -11,7 +11,7 @@ import { sleep } from "@/utils/sleep";
 import { DEFAULT_WEBRTC_STATE } from "@/config/constants";
 import { createLogger } from "@/utils/logger";
 
-const log = createLogger("WebRtcClient");
+const log = createLogger("WebRTCClient");
 
 const RTC_CONFIGURATION: RTCConfiguration = {
 	iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }]
