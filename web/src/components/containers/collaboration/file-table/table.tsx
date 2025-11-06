@@ -2,7 +2,7 @@ import type { WithChildren } from "@/types/misc";
 import type { PeerSendFile } from "@/state/types";
 import type { RowSelectionState } from "@tanstack/react-table";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Table } from "@mantine/core";
 import {
 	useReactTable,
@@ -33,17 +33,21 @@ interface Props extends WithChildren<"required", (args: RenderChildrenArgs) => R
 export function FileTable({ files, emptyComponent, children }: Props) {
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-	const table = useReactTable({
-		data: files,
-		columns: [
+	const columns = useMemo(
+		() => [
 			selectionColumn,
 			fileIconColumn,
 			fileNameColumn,
 			fileSizeColumn,
 			fileStatusColumn,
 			fileTimestampColumn
-			// fileActionsColumn
 		],
+		[]
+	);
+
+	const table = useReactTable({
+		data: files,
+		columns: columns,
 		state: {
 			rowSelection: rowSelection
 		},

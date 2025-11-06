@@ -18,7 +18,7 @@ export function HostStandbyCard() {
 							</div>
 							<h3 className="text-lg font-medium">Pending Host Action</h3>
 							<p className="text-sm text-gray-400 text-center leading-tight">
-								Hang tight — the host will kick off the file transfer once they're ready
+								Hang tight — the host will kick off the file transfer once they&#39;re ready
 							</p>
 						</Stack>
 					</Group>

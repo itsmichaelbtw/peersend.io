@@ -1,6 +1,6 @@
 import React from "react";
 
-export type WithNullable<T> = T | null | undefined | void;
+export type WithNullable<T> = T | null;
 
 type WithBaseGeneric = "required" | "optional";
 
@@ -13,16 +13,16 @@ type WithBaseGeneric = "required" | "optional";
  *
  */
 export type WithChildren<
-  T extends WithBaseGeneric = "required",
-  R = React.ReactNode
+	T extends WithBaseGeneric = "required",
+	R = React.ReactNode
 > = T extends "required" ? { children: R } : { children?: R };
 
 export type RecursivePartial<T> = {
-  [P in keyof T]?: T[P] extends (infer U)[]
-    ? RecursivePartial<U>[]
-    : T[P] extends object
-      ? RecursivePartial<T[P]>
-      : T[P];
+	[P in keyof T]?: T[P] extends (infer U)[]
+		? RecursivePartial<U>[]
+		: T[P] extends object
+			? RecursivePartial<T[P]>
+			: T[P];
 };
 
 /**
@@ -54,12 +54,12 @@ export type RequiredKeys<T, K extends keyof T> = Required<Pick<T, K>> & Partial<
 /**
  * A generic function type.
  */
-export type FunctionType = (...args: any[]) => any;
+export type FunctionType<T = unknown> = (...args: unknown[]) => T;
 
 /**
  * A generic async function type.
  */
-export type AsyncFunctionType = (...args: any[]) => Promise<any>;
+export type AsyncFunctionType<T = unknown> = (...args: unknown[]) => Promise<T>;
 
 /**
  * Get the return type of a function.
@@ -67,7 +67,11 @@ export type AsyncFunctionType = (...args: any[]) => Promise<any>;
  * @example
  * type MyFunctionReturnType = ReturnType<typeof myFunction>;
  */
-export type ReturnType<T extends FunctionType> = T extends (...args: any[]) => infer R ? R : never;
+export type ReturnType<T extends FunctionType<K>, K = unknown> = T extends (
+	...args: unknown[]
+) => infer R
+	? R
+	: never;
 
 /**
  * When "compilerOptions.strictNullChecks" is enabled, this is convenient to use
@@ -112,7 +116,7 @@ export type FlexibleString = string & {};
  * type MutableUser = Without<User, Readonly<User>>;
  */
 export type Without<T, U> = {
-  [P in Exclude<keyof T, keyof U>]?: never;
+	[P in Exclude<keyof T, keyof U>]?: never;
 };
 
 /**
@@ -123,7 +127,7 @@ export type Without<T, U> = {
  * type ReadonlyUser = ReadonlyObject<User>;
  */
 export type ReadonlyObject<T> = {
-  readonly [P in keyof T]: T[P];
+	readonly [P in keyof T]: T[P];
 };
 
 /**

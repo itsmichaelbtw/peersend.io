@@ -1,8 +1,8 @@
-import type { WebRtcMessages } from "./types";
+import type { WebRTCIncomingMessage, WebRTCOutgoingMessage } from "./types";
 
 import { NetworkClient } from "../network-client";
-import { webSocketClient } from "../websocket";
-import { WebRtcLatencyChecker } from "./latency-checker";
+import { getWebSocketClient } from "../utils";
+import { WebRTCLatencyChecker } from "./latency-checker";
 import { CustomRTCPeerConnection } from "./peer-connection";
 import { events } from "./events";
 
@@ -17,22 +17,19 @@ const RTC_CONFIGURATION: RTCConfiguration = {
 	iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }]
 };
 
-export class WebRtcClient extends NetworkClient<
-	WebRtcMessages.IncomingMessage,
-	WebRtcMessages.OutgoingMessage
-> {
+export class WebRTCClient extends NetworkClient<WebRTCIncomingMessage, WebRTCOutgoingMessage> {
 	constructor() {
-		super(new WebRtcLatencyChecker());
+		super(new WebRTCLatencyChecker());
 
-		this.register_events(events);
+		this.registerEvents(events);
 	}
 
-	public async connect(): Promise<void> {
+	public async connect(): Promise<this> {
 		const { sessionState } = appState.get();
 
 		if (isWebRtcConnected()) {
 			log.warn("WebRTC is already connected ~ cannot connect again");
-			return;
+			return this;
 		}
 
 		if (!sessionState.isHost) {
@@ -41,7 +38,7 @@ export class WebRtcClient extends NetworkClient<
 				message: "Only the host can initiate a direct connection"
 			});
 
-			return;
+			return this;
 		}
 
 		log.info("Attempting to establish a WebRTC connection");
@@ -69,7 +66,7 @@ export class WebRtcClient extends NetworkClient<
 
 			log.info("Created an offer and set local description, sending to peer via WebSocket");
 
-			webSocketClient.emit({
+			getWebSocketClient().emit({
 				type: "webrtc_offer",
 				data: {
 					description: pc.localDescription.toJSON()
@@ -85,9 +82,11 @@ export class WebRtcClient extends NetworkClient<
 					error instanceof Error ? error.message : "Unable to establish a direction connection"
 			});
 		}
+
+		return this;
 	}
 
-	public async disconnect(): Promise<void> {
+	public disconnect(): this {
 		const { webrtcState } = appState.get();
 
 		if (webrtcState.dataChannel) {
@@ -98,15 +97,17 @@ export class WebRtcClient extends NetworkClient<
 			webrtcState.peerConnection.close();
 		}
 
-		this.stop_latency_monitoring();
+		this.stopLatencyMonitoring();
 		this.reset();
 
-		webSocketClient.start_latency_monitoring();
+		getWebSocketClient().startLatencyMonitoring();
 
 		log.info("Disconnected");
+
+		return this;
 	}
 
-	public reset(): void {
+	public reset(): this {
 		appState.dispatch("UPDATE", {
 			sessionState: {
 				connectionType: "websocket"
@@ -115,14 +116,16 @@ export class WebRtcClient extends NetworkClient<
 		});
 
 		log.debug("State has been reset");
+
+		return this;
 	}
 
-	public emit(event: WebRtcMessages.OutgoingMessage): void {
+	public emit(event: WebRTCOutgoingMessage): this {
 		const { webrtcState } = appState.get();
 
 		if (!isWebRtcConnected()) {
 			log.error(`Cannot emit WebRTC event when not connected: ${event.type}`);
-			return;
+			return this;
 		}
 
 		log.info(`Emitting event: ${event.type}`);
@@ -133,7 +136,7 @@ export class WebRtcClient extends NetworkClient<
 			const payload = JSON.stringify(event);
 			webrtcState.dataChannel!.send(payload);
 		}
+
+		return this;
 	}
 }
-
-export const webrtcClient = new WebRtcClient();

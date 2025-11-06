@@ -2,11 +2,11 @@ import type { PongData } from "../core/latency-checker";
 
 import { appState } from "@/state";
 import { LatencyChecker } from "../core/latency-checker";
-import { webrtcClient } from "./client";
+import { getWebRTCClient } from "../utils";
 
-export class WebRtcLatencyChecker extends LatencyChecker {
+export class WebRTCLatencyChecker extends LatencyChecker {
 	public ping(): void {
-		webrtcClient.emit({
+		getWebRTCClient().emit({
 			type: "ping",
 			data: {
 				client_timestamp: Date.now()
@@ -15,11 +15,11 @@ export class WebRtcLatencyChecker extends LatencyChecker {
 	}
 
 	public pong(data: PongData): void {
-		const latency = this.calculate_latency(data);
-		this.update_latency(latency);
+		const latency = this.calculateLatency(data);
+		this.updateLatency(latency);
 	}
 
-	public update_latency(latency: number): void {
+	public updateLatency(latency: number): void {
 		appState.dispatch("UPDATE", {
 			sessionState: {
 				latency: latency

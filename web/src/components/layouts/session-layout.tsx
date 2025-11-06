@@ -14,12 +14,6 @@ import { capitalise } from "@/utils/capitalise";
 export function SessionLayout() {
 	const { sessionState } = useAppState();
 
-	useEffect(() => {
-		if (sessionState.lastError) {
-			handleLastError(sessionState.lastError);
-		}
-	}, [sessionState.lastError]);
-
 	function handleLastError(lastError: ConnectionErrorData) {
 		appState.dispatch("SET_LAST_ERROR", null);
 
@@ -32,6 +26,12 @@ export function SessionLayout() {
 			position: "top-right"
 		});
 	}
+
+	useEffect(() => {
+		if (sessionState.lastError) {
+			handleLastError(sessionState.lastError);
+		}
+	}, [sessionState.lastError]);
 
 	return (
 		<React.Fragment>

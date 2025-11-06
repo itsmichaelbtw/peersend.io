@@ -1,24 +1,23 @@
-import type { NetworkClients } from "../utils";
-import type { WebRtcMessages } from "./types";
+import type { WebRTCIncomingMessage } from "./types";
 
 import { appState } from "@/state";
-import { getNetworkingClients } from "../utils";
+import { getWebRTCClient } from "../utils";
 import { abortRegistry } from "../core";
 import { createLogger } from "@/utils/logger";
 
 const log = createLogger("CustomDataChannel");
 
 export class CustomDataChannel {
-	private network_clients: NetworkClients;
 	private channel: RTCDataChannel;
 
 	constructor(channel: RTCDataChannel) {
-		this.network_clients = getNetworkingClients();
 		this.channel = channel;
 		this.channel.addEventListener("open", this.on_open.bind(this));
 		this.channel.addEventListener("close", this.on_close.bind(this));
 		this.channel.addEventListener("error", this.on_error.bind(this));
-		this.channel.addEventListener("message", this.on_message.bind(this));
+		this.channel.addEventListener("message", (event) => {
+			void this.on_message(event);
+		});
 	}
 
 	private on_open() {
@@ -30,7 +29,7 @@ export class CustomDataChannel {
 			return;
 		}
 
-		this.network_clients.wrtc.start_latency_monitoring();
+		getWebRTCClient().startLatencyMonitoring();
 	}
 
 	private on_close() {
@@ -53,7 +52,6 @@ export class CustomDataChannel {
 	}
 
 	private async on_message(event: MessageEvent) {
-		log.debug("on_message");
 		const { sessionState, webrtcState } = appState.get();
 
 		if (sessionState.lastError || webrtcState.isConnecting) {
@@ -64,28 +62,32 @@ export class CustomDataChannel {
 			case event.data instanceof Blob: {
 				const buffer = await event.data.arrayBuffer();
 				log.debug("Received a file chunk as instanceof Blob");
-				this.network_clients.wrtc.message_bus.emit("in_file_transit", buffer);
+				getWebRTCClient().messageBus.emit("in_file_transit", buffer);
 				return;
 			}
 
 			case event.data instanceof ArrayBuffer: {
 				const chunk = new Uint8Array(event.data);
 				log.debug("Received a file chunk as instanceof ArrayBuffer");
-				this.network_clients.wrtc.message_bus.emit("in_file_transit", chunk);
+				getWebRTCClient().messageBus.emit("in_file_transit", chunk);
 				return;
 			}
 
 			case event.data instanceof Uint8Array: {
 				log.debug("Received a file chunk as instanceof Uint8Array");
-				this.network_clients.wrtc.message_bus.emit("in_file_transit", event.data);
+				getWebRTCClient().messageBus.emit("in_file_transit", event.data);
 				return;
 			}
 		}
 
 		try {
-			const { type, data } = JSON.parse(event.data) as WebRtcMessages.IncomingMessage;
+			if (typeof event.data !== "string") {
+				throw new Error("Invalid message format: expected string");
+			}
+
+			const { type, data } = JSON.parse(event.data) as WebRTCIncomingMessage;
 			log.info("Received a message of type:", type);
-			this.network_clients.wrtc.message_bus.emit(type, data);
+			getWebRTCClient().messageBus.emit(type, data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {
 				title: "Failed to parse incoming WebRTC message",
@@ -102,9 +104,11 @@ export class CustomDataChannel {
 		return this.channel.readyState;
 	}
 
-	public send(data: any) {
+	public send(data: unknown) {
 		try {
 			log.debug("Sending data to peer via data channel");
+
+			// @ts-expect-error Controlled data type
 			this.channel.send(data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {

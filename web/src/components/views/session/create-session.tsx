@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 
 import {
 	CopyIcon,
@@ -17,7 +17,7 @@ import { useNavigate } from "react-router";
 import { useAppState } from "@/hooks/use-app-state";
 
 import { appState } from "@/state";
-import { webSocketClient } from "@/lib/networking";
+import { getWebSocketClient } from "@/lib/networking/utils";
 
 const VARIANTS = {
 	fadeIn: { opacity: 1, y: 0 },
@@ -34,7 +34,7 @@ export function CreateSessionView() {
 	const { sessionState, websocketState } = useAppState();
 
 	const navigate = useNavigate();
-	const isFirstRender = useRef(true);
+	const [isFirstRender, setIsFirstRender] = useState(true);
 
 	useEffect(() => {
 		return () => {
@@ -60,11 +60,13 @@ export function CreateSessionView() {
 							key="connected"
 							variants={VARIANTS}
 							custom={1}
-							initial={isFirstRender.current ? { opacity: 0 } : "enter"}
-							animate={isFirstRender.current ? "fadeIn" : "center"}
+							initial={isFirstRender ? { opacity: 0 } : "enter"}
+							animate={isFirstRender ? "fadeIn" : "center"}
 							exit="exit"
 							onAnimationComplete={() => {
-								isFirstRender.current = false;
+								if (isFirstRender) {
+									setIsFirstRender(false);
+								}
 							}}
 						>
 							<h2 className="font-semibold text-lg leading-snug">Session created</h2>
@@ -72,7 +74,7 @@ export function CreateSessionView() {
 								Share this code with another user to join this session
 							</p>
 
-							{sessionState.sessionCode != null && (
+							{sessionState.sessionCode !== null && (
 								<React.Fragment>
 									<Box p="md" mt="xs" mb="xs" className="rounded border border-gray-200 bg-gray-50">
 										<Group justify="space-between">
@@ -110,25 +112,19 @@ export function CreateSessionView() {
 									<Group justify="space-between">
 										<span className="text-gray-500">Auto WebRTC:</span>
 										{sessionState.autoWebRTC ? (
-											<span className="text-[var(--mantine-color-teal-7)] font-semibold">
-												Enabled
-											</span>
+											<span className="text-(--mantine-color-teal-7) font-semibold">Enabled</span>
 										) : (
-											<span className="text-[var(--mantine-color-red-7)] font-semibold">
-												Disabled
-											</span>
+											<span className="text-(--mantine-color-red-7) font-semibold">Disabled</span>
 										)}
 									</Group>
 									<Group justify="space-between">
 										<span className="text-gray-500">End-to-end encryption:</span>
 										{sessionState.encryptionMode !== "none" ? (
-											<span className="text-[var(--mantine-color-teal-7)] font-semibold">
+											<span className="text-(--mantine-color-teal-7) font-semibold">
 												{sessionState.encryptionMode}
 											</span>
 										) : (
-											<span className="text-[var(--mantine-color-red-7)] font-semibold">
-												Disabled
-											</span>
+											<span className="text-(--mantine-color-red-7) font-semibold">Disabled</span>
 										)}
 									</Group>
 								</div>
@@ -139,7 +135,7 @@ export function CreateSessionView() {
 								size="sm"
 								fullWidth
 								onClick={() => {
-									navigate(`/session/${sessionState.sessionCode}`);
+									void navigate(`/session/${sessionState.sessionCode}`);
 								}}
 							>
 								Enter <ArrowRightIcon size={18} />
@@ -150,11 +146,13 @@ export function CreateSessionView() {
 							key="not-connected"
 							variants={VARIANTS}
 							custom={-1}
-							initial={isFirstRender.current ? { opacity: 0 } : "enter"}
-							animate={isFirstRender.current ? "fadeIn" : "center"}
+							initial={isFirstRender ? { opacity: 0 } : "enter"}
+							animate={isFirstRender ? "fadeIn" : "center"}
 							exit="exit"
 							onAnimationComplete={() => {
-								isFirstRender.current = false;
+								if (isFirstRender) {
+									setIsFirstRender(false);
+								}
 							}}
 						>
 							<h2 className="font-semibold text-lg leading-tight">Start a new session</h2>
@@ -201,7 +199,7 @@ export function CreateSessionView() {
 								size="sm"
 								fullWidth
 								onClick={() => {
-									webSocketClient.connect();
+									void getWebSocketClient().connect();
 								}}
 							>
 								Create session
@@ -238,7 +236,7 @@ export function CreateSessionView() {
 									classNames={{
 										label: "text-sm hover:underline"
 									}}
-									onClick={() => navigate("/session/join")}
+									onClick={() => void navigate("/session/join")}
 								>
 									Join session
 								</Button>

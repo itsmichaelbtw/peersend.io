@@ -1,17 +1,14 @@
-import type { WebRtcClient } from "./webrtc";
-import type { WebSocketClient } from "./websocket";
+import { WebRTCClient } from "./webrtc";
+import { WebSocketClient } from "./websocket";
+import { WEBSOCKET_ENDPOINT } from "@/config/constants";
 
-import { webrtcClient } from "./webrtc";
-import { webSocketClient } from "./websocket";
+let webSocketClient: WebSocketClient | null = null;
+let webRTCClient: WebRTCClient | null = null;
 
-export interface NetworkClients {
-  wrtc: WebRtcClient;
-  ws: WebSocketClient;
+export function getWebRTCClient(): WebRTCClient {
+	return webRTCClient ? webRTCClient : new WebRTCClient();
 }
 
-export function getNetworkingClients(): NetworkClients {
-  return {
-    wrtc: webrtcClient,
-    ws: webSocketClient
-  };
+export function getWebSocketClient(): WebSocketClient {
+	return webSocketClient ? webSocketClient : new WebSocketClient(WEBSOCKET_ENDPOINT);
 }

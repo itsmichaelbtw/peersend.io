@@ -1,5 +1,5 @@
 import type { PeerSendFile } from "@/state";
-import type { WebRtcClient } from "@/lib/networking";
+import type { WebRTCClient } from "@/lib/networking";
 import type { FileTransferTransport } from "../types";
 
 import { BUFFER_THRESHOLD } from "../constants";
@@ -8,11 +8,11 @@ import { createLogger } from "@/utils/logger";
 
 const log = createLogger("WebRtcTransport");
 
-export class WebRtcTransport implements FileTransferTransport {
-	private client: WebRtcClient;
+export class WebRTCTransport implements FileTransferTransport {
+	private client: WebRTCClient;
 	private datachannel: RTCDataChannel;
 
-	constructor(client: WebRtcClient, datachannel: RTCDataChannel) {
+	constructor(client: WebRTCClient, datachannel: RTCDataChannel) {
 		this.client = client;
 		this.datachannel = datachannel;
 	}
@@ -48,6 +48,8 @@ export class WebRtcTransport implements FileTransferTransport {
 				metadata: metadata
 			}
 		});
+
+		return Promise.resolve();
 	}
 
 	public async chunk(id: string, chunk: Uint8Array, percentage: number): Promise<void> {
@@ -81,6 +83,8 @@ export class WebRtcTransport implements FileTransferTransport {
 			id: id,
 			status: "sent"
 		});
+
+		return Promise.resolve();
 	}
 
 	public async error(id: string, message: string): Promise<void> {
@@ -90,5 +94,7 @@ export class WebRtcTransport implements FileTransferTransport {
 			id: id,
 			status: "error"
 		});
+
+		return Promise.resolve();
 	}
 }

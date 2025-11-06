@@ -36,8 +36,8 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
 
 		this.dispatch("BULK_REMOVE_FILES", files);
 
-		for (const id in files) {
-			fileStorage.remove(id);
+		for (const file of files) {
+			fileStorage.remove(file.id);
 		}
 	}
 
@@ -57,7 +57,7 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
 					files: state.files.map((file) => {
 						const newFile = action.payload.find((f) => f.id === file.id);
 
-						return !!newFile ? newFile : file;
+						return newFile ? newFile : file;
 					})
 				};
 			}

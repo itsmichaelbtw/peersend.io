@@ -10,8 +10,8 @@ import { useNavigate } from "react-router";
 import { useAppState } from "@/hooks/use-app-state";
 
 import { appState } from "@/state";
-import { webSocketClient } from "@/lib/networking";
 import { SESSION_CODE_EXAMPLE } from "@/config/constants";
+import { getWebSocketClient } from "@/lib/networking/utils";
 
 const INFO_LIST_POINTS: string[] = [
 	"You'll initially connect to our servers",
@@ -43,15 +43,21 @@ export function JoinSessionView() {
 
 	useEffect(() => {
 		if (sessionState.isConnected) {
-			navigate(`/session/${sessionState.sessionCode}`);
+			void navigate(`/session/${sessionState.sessionCode}`);
 		}
-	}, [sessionState.isConnected, sessionState.sessionCode]);
+	}, [sessionState.isConnected, sessionState.sessionCode, navigate]);
 
 	useEffect(() => {
 		return () => {
 			appState.dispatch("RESET_CONNECTING_STATES", null);
 		};
 	}, []);
+
+	async function onEnter() {
+		if (await field.validate()) {
+			await getWebSocketClient().connect(field.getValue());
+		}
+	}
 
 	return (
 		<Card shadow="sm" padding="lg" radius="sm" className="select-none w-md" withBorder>
@@ -93,9 +99,7 @@ export function JoinSessionView() {
 						loading={websocketState.isConnecting}
 						size="sm"
 						fullWidth
-						onClick={async () => {
-							!(await field.validate()) && webSocketClient.connect(field.getValue());
-						}}
+						onClick={() => void onEnter()}
 					>
 						Enter <ArrowRightIcon size={18} />
 					</Button>
@@ -121,7 +125,9 @@ export function JoinSessionView() {
 							<p className="text-sm text-gray-500 leading-none mt-2.5">Joining...</p>
 						) : !sessionState.isConnected ? (
 							<React.Fragment>
-								<p className="leading-tight text-sm text-gray-500">Don't have a session code?</p>
+								<p className="leading-tight text-sm text-gray-500">
+									Don&apos;t have a session code?
+								</p>
 								<Button
 									variant="transparent"
 									px={0}
@@ -129,7 +135,9 @@ export function JoinSessionView() {
 									classNames={{
 										label: "text-sm hover:underline"
 									}}
-									onClick={() => navigate("/session/create")}
+									onClick={() => {
+										void navigate("/session/create");
+									}}
 								>
 									Create session
 								</Button>

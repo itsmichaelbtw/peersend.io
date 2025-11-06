@@ -1,16 +1,17 @@
 import type { RecursivePartial } from "@/types/misc";
 import type { ContextReducerActions } from "@/context/context.types";
 import type { AppState, ConnectionErrorData } from "../types";
-import type { WebSocketEventMap } from "@/lib/networking";
+import type { WebSocketEventMapIncomingEvents } from "@/lib/networking";
 
 import { StateStore } from "../store";
+import { isObject } from "@/utils/is-x";
 
 interface StateActions {
 	UPDATE: RecursivePartial<AppState>;
 	SET_LAST_ERROR: ConnectionErrorData | null;
-	SET_SESSION_INFORMATION: WebSocketEventMap.IncomingEvents["session_information"];
-	SET_CLIENTS: WebSocketEventMap.IncomingEvents["sync_clients"];
-	SET_HOST: WebSocketEventMap.IncomingEvents["host_transferred"];
+	SET_SESSION_INFORMATION: WebSocketEventMapIncomingEvents["session_information"];
+	SET_CLIENTS: WebSocketEventMapIncomingEvents["sync_clients"];
+	SET_HOST: WebSocketEventMapIncomingEvents["host_transferred"];
 	RESET_CONNECTING_STATES: null;
 }
 
@@ -20,9 +21,15 @@ export class AppStateStore extends StateStore<AppState, StateActions> {
 		const next: AppState = { ...current };
 
 		for (const key in next) {
-			if (state.hasOwnProperty(key)) {
-				// @ts-ignore
-				next[key] = { ...current[key], ...state[key] };
+			if (Object.prototype.hasOwnProperty.call(state, key)) {
+				// @ts-expect-error Known state shape
+				if (isObject(current[key]) && isObject(state[key])) {
+					// @ts-expect-error Known state shape
+					next[key] = { ...current[key], ...state[key] };
+				} else {
+					// @ts-expect-error Known state shape
+					next[key] = state[key] as unknown;
+				}
 			}
 		}
 

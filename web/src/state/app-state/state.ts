@@ -31,7 +31,7 @@ export function getWebsocketState() {
 export function isWebSocketConnected() {
 	const { websocketState } = appState.get();
 
-	if (websocketState.ws == null) {
+	if (websocketState.ws === null) {
 		return null;
 	}
 
@@ -45,7 +45,7 @@ export function isWebSocketConnected() {
 export function isWebRtcConnected() {
 	const { webrtcState } = appState.get();
 
-	if (webrtcState.dataChannel == null || webrtcState.peerConnection == null) {
+	if (webrtcState.dataChannel === null || webrtcState.peerConnection === null) {
 		return false;
 	}
 

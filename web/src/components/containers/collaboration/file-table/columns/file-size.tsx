@@ -5,6 +5,14 @@ import { SortableHeader } from "../sorting-header";
 import { columnHelper } from "../helper";
 import { formatFileSize } from "@/lib/file-transfer";
 
+function Cell(size: number) {
+	const fileSize = useMemo(() => {
+		return formatFileSize(size);
+	}, [size]);
+
+	return <div className="text-left">{fileSize}</div>;
+}
+
 export const fileSizeColumn = columnHelper.accessor((row) => row.metadata, {
 	id: "file-size",
 	header({ column }) {
@@ -16,11 +24,7 @@ export const fileSizeColumn = columnHelper.accessor((row) => row.metadata, {
 	},
 	cell({ getValue }) {
 		const metadata = getValue<PeerSendFile["metadata"]>();
-		const fileSize = useMemo(() => {
-			return formatFileSize(metadata.size);
-		}, []);
-
-		return <div className="text-left">{fileSize}</div>;
+		return Cell(metadata.size);
 	},
 	size: 96,
 	maxSize: 96,

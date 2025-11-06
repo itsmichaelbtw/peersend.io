@@ -1,19 +1,13 @@
-import type { NetworkClients } from "../utils";
-
 import { appState } from "@/state";
 import { CustomDataChannel } from "./data-channel";
-import { getNetworkingClients } from "../utils";
 import { createLogger } from "@/utils/logger";
+import { getWebRTCClient, getWebSocketClient } from "../utils";
 
 const log = createLogger("CustomRTCPeerConnection");
 
 export class CustomRTCPeerConnection extends RTCPeerConnection {
-	private network_clients: NetworkClients;
-
 	constructor(config: RTCConfiguration) {
 		super(config);
-
-		this.network_clients = getNetworkingClients();
 
 		this.addEventListener("icecandidate", this.on_icecandidate.bind(this));
 		this.addEventListener("icecandidateerror", this.on_icecandidateerror.bind(this));
@@ -26,7 +20,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		log.debug("on_icecandidate");
 
 		if (event.candidate) {
-			this.network_clients.ws.emit({
+			getWebSocketClient().emit({
 				type: "webrtc_ice_candidate",
 				data: {
 					candidate: event.candidate.toJSON()
@@ -72,14 +66,14 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 					}
 				});
 
-				this.network_clients.ws.stop_latency_monitoring();
-				this.network_clients.wrtc.start_latency_monitoring();
+				getWebSocketClient().stopLatencyMonitoring();
+				getWebRTCClient().startLatencyMonitoring();
 
 				break;
 			case "disconnected":
 			case "failed":
 			case "closed":
-				this.network_clients.wrtc.disconnect();
+				getWebRTCClient().disconnect();
 		}
 	}
 

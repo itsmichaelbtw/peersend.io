@@ -5,7 +5,7 @@ import React from "react";
 import { ArrowUpFromLineIcon, LockIcon, RouterIcon, ShieldIcon } from "lucide-react";
 import { useAppState } from "@/hooks/use-app-state";
 import { Button, Group, Stack, Box, Loader } from "@mantine/core";
-import { webrtcClient } from "@/lib/networking";
+import { getWebRTCClient } from "@/lib/networking/utils";
 
 export function ConnectionUpgrade({ id, context }: ContextModalProps) {
 	const { sessionState, webrtcState } = useAppState();
@@ -29,7 +29,7 @@ export function ConnectionUpgrade({ id, context }: ContextModalProps) {
 						<div className="text-center space-y-1">
 							<h3 className="text-lg font-medium">Connection Upgraded Successfully!</h3>
 							<p className="text-gray-500 text-sm">
-								You're now connected via WebRTC and can transfer files up to 500MB in size.
+								You&apos;re now connected via WebRTC and can transfer files up to 500MB in size.
 							</p>
 						</div>
 					</Stack>
@@ -96,8 +96,7 @@ export function ConnectionUpgrade({ id, context }: ContextModalProps) {
 					) : (
 						<Button
 							onClick={() => {
-								console.log("clicked");
-								webrtcClient.connect();
+								void getWebRTCClient().connect();
 							}}
 						>
 							Upgrade connection

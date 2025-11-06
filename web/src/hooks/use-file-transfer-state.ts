@@ -8,12 +8,13 @@ export function useFileTransferState() {
 		() => fileTransferState.get()
 	);
 
+	// weird one
 	const fileGroups = useMemo(() => {
 		return {
 			incoming: getIncomingFiles(),
 			outgoing: getOutgoingFiles()
 		};
-	}, [state.files]);
+	}, []);
 
 	return {
 		...state,

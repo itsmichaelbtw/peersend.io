@@ -51,7 +51,7 @@ export function ConnectionStatus() {
 							</p>
 							<div className="relative ml-2 inline-flex items-center justify-center align-middle">
 								{sessionState.connectionType === "webrtc" && (
-									<span className="bg-[var(--mantine-color-teal-filled)]/35 absolute h-8 w-8 animate-ping rounded-full"></span>
+									<span className="bg-[var(--mantine-color-teal-filled)]/35 absolute h-8 w-8 animate-ping rounded-full" />
 								)}
 
 								<span

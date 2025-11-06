@@ -16,7 +16,7 @@ export function Diagnostics() {
 					</span>
 				</div>
 
-				{sessionState.connectionType === "webrtc" && webrtcState.dataChannel != null && (
+				{sessionState.connectionType === "webrtc" && webrtcState.dataChannel !== null && (
 					<div className="flex justify-between">
 						<span className="text-xs text-gray-500">Data Channel</span>
 						<span className="text-xs font-medium font-mono">
@@ -32,7 +32,7 @@ export function Diagnostics() {
 					</div>
 				)}
 
-				{sessionState.sessionCode != null && (
+				{sessionState.sessionCode !== null && (
 					<div className="flex justify-between">
 						<span className="text-xs text-gray-500">Session code</span>
 						<span className="text-xs font-medium font-mono">{sessionState.sessionCode}</span>

@@ -4,51 +4,51 @@ import { createLogger } from "@/utils/logger";
 const log = createLogger("LatencyMonitor");
 
 export abstract class LatencyMonitor {
-	protected ping_interval: number | null = null;
-	protected ping_interval_ms: number = 1000;
+	protected pingInterval: number | null = null;
+	protected pingIntervalMS: number = 1000;
 
-	public latency_checker: LatencyChecker;
+	public latencyChecker: LatencyChecker;
 
-	constructor(latency_checker: LatencyChecker) {
-		this.latency_checker = latency_checker;
+	constructor(latencyChecker: LatencyChecker) {
+		this.latencyChecker = latencyChecker;
 	}
 
-	public start_latency_monitoring(): void {
-		this.stop_latency_monitoring();
+	public startLatencyMonitoring(): void {
+		this.stopLatencyMonitoring();
 
-		if (!this.latency_checker) {
+		if (!this.latencyChecker) {
 			log.error(
 				"When using LatencyMonitor, you must set a LatencyChecker. Please call set() before starting latency monitoring."
 			);
 			return;
 		}
 
-		this.ping_interval = window.setInterval(() => {
-			if (this.latency_checker) {
-				this.latency_checker.ping();
+		this.pingInterval = window.setInterval(() => {
+			if (this.latencyChecker) {
+				this.latencyChecker.ping();
 			}
-		}, this.ping_interval_ms);
+		}, this.pingIntervalMS);
 
-		this.latency_checker.ping();
+		this.latencyChecker.ping();
 
-		log.info(`Latency monitoring started with interval ${this.ping_interval_ms}ms`);
+		log.info(`Latency monitoring started with interval ${this.pingIntervalMS}ms`);
 	}
 
-	public stop_latency_monitoring(): void {
-		if (this.ping_interval !== null) {
+	public stopLatencyMonitoring(): void {
+		if (this.pingInterval !== null) {
 			log.info("Latency monitoring stopped");
-			clearInterval(this.ping_interval);
-			this.ping_interval = null;
+			clearInterval(this.pingInterval);
+			this.pingInterval = null;
 		}
 
-		this.latency_checker?.update_latency(-1);
+		this.latencyChecker?.updateLatency(-1);
 	}
 
-	public set_ping_interval(ms: number): void {
-		this.ping_interval_ms = ms;
+	public setPingInterval(ms: number): void {
+		this.pingIntervalMS = ms;
 
-		if (this.ping_interval !== null && this.latency_checker) {
-			this.start_latency_monitoring();
+		if (this.pingInterval !== null && this.latencyChecker) {
+			this.startLatencyMonitoring();
 		}
 	}
 }

@@ -1,4 +1,12 @@
-import type { WebRtcEventMap, WebRtcMessages } from "./types";
+import type {
+	WebRTCDataStartFileTransit,
+	WebRTCDataInFileTransit,
+	WebRTCDataEndFileTransit,
+	WebRTCDataPong,
+	WebRTCDataPing,
+	WebRTCDataError,
+	WebRTCIncomingMessage
+} from "./types";
 import type { NetworkEvents } from "../types";
 
 import { appState, fileTransferState, getPeersendFile } from "@/state";
@@ -8,15 +16,15 @@ import {
 	parseTransitBuffer,
 	ProgressThrottler
 } from "@/lib/file-transfer";
-import { webrtcClient } from "./client";
+import { getWebRTCClient } from "../utils";
 import { createLogger } from "@/utils/logger";
 
 const log = createLogger("WebRtcEvents");
 
 const throttler = new ProgressThrottler(1, 150);
 
-function event_StartFileTransit(data: WebRtcEventMap.IncomingEvents["start_file_transit"]) {
-	if (!!getPeersendFile(data.id)) {
+function event_StartFileTransit(data: WebRTCDataStartFileTransit) {
+	if (getPeersendFile(data.id)) {
 		log.error(`File with id ${data.id} already exists, ignoring incoming file transfer.`);
 		return;
 	}
@@ -27,7 +35,7 @@ function event_StartFileTransit(data: WebRtcEventMap.IncomingEvents["start_file_
 	fileTransferState.add([file]);
 }
 
-function event_InFileTransit(data: WebRtcEventMap.IncomingEvents["in_file_transit"]) {
+function event_InFileTransit(data: WebRTCDataInFileTransit) {
 	// https://github.com/itsmichaelbtw/peersend.io/issues/37
 
 	const parsed = parseTransitBuffer(data);
@@ -41,7 +49,7 @@ function event_InFileTransit(data: WebRtcEventMap.IncomingEvents["in_file_transi
 	}
 }
 
-function event_EndFileTransit(data: WebRtcEventMap.IncomingEvents["end_file_transit"]) {
+function event_EndFileTransit(data: WebRTCDataEndFileTransit) {
 	log.info(`Finished receiving file with id ${data.id}`);
 	throttler.reset();
 
@@ -60,12 +68,12 @@ function event_EndFileTransit(data: WebRtcEventMap.IncomingEvents["end_file_tran
 	}
 }
 
-function event_Pong(data: WebRtcEventMap.IncomingEvents["pong"]) {
-	webrtcClient.latency_checker.pong(data);
+function event_Pong(data: WebRTCDataPong) {
+	getWebRTCClient().latencyChecker.pong(data);
 }
 
-function event_Ping(data: WebRtcEventMap.IncomingEvents["ping"]) {
-	webrtcClient.emit({
+function event_Ping(data: WebRTCDataPing) {
+	getWebRTCClient().emit({
 		type: "pong",
 		data: {
 			client_timestamp: data.client_timestamp,
@@ -74,14 +82,14 @@ function event_Ping(data: WebRtcEventMap.IncomingEvents["ping"]) {
 	});
 }
 
-function event_Error(data: WebRtcEventMap.IncomingEvents["error"]) {
+function event_Error(data: WebRTCDataError) {
 	appState.dispatch("SET_LAST_ERROR", {
 		title: data.type,
 		message: data.reason
 	});
 }
 
-export const events: NetworkEvents<WebRtcMessages.IncomingMessage> = {
+export const events: NetworkEvents<WebRTCIncomingMessage> = {
 	start_file_transit: event_StartFileTransit,
 	in_file_transit: event_InFileTransit,
 	end_file_transit: event_EndFileTransit,

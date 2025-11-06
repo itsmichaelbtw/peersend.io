@@ -1,37 +1,31 @@
-import type { WebSocketMessages } from "./types";
-import type { NetworkClients } from "../utils";
+import type { WebSocketIncomingMessage } from "./types";
 
 import { appState } from "@/state";
-import { getNetworkingClients } from "../utils";
-import { abortRegistry } from "../core";
 import { createLogger } from "@/utils/logger";
+import { getWebSocketClient } from "../utils";
+import { abortRegistry } from "../core";
 
 const log = createLogger("CustomWebSocket");
 
 export class CustomWebSocket extends WebSocket {
-	private network_clients: NetworkClients;
-
 	constructor(url: string) {
 		super(url);
 
-		this.network_clients = getNetworkingClients();
-
-		this.addEventListener("open", this.on_open.bind(this));
-		this.addEventListener("close", this.on_close.bind(this));
-		this.addEventListener("error", this.on_error.bind(this));
-		this.addEventListener("message", this.on_message.bind(this));
+		this.addEventListener("open", this.onOpen.bind(this));
+		this.addEventListener("close", this.onClose.bind(this));
+		this.addEventListener("error", this.onError.bind(this));
+		this.addEventListener("message", this.onMessage.bind(this));
 	}
 
-	private on_open() {
-		log.debug("on_open");
+	private onOpen() {
+		log.debug("onOpen");
 		abortRegistry.start();
 	}
 
-	private on_close(event: CloseEvent) {
-		log.debug("on_close");
+	private onClose(event: CloseEvent) {
+		log.debug("onClose");
 
-		this.network_clients.ws.disconnect();
-		this.network_clients.ws.stop_latency_monitoring();
+		getWebSocketClient().disconnect();
 
 		appState.dispatch(
 			"SET_LAST_ERROR",
@@ -46,8 +40,8 @@ export class CustomWebSocket extends WebSocket {
 		abortRegistry.end();
 	}
 
-	private on_error() {
-		log.error("on_error");
+	private onError() {
+		log.error("onError");
 
 		appState.dispatch("SET_LAST_ERROR", {
 			title: "Connection Issue",
@@ -55,8 +49,8 @@ export class CustomWebSocket extends WebSocket {
 		});
 	}
 
-	private on_message(event: MessageEvent) {
-		log.debug("on_message");
+	private onMessage(event: MessageEvent) {
+		log.debug("onMessage");
 
 		const { sessionState, websocketState } = appState.get();
 
@@ -65,9 +59,14 @@ export class CustomWebSocket extends WebSocket {
 		}
 
 		try {
-			const { type, data } = JSON.parse(event.data) as WebSocketMessages.IncomingMessage;
+			if (typeof event.data !== "string") {
+				throw new Error("Invalid message format: expected string");
+			}
+
+			const { type, data } = JSON.parse(event.data) as WebSocketIncomingMessage;
+
 			log.info("Received a message of type:", type);
-			this.network_clients.ws.message_bus.emit(type, data);
+			getWebSocketClient().messageBus.emit(type, data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {
 				title: "Message Error happened here",

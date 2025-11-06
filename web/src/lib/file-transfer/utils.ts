@@ -1,12 +1,12 @@
 import type { PeerSendFile } from "@/state/types";
 import type { FileWithPath } from "@mantine/dropzone";
-import type { WebRtcEventMap } from "../networking";
+import type { WebRTCDataStartFileTransit } from "../networking";
 
 import { v4, stringify } from "uuid";
 import { FILE_ID_BYTE_LENGTH, DOWNLOAD_CONTAINER_ID } from "./constants";
 import { getContainerElementForDownload } from "@/utils/dom";
 
-export async function createCustomFileFromUpload(file: FileWithPath): Promise<PeerSendFile> {
+export function createCustomFileFromUpload(file: FileWithPath): PeerSendFile {
 	return {
 		id: v4(),
 		timestamp: Date.now(),
@@ -26,9 +26,7 @@ export async function createCustomFileFromUpload(file: FileWithPath): Promise<Pe
 	};
 }
 
-export function createCustomFileFromTransfer(
-	transfer: WebRtcEventMap.IncomingEvents["start_file_transit"]
-): PeerSendFile {
+export function createCustomFileFromTransfer(transfer: WebRTCDataStartFileTransit): PeerSendFile {
 	return {
 		id: transfer.id,
 		transfer: {
@@ -43,7 +41,7 @@ export function createCustomFileFromTransfer(
 }
 
 export function createBufferWithHeader(id: Uint8Array, data: Uint8Array): Uint8Array {
-	if (id.length != FILE_ID_BYTE_LENGTH) {
+	if (id.length !== FILE_ID_BYTE_LENGTH) {
 		throw new Error(`Invalid file id length: expected ${FILE_ID_BYTE_LENGTH}, got ${id.length}`);
 	}
 

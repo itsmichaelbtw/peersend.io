@@ -8,14 +8,14 @@ import { Dropzone } from "@mantine/dropzone";
 import { useFileTransferState } from "@/hooks/use-file-transfer-state";
 import {
 	FileTransfer,
-	WebRtcTransport,
+	WebRTCTransport,
 	createCustomFileFromUpload,
 	smartFileDownload
 } from "@/lib/file-transfer";
-import { webrtcClient } from "@/lib/networking";
 import { appState, fileTransferState } from "@/state";
 
 import { FileTable } from "../file-table";
+import { getWebRTCClient } from "@/lib/networking/utils";
 
 export function FileTransferCard() {
 	const { fileGroups } = useFileTransferState();
@@ -37,7 +37,10 @@ export function FileTransferCard() {
 			}))
 		);
 
-		const transport = new WebRtcTransport(webrtcClient, webrtcState.dataChannel!.getDataChannel());
+		const transport = new WebRTCTransport(
+			getWebRTCClient(),
+			webrtcState.dataChannel!.getDataChannel()
+		);
 		const fileTransfer = new FileTransfer(filesToSend, transport);
 
 		await fileTransfer.initiate();
@@ -47,15 +50,15 @@ export function FileTransferCard() {
 		// maybe look at cancelling in the future?
 	}
 
-	async function onDownload(files: PeerSendFile[]) {
-		await smartFileDownload(files);
+	function onDownload(files: PeerSendFile[]) {
+		smartFileDownload(files);
 	}
 
-	async function onDrop(files: FileWithPath[]) {
+	function onDrop(files: FileWithPath[]) {
 		const customFiles: PeerSendFile[] = [];
 
 		for (const file of files) {
-			const customFile = await createCustomFileFromUpload(file);
+			const customFile = createCustomFileFromUpload(file);
 			customFiles.push(customFile);
 		}
 
@@ -67,7 +70,7 @@ export function FileTransferCard() {
 		for (const rejection of rejections) {
 			notifications.show({
 				title: `File Upload Error: ${rejection.file.name}`,
-				message: rejection.errors.join(", "),
+				message: rejection.errors.map((e) => e.message).join(", "),
 				color: "red",
 				withBorder: true
 			});
@@ -125,7 +128,7 @@ export function FileTransferCard() {
 										size="sm"
 										leftSection={<SendIcon size={16} />}
 										onClick={() => {
-											onSend(isUsingSelection ? files : fileGroups.outgoing);
+											void onSend(isUsingSelection ? files : fileGroups.outgoing);
 										}}
 									>
 										Send {isUsingSelection && `(${files.length})`}

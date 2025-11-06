@@ -1,5 +1,4 @@
-import type { WebSocketMessages } from "./types";
-import type { WithNullable } from "@/types/misc";
+import type { WebSocketIncomingMessage, WebSocketOutgoingMessage } from "./types";
 
 import { NetworkClient } from "../network-client";
 import { CustomWebSocket } from "./websocket";
@@ -9,8 +8,7 @@ import { events } from "./events";
 import {
 	DEFAULT_SESSION_STATE,
 	DEFAULT_WEBRTC_STATE,
-	DEFAULT_WEBSOCKET_STATE,
-	WEBSOCKET_ENDPOINT
+	DEFAULT_WEBSOCKET_STATE
 } from "@/config/constants";
 import { appState, isWebSocketConnected } from "@/state";
 import { sleep } from "@/utils/sleep";
@@ -19,8 +17,8 @@ import { createLogger } from "@/utils/logger";
 const log = createLogger("WebSocketClient");
 
 export class WebSocketClient extends NetworkClient<
-	WebSocketMessages.IncomingMessage,
-	WebSocketMessages.OutgoingMessage
+	WebSocketIncomingMessage,
+	WebSocketOutgoingMessage
 > {
 	private url: string;
 
@@ -28,15 +26,15 @@ export class WebSocketClient extends NetworkClient<
 		super(new WebSocketLatencyChecker());
 		this.url = url;
 
-		this.register_events(events);
+		this.registerEvents(events);
 	}
 
-	public async connect(sessionCode: WithNullable<string>): Promise<void> {
+	public override async connect(sessionCode?: string): Promise<this> {
 		const { websocketState } = appState.get();
 
 		if (isWebSocketConnected() || websocketState.isConnecting) {
 			log.warn("WebSocket is already connected ~ cannot connect again");
-			return;
+			return this;
 		}
 
 		log.info("Attempting to establish a WebSocket connection");
@@ -64,9 +62,11 @@ export class WebSocketClient extends NetworkClient<
 				message: error instanceof Error ? error.message : "Unable to establish connection"
 			});
 		}
+
+		return this;
 	}
 
-	public async disconnect(): Promise<void> {
+	public disconnect(): this {
 		const { websocketState } = appState.get();
 
 		if (websocketState.ws) {
@@ -77,13 +77,15 @@ export class WebSocketClient extends NetworkClient<
 			}
 		}
 
-		this.stop_latency_monitoring();
+		this.stopLatencyMonitoring();
 		this.reset();
 
 		log.info("Disconnected");
+
+		return this;
 	}
 
-	public reset(): void {
+	public reset(): this {
 		appState.dispatch("UPDATE", {
 			sessionState: DEFAULT_SESSION_STATE,
 			webrtcState: DEFAULT_WEBRTC_STATE,
@@ -91,21 +93,23 @@ export class WebSocketClient extends NetworkClient<
 		});
 
 		log.debug("State has been reset");
+
+		return this;
 	}
 
-	public emit(event: WebSocketMessages.OutgoingMessage): void {
+	public emit(event: WebSocketOutgoingMessage): this {
 		const { websocketState } = appState.get();
 
 		if (!isWebSocketConnected()) {
 			log.warn("WebSocket is not connected. Cannot send message.");
-			return;
+			return this;
 		}
 
 		log.info(`Emitting event: ${event.type}`);
 
 		const payload = JSON.stringify(event);
 		websocketState.ws!.send(payload);
+
+		return this;
 	}
 }
-
-export const webSocketClient = new WebSocketClient(WEBSOCKET_ENDPOINT);

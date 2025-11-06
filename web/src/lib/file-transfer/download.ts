@@ -6,7 +6,7 @@ import { createLogger } from "@/utils/logger";
 
 const log = createLogger("FileDownload");
 
-export async function smartFileDownload(files: PeerSendFile[]): Promise<void> {
+export function smartFileDownload(files: PeerSendFile[]): void {
 	log.info(`Starting smart file download for ${files.length} files`);
 
 	for (const file of files) {
@@ -18,7 +18,7 @@ export async function smartFileDownload(files: PeerSendFile[]): Promise<void> {
 
 			triggerBrowserDownload(nativeFile);
 		} catch (error) {
-			console.error(error);
+			log.error(error);
 		}
 	}
 }

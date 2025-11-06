@@ -1,7 +1,7 @@
 import { CopyIcon, WifiIcon, RouterIcon, CrownIcon, CopyCheckIcon } from "lucide-react";
 import { Badge, Box, Button, CopyButton, Tooltip } from "@mantine/core";
 import { useAppState } from "@/hooks/use-app-state";
-import { webSocketClient } from "@/lib/networking";
+import { getWebSocketClient } from "@/lib/networking/utils";
 
 export function SessionStatusBar() {
 	const { sessionState } = useAppState();
@@ -9,7 +9,7 @@ export function SessionStatusBar() {
 	return (
 		<Box w="100%" display="flex" className="items-center justify-between select-none">
 			<Box display="flex" className="items-center justify-between gap-x-2">
-				{sessionState.sessionCode != null && (
+				{sessionState.sessionCode !== null && (
 					<CopyButton value={sessionState.sessionCode}>
 						{({ copy, copied }) => (
 							<Tooltip label={copied ? "Copied!" : "Copy session code"}>
@@ -58,7 +58,7 @@ export function SessionStatusBar() {
 					size="sm"
 					color="dark"
 					onClick={() => {
-						webSocketClient.emit({ type: "transfer_host", data: null });
+						getWebSocketClient().emit({ type: "transfer_host", data: null });
 					}}
 				>
 					Transfer Host

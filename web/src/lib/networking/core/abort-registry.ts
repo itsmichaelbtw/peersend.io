@@ -20,7 +20,7 @@ class AbortRegistry {
 	}
 
 	public start(): void {
-		if (!!this.globalAbort) {
+		if (this.globalAbort) {
 			return;
 		}
 

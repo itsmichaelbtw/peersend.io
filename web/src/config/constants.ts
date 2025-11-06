@@ -1,7 +1,7 @@
 import type { SessionState, WebRtcConnectionState, WebSocketConnectionState } from "@/state";
 
-export const SESSION_CODE_EXAMPLE = import.meta.env.VITE_SESSION_CODE_EXAMPLE;
-export const WEBSOCKET_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT;
+export const SESSION_CODE_EXAMPLE = import.meta.env.VITE_SESSION_CODE_EXAMPLE as string;
+export const WEBSOCKET_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT as string;
 export const SESSION_CODE_LENGTH = 5;
 
 export const NODE_ENV = import.meta.env.MODE || "development";

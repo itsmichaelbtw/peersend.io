@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { appState } from "@/state";
-import { webSocketClient } from "@/lib/networking";
-// import { WebRTCClient } from "@/lib/webrtc";
+import { getWebRTCClient, getWebSocketClient } from "@/lib/networking/utils";
 
 export function useAppState() {
 	const state = useSyncExternalStore(
@@ -13,8 +12,8 @@ export function useAppState() {
 	return {
 		...state,
 		resetState() {
-			webSocketClient.disconnect();
-			// WebRTCClient.disconnect();
+			getWebSocketClient().disconnect();
+			getWebRTCClient().disconnect();
 		}
 	};
 }

@@ -2,48 +2,56 @@ import type { PeerSendFile } from "@/state/types";
 import type { PongData } from "../core/latency-checker";
 import type { NetworkMessagePayload } from "../types";
 
-interface WebRtcCommonEvents {
-	ping: Pick<PongData, "client_timestamp">;
-	pong: PongData;
-	start_file_transit: {
-		id: string;
-		transferSize: number;
-		metadata: PeerSendFile["metadata"];
-	};
-	in_file_transit: Uint8Array;
-	end_file_transit: {
-		id: string;
-	};
+export interface WebRTCDataPing {
+	client_timestamp: number;
 }
 
-export namespace WebRtcEventMap {
-	export interface IncomingEvents extends WebRtcCommonEvents {
-		error: {
-			type: string;
-			reason: string;
-		};
-	}
+export interface WebRTCDataPong extends PongData {}
 
-	export interface OutgoingEvents extends WebRtcCommonEvents {}
+export interface WebRTCDataStartFileTransit {
+	id: string;
+	transferSize: number;
+	metadata: PeerSendFile["metadata"];
 }
 
-export namespace WebRtcEvents {
-	export type IncomingTypes = keyof WebRtcEventMap.IncomingEvents;
-	export type OutgoingTypes = keyof WebRtcEventMap.OutgoingEvents;
+export type WebRTCDataInFileTransit = Uint8Array;
+
+export interface WebRTCDataEndFileTransit {
+	id: string;
 }
 
-export namespace WebRtcMessages {
-	export type IncomingMessage = {
-		[K in keyof WebRtcEventMap.IncomingEvents]: NetworkMessagePayload<
-			K,
-			WebRtcEventMap.IncomingEvents[K]
-		>;
-	}[keyof WebRtcEventMap.IncomingEvents];
-
-	export type OutgoingMessage = {
-		[K in keyof WebRtcEventMap.OutgoingEvents]: NetworkMessagePayload<
-			K,
-			WebRtcEventMap.OutgoingEvents[K]
-		>;
-	}[keyof WebRtcEventMap.OutgoingEvents];
+export interface WebRTCDataError {
+	type: string;
+	reason: string;
 }
+
+interface WebRTCCommonEvents {
+	ping: WebRTCDataPing;
+	pong: WebRTCDataPong;
+	start_file_transit: WebRTCDataStartFileTransit;
+	in_file_transit: WebRTCDataInFileTransit;
+	end_file_transit: WebRTCDataEndFileTransit;
+}
+
+export interface WebRTCEventMapIncomingEvents extends WebRTCCommonEvents {
+	error: WebRTCDataError;
+}
+
+export interface WebRTCEventMapOutgoingEvents extends WebRTCCommonEvents {}
+
+export type WebRTCEventsIncomingTypes = keyof WebRTCEventMapIncomingEvents;
+export type WebRTCEventsOutgoingTypes = keyof WebRTCEventMapOutgoingEvents;
+
+export type WebRTCIncomingMessage = {
+	[K in keyof WebRTCEventMapIncomingEvents]: NetworkMessagePayload<
+		K,
+		WebRTCEventMapIncomingEvents[K]
+	>;
+}[keyof WebRTCEventMapIncomingEvents];
+
+export type WebRTCOutgoingMessage = {
+	[K in keyof WebRTCEventMapOutgoingEvents]: NetworkMessagePayload<
+		K,
+		WebRTCEventMapOutgoingEvents[K]
+	>;
+}[keyof WebRTCEventMapOutgoingEvents];

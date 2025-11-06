@@ -1,6 +1,10 @@
+import React from "react";
+
 import type { FlexibleString } from "@/types/misc";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ActionMap = Record<string, any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DispatchState = Record<string, any>;
 export type DispatchType = "DISPATCH" | FlexibleString;
 

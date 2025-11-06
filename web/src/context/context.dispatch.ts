@@ -11,20 +11,20 @@ type DispatchFn<S extends DispatchState> = () => Partial<S>;
  * and falls back to running the provided function for all other actions.
  */
 export function withDispatchReducer<M extends ActionMap, S extends DispatchState>(
-  state: S,
-  action: ContextReducerActions<M, S>
+	state: S,
+	action: ContextReducerActions<M, S>
 ): (fn: DispatchFn<S>) => S {
-  return (fn: DispatchFn<S>) => {
-    if (action.type === "DISPATCH") {
-      return {
-        ...state,
-        ...action.payload
-      };
-    }
+	return (fn: DispatchFn<S>) => {
+		if (action.type === "DISPATCH") {
+			return {
+				...state,
+				...(action.payload as Partial<S>)
+			};
+		}
 
-    return {
-      ...state,
-      ...fn()
-    };
-  };
+		return {
+			...state,
+			...fn()
+		};
+	};
 }
