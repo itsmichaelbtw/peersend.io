@@ -54,7 +54,7 @@ export function JoinSessionView() {
 	}, []);
 
 	async function onEnter() {
-		if (await field.validate()) {
+		if (!(await field.validate())) {
 			await getWebSocketClient().connect(field.getValue());
 		}
 	}
