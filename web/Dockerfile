@@ -3,6 +3,7 @@ FROM node:20-alpine AS base
 WORKDIR /usr/src/app
 
 COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
 FROM base AS development
 
@@ -11,8 +12,6 @@ WORKDIR /usr/src/app
 COPY . .
 
 ENV NODE_ENV=development
-
-RUN npm install --legacy-peer-deps
 
 CMD ["sh", "-c", "npm run dev -- --host 0.0.0.0"]
 
@@ -24,7 +23,6 @@ COPY web/ ./
 
 ENV NODE_ENV=production
 
-RUN npm install --legacy-peer-deps
 RUN npm run build
 
 FROM nginx:stable-alpine AS deployment
