@@ -69,7 +69,7 @@ export function ConnectionUpgrade({ id, context }: ContextModalProps) {
 
 						<Box p="md" className="rounded-lg border-2 border-gray-200 bg-gray-50">
 							<Group gap="md" align="center" justify="flex-start" wrap="nowrap">
-								<LockIcon size={30} className="text-[var(--mantine-color-teal-5)]" />
+								<LockIcon size={30} className="text-(--mantine-color-teal-5)" />
 								<div>
 									<h3 className="font-medium">Direct Peer-to-Peer</h3>
 									<p className="text-sm text-gray-500">

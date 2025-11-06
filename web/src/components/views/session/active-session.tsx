@@ -31,7 +31,7 @@ export function ActiveSessionView() {
 						setShowAlert(false);
 					}}
 				>
-					<span className="text-[var(--mantine-color-yellow-text)]">
+					<span className="text-(--mantine-color-yellow-text)">
 						All received files will be lost when you close this tab or browser. Download any files
 						you want to keep.
 					</span>

@@ -86,8 +86,8 @@ export function JoinSessionView() {
 						<ul className="space-y-2 text-sm text-gray-500 mt-2.5">
 							{INFO_LIST_POINTS.map((item, index) => (
 								<li key={index} className="flex items-start gap-2">
-									<span className="bg-[var(--mantine-primary-color-filled)]/15 mt-0.5 rounded-full p-1">
-										<span className="bg-[var(--mantine-primary-color-filled)]/75 block h-1.5 w-1.5 rounded-full" />
+									<span className="bg-(--mantine-primary-color-filled)/15 mt-0.5 rounded-full p-1">
+										<span className="bg-(--mantine-primary-color-filled)/75 block h-1.5 w-1.5 rounded-full" />
 									</span>
 									<span>{item}</span>
 								</li>

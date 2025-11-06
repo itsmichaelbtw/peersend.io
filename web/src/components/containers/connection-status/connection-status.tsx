@@ -12,7 +12,7 @@ export function ConnectionStatus() {
 	const { sessionState } = useAppState();
 	const { classNames, joinCls } = useClsx({
 		icon: {
-			"bg-[var(--mantine-color-teal-filled)]/45 text-[var(--mantine-color-teal-9)]":
+			"bg-(--mantine-color-teal-filled)/45 text-(--mantine-color-teal-9)":
 				sessionState.connectionType === "webrtc",
 			"bg-gray-200": sessionState.connectionType === "websocket"
 		}
@@ -51,7 +51,7 @@ export function ConnectionStatus() {
 							</p>
 							<div className="relative ml-2 inline-flex items-center justify-center align-middle">
 								{sessionState.connectionType === "webrtc" && (
-									<span className="bg-[var(--mantine-color-teal-filled)]/35 absolute h-8 w-8 animate-ping rounded-full" />
+									<span className="bg-(--mantine-color-teal-filled)/35 absolute h-8 w-8 animate-ping rounded-full" />
 								)}
 
 								<span
@@ -71,9 +71,9 @@ export function ConnectionStatus() {
 					title="Auto WebRTC"
 					stat={
 						sessionState.autoWebRTC ? (
-							<span className="text-[var(--mantine-color-teal-7)] font-semibold">Enabled</span>
+							<span className="text-(--mantine-color-teal-7) font-semibold">Enabled</span>
 						) : (
-							<span className="text-[var(--mantine-color-red-7)] font-semibold">Disabled</span>
+							<span className="text-(--mantine-color-red-7) font-semibold">Disabled</span>
 						)
 					}
 				/>
@@ -81,11 +81,11 @@ export function ConnectionStatus() {
 					title="Encryption"
 					stat={
 						sessionState.encryptionMode !== "none" ? (
-							<span className="text-[var(--mantine-color-teal-7)] font-semibold">
+							<span className="text-(--mantine-color-teal-7) font-semibold">
 								{sessionState.encryptionMode}
 							</span>
 						) : (
-							<span className="text-[var(--mantine-color-red-7)] font-semibold">Disabled</span>
+							<span className="text-(--mantine-color-red-7) font-semibold">Disabled</span>
 						)
 					}
 				/>
