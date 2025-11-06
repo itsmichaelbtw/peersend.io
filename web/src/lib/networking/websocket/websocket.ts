@@ -65,7 +65,7 @@ export class CustomWebSocket extends WebSocket {
 
 			const { type, data } = JSON.parse(event.data) as WebSocketIncomingMessage;
 
-			log.info("Received a message of type:", type);
+			log.debug("Received a message of type:", type);
 			getWebSocketClient().messageBus.emit(type, data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {

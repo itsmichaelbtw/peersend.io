@@ -86,7 +86,7 @@ export class CustomDataChannel {
 			}
 
 			const { type, data } = JSON.parse(event.data) as WebRTCIncomingMessage;
-			log.info("Received a message of type:", type);
+			log.debug("Received a message of type:", type);
 			getWebRTCClient().messageBus.emit(type, data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {

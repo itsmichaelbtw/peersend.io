@@ -105,7 +105,7 @@ export class WebSocketClient extends NetworkClient<
 			return this;
 		}
 
-		log.info(`Emitting event: ${event.type}`);
+		log.debug(`Emitting event: ${event.type}`);
 
 		const payload = JSON.stringify(event);
 		websocketState.ws!.send(payload);

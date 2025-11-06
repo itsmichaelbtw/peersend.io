@@ -128,7 +128,7 @@ export class WebRTCClient extends NetworkClient<WebRTCIncomingMessage, WebRTCOut
 			return this;
 		}
 
-		log.info(`Emitting event: ${event.type}`);
+		log.debug(`Emitting event: ${event.type}`);
 
 		if (event.type === "in_file_transit") {
 			webrtcState.dataChannel!.send(event.data);
