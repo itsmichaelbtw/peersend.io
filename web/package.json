@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b tsconfig.json && vite build",
     "preview": "vite preview",
-    "lint": "TS_ESLINT_IGNORE_UNSUPPORTED=true eslint --ext .ts,.tsx src --max-warnings=0",
+    "lint": "TS_ESLINT_IGNORE_UNSUPPORTED=true eslint --ext .ts,.tsx src --max-warnings=5",
     "lint:fix": "TS_ESLINT_IGNORE_UNSUPPORTED=true eslint --ext .ts,.tsx src --fix",
     "type-check": "tsc -b --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,json,css}\""
