@@ -1,5 +1,7 @@
+import type { PeerSendFile } from "@/state";
+
 import { useSyncExternalStore, useMemo } from "react";
-import { fileTransferState, getIncomingFiles, getOutgoingFiles } from "@/state";
+import { fileTransferState } from "@/state";
 
 export function useFileTransferState() {
 	const state = useSyncExternalStore(
@@ -8,13 +10,16 @@ export function useFileTransferState() {
 		() => fileTransferState.get()
 	);
 
-	// weird one
 	const fileGroups = useMemo(() => {
 		return {
-			incoming: getIncomingFiles(),
-			outgoing: getOutgoingFiles()
+			incoming: state.files.filter(
+				(f): f is PeerSendFile<"incoming"> => f.transfer.type === "incoming"
+			),
+			outgoing: state.files.filter(
+				(f): f is PeerSendFile<"incoming"> => f.transfer.type === "outgoing"
+			)
 		};
-	}, []);
+	}, [state.files]);
 
 	return {
 		...state,
