@@ -7,11 +7,9 @@ assignees: ''
 ---
 
 ## Suggestions / Required Changes
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 <!-- List any improvements, suggestions, or required changes here -->
 
 ## Review Checklist
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
 
 - [ ] Code is clear and easy to understand
 - [ ] Follows coding standards and style guide
