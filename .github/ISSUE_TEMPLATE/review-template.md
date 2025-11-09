@@ -1,5 +1,5 @@
 ---
-name: "\uD83D\uDD0D Codebase Review"
+name: "\U0001F50D Codebase Review"
 about: Review a part of the codebase
 title: "[review] "
 labels: review
