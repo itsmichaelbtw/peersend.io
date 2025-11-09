@@ -1,5 +1,5 @@
 ---
-name: "\U0000267B\U0000FE0F Refactor Request"
+name: "\U0000267B\U0000FE0F Codebase Refactor"
 about: Suggest an improvement to the codebase
 title: "[refactor] "
 labels: refactor
