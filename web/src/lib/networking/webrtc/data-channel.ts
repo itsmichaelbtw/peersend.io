@@ -12,16 +12,16 @@ export class CustomDataChannel {
 
 	constructor(channel: RTCDataChannel) {
 		this.channel = channel;
-		this.channel.addEventListener("open", this.on_open.bind(this));
-		this.channel.addEventListener("close", this.on_close.bind(this));
-		this.channel.addEventListener("error", this.on_error.bind(this));
+		this.channel.addEventListener("open", this.onOpen.bind(this));
+		this.channel.addEventListener("close", this.onClose.bind(this));
+		this.channel.addEventListener("error", this.onError.bind(this));
 		this.channel.addEventListener("message", (event) => {
-			void this.on_message(event);
+			void this.onMessage(event);
 		});
 	}
 
-	private on_open() {
-		log.debug("on_open");
+	private onOpen(): void {
+		log.debug("onOpen");
 
 		const { sessionState } = appState.get();
 
@@ -32,13 +32,13 @@ export class CustomDataChannel {
 		getWebRTCClient().startLatencyMonitoring();
 	}
 
-	private on_close() {
-		log.debug("on_close");
+	private onClose(): void {
+		log.debug("onClose");
 		abortRegistry.end();
 	}
 
-	private on_error(event: RTCErrorEvent) {
-		log.error("on_error", event.error);
+	private onError(event: RTCErrorEvent): void {
+		log.error("onError", event.error);
 
 		if (event.error) {
 			appState.dispatch("SET_LAST_ERROR", {
@@ -51,7 +51,7 @@ export class CustomDataChannel {
 		}
 	}
 
-	private async on_message(event: MessageEvent) {
+	private async onMessage(event: MessageEvent): Promise<void> {
 		const { sessionState, webrtcState } = appState.get();
 
 		if (sessionState.lastError || webrtcState.isConnecting) {
@@ -96,15 +96,15 @@ export class CustomDataChannel {
 		}
 	}
 
-	public getDataChannel() {
+	public getDataChannel(): RTCDataChannel {
 		return this.channel;
 	}
 
-	public get readyState() {
+	public get readyState(): RTCDataChannelState {
 		return this.channel.readyState;
 	}
 
-	public send(data: unknown) {
+	public send(data: unknown): void {
 		try {
 			log.debug("Sending data to peer via data channel");
 
@@ -121,7 +121,7 @@ export class CustomDataChannel {
 		}
 	}
 
-	public close() {
+	public close(): void {
 		this.channel.close();
 	}
 }

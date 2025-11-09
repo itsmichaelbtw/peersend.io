@@ -1,11 +1,11 @@
 import type { PeerSendFile } from "@/state/types";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { SortableHeader } from "../sorting-header";
 import { columnHelper } from "../helper";
 import { formatFileSize } from "@/lib/file-transfer";
 
-function Cell(size: number) {
+function Cell(size: number): React.ReactNode {
 	const fileSize = useMemo(() => {
 		return formatFileSize(size);
 	}, [size]);

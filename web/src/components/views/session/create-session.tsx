@@ -1,3 +1,5 @@
+import type { Variants } from "framer-motion";
+
 import React, { useEffect, useState } from "react";
 
 import {
@@ -19,7 +21,7 @@ import { useAppState } from "@/hooks/use-app-state";
 import { appState } from "@/state";
 import { getWebSocketClient } from "@/lib/networking/utils";
 
-const VARIANTS = {
+const VARIANTS: Variants = {
 	fadeIn: { opacity: 1, y: 0 },
 	enter: (direction: number) => ({ y: direction > 0 ? 50 : -50, opacity: 0 }),
 	center: { y: 0, opacity: 1, transition: { duration: 0.1 } },
@@ -30,14 +32,14 @@ const VARIANTS = {
 	})
 };
 
-export function CreateSessionView() {
+export function CreateSessionView(): React.ReactNode {
 	const { sessionState, websocketState } = useAppState();
 
 	const navigate = useNavigate();
 	const [isFirstRender, setIsFirstRender] = useState(true);
 
 	useEffect(() => {
-		return () => {
+		return (): void => {
 			appState.dispatch("RESET_CONNECTING_STATES", null);
 		};
 	}, []);

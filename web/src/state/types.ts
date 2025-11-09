@@ -18,7 +18,7 @@ export interface ConnectionErrorData {
 	message: string;
 }
 
-export interface WebRtcConnectionState extends ConnectionState {
+export interface WebRTCConnectionState extends ConnectionState {
 	dataChannel: WithNullable<CustomDataChannel>;
 	peerConnection: WithNullable<CustomRTCPeerConnection>;
 }
@@ -29,7 +29,7 @@ export interface WebSocketConnectionState extends ConnectionState {
 
 export interface AppState {
 	sessionState: SessionState;
-	webrtcState: WebRtcConnectionState;
+	webrtcState: WebRTCConnectionState;
 	websocketState: WebSocketConnectionState;
 }
 

@@ -1,4 +1,9 @@
-import type { AppState } from "../types";
+import type {
+	AppState,
+	SessionState,
+	WebRTCConnectionState,
+	WebSocketConnectionState
+} from "../types";
 
 import { AppStateStore } from "./store";
 
@@ -16,23 +21,23 @@ const initialState: AppState = {
 
 export const appState = new AppStateStore(initialState);
 
-export function getSessionState() {
+export function getSessionState(): SessionState {
 	return appState.get().sessionState;
 }
 
-export function getWebrtcState() {
+export function getWebRTCState(): WebRTCConnectionState {
 	return appState.get().webrtcState;
 }
 
-export function getWebsocketState() {
+export function getWebsocketState(): WebSocketConnectionState {
 	return appState.get().websocketState;
 }
 
-export function isWebSocketConnected() {
+export function isWebSocketConnected(): boolean {
 	const { websocketState } = appState.get();
 
 	if (websocketState.ws === null) {
-		return null;
+		return false;
 	}
 
 	if (websocketState.ws.readyState !== WebSocket.OPEN) {
@@ -42,7 +47,7 @@ export function isWebSocketConnected() {
 	return websocketState.isConnected;
 }
 
-export function isWebRtcConnected() {
+export function isWebRtcConnected(): boolean {
 	const { webrtcState } = appState.get();
 
 	if (webrtcState.dataChannel === null || webrtcState.peerConnection === null) {

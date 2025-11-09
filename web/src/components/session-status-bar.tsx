@@ -1,9 +1,11 @@
+import React from "react";
+
 import { CopyIcon, WifiIcon, RouterIcon, CrownIcon, CopyCheckIcon } from "lucide-react";
 import { Badge, Box, Button, CopyButton, Tooltip } from "@mantine/core";
 import { useAppState } from "@/hooks/use-app-state";
 import { getWebSocketClient } from "@/lib/networking/utils";
 
-export function SessionStatusBar() {
+export function SessionStatusBar(): React.ReactNode {
 	const { sessionState } = useAppState();
 
 	return (

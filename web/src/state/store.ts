@@ -17,7 +17,7 @@ export abstract class StateStore<S extends DispatchState, M extends ActionMap> {
 		this.state = initialState;
 	}
 
-	public get() {
+	public get(): S {
 		return this.state;
 	}
 
@@ -31,7 +31,7 @@ export abstract class StateStore<S extends DispatchState, M extends ActionMap> {
 		}
 	}
 
-	public subscribe(listener: Listener<S>) {
+	public subscribe(listener: Listener<S>): () => void {
 		this.listeners.add(listener);
 		return () => this.listeners.delete(listener);
 	}

@@ -11,10 +11,10 @@ import { notifications } from "@mantine/notifications";
 import { useAppState } from "@/hooks/use-app-state";
 import { capitalise } from "@/utils/capitalise";
 
-export function SessionLayout() {
+export function SessionLayout(): React.ReactNode {
 	const { sessionState } = useAppState();
 
-	function handleLastError(lastError: ConnectionErrorData) {
+	function handleLastError(lastError: ConnectionErrorData): void {
 		appState.dispatch("SET_LAST_ERROR", null);
 
 		notifications.show({

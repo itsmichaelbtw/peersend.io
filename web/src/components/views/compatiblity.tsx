@@ -1,8 +1,10 @@
+import React from "react";
+
 import { AlertTriangleIcon, CheckIcon } from "lucide-react";
 import { Box } from "@mantine/core";
 import { useCompatibility } from "@/hooks/use-compatibility";
 
-export function CompatibilityView() {
+export function CompatibilityView(): React.ReactNode {
 	const { browser, isCompatible } = useCompatibility();
 
 	if (isCompatible) {

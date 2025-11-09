@@ -10,6 +10,11 @@ export interface FileStorageRecord {
 	complete: boolean;
 }
 
+export interface BufferParsed {
+	fileId: string;
+	chunk: Uint8Array<ArrayBuffer>;
+}
+
 export interface FileTransferTransport {
 	start(id: string, transferSize: number, metadata: PeerSendFile["metadata"]): Promise<void>;
 	chunk(id: string, chunk: Uint8Array, percentage: number): Promise<void>;

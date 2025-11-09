@@ -10,6 +10,11 @@ interface WebRTCCustomWindow extends Window {
 	mozRTCPeerConnection?: RTCPeerConnectionConstructor;
 }
 
+interface UseCompatibility {
+	isCompatible: boolean;
+	browser: string;
+}
+
 function getRTCPeerConnectionCtor(): RTCPeerConnectionConstructor | undefined {
 	if (typeof window === "undefined") {
 		return undefined;
@@ -31,7 +36,7 @@ export function isBrowserCompatible(): boolean {
 	return hasPeerConnection() && hasDataChannel();
 }
 
-export function useCompatibility() {
+export function useCompatibility(): UseCompatibility {
 	const ua = new UAParser();
 	const browser = ua.getBrowser().name || "unknown";
 	const isCompatible = isBrowserCompatible();

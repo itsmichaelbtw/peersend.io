@@ -1,4 +1,4 @@
-import type { SessionState, WebRtcConnectionState, WebSocketConnectionState } from "@/state";
+import type { SessionState, WebRTCConnectionState, WebSocketConnectionState } from "@/state";
 
 export const SESSION_CODE_EXAMPLE = import.meta.env.VITE_SESSION_CODE_EXAMPLE as string;
 export const WEBSOCKET_ENDPOINT = import.meta.env.VITE_SERVER_ENDPOINT as string;
@@ -15,7 +15,7 @@ export const DEFAULT_WEBSOCKET_STATE: WebSocketConnectionState = {
 	isConnecting: false
 };
 
-export const DEFAULT_WEBRTC_STATE: WebRtcConnectionState = {
+export const DEFAULT_WEBRTC_STATE: WebRTCConnectionState = {
 	dataChannel: null,
 	peerConnection: null,
 	isConnected: false,

@@ -17,12 +17,12 @@ export class CustomWebSocket extends WebSocket {
 		this.addEventListener("message", this.onMessage.bind(this));
 	}
 
-	private onOpen() {
+	private onOpen(): void {
 		log.debug("onOpen event received");
 		abortRegistry.start();
 	}
 
-	private onClose(event: CloseEvent) {
+	private onClose(event: CloseEvent): void {
 		log.debug("onClose event received");
 
 		getWebSocketClient().disconnect();
@@ -40,7 +40,7 @@ export class CustomWebSocket extends WebSocket {
 		abortRegistry.end();
 	}
 
-	private onError() {
+	private onError(): void {
 		log.error("onError event received");
 
 		appState.dispatch("SET_LAST_ERROR", {
@@ -49,7 +49,7 @@ export class CustomWebSocket extends WebSocket {
 		});
 	}
 
-	private onMessage(event: MessageEvent) {
+	private onMessage(event: MessageEvent): void {
 		log.debug("onMessage event received");
 
 		const { sessionState, websocketState } = appState.get();

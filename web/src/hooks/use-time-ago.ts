@@ -15,22 +15,22 @@ const customLocale: Locale = {
 	}
 };
 
-function getTimeDistance(timestamp: string | number | Date) {
+function getTimeDistance(timestamp: string | number | Date): string {
 	return formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: customLocale });
 }
 
-export function useTimeDistance(timestamp: string | number | Date) {
+export function useTimeDistance(timestamp: string | number | Date): string {
 	const [timeDistance, setTimeDistance] = useState(() => getTimeDistance(timestamp));
 
 	useEffect(() => {
-		function update() {
+		function update(): void {
 			setTimeDistance(getTimeDistance(timestamp));
 		}
 
 		update();
 		const interval = setInterval(update, 60 * 1000);
 
-		return () => clearInterval(interval);
+		return (): void => clearInterval(interval);
 	}, [timestamp]);
 
 	return timeDistance;

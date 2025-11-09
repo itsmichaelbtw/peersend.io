@@ -9,15 +9,15 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 	constructor(config: RTCConfiguration) {
 		super(config);
 
-		this.addEventListener("icecandidate", this.on_icecandidate.bind(this));
-		this.addEventListener("icecandidateerror", this.on_icecandidateerror.bind(this));
-		this.addEventListener("iceconnectionstatechange", this.on_iceconnectionstatechange.bind(this));
-		this.addEventListener("connectionstatechange", this.on_connectionstatechange.bind(this));
-		this.addEventListener("datachannel", this.on_datachannel.bind(this));
+		this.addEventListener("icecandidate", this.onICECandiate.bind(this));
+		this.addEventListener("icecandidateerror", this.onICECandiateError.bind(this));
+		this.addEventListener("iceconnectionstatechange", this.onICECandiateStateChange.bind(this));
+		this.addEventListener("connectionstatechange", this.onConnectionStateChange.bind(this));
+		this.addEventListener("datachannel", this.onDataChannel.bind(this));
 	}
 
-	private on_icecandidate(event: RTCPeerConnectionIceEvent) {
-		log.debug("on_icecandidate");
+	private onICECandiate(event: RTCPeerConnectionIceEvent): void {
+		log.debug("onICECandiate");
 
 		if (event.candidate) {
 			getWebSocketClient().emit({
@@ -29,12 +29,12 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		}
 	}
 
-	private on_icecandidateerror() {
-		log.error("on_icecandidateerror");
+	private onICECandiateError(): void {
+		log.error("onICECandiateError");
 	}
 
-	private on_iceconnectionstatechange() {
-		log.debug("on_iceconnectionstatechange");
+	private onICECandiateStateChange(): void {
+		log.debug("onICECandiateStateChange");
 
 		const { webrtcState } = appState.get();
 
@@ -43,8 +43,8 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		}
 	}
 
-	private on_connectionstatechange() {
-		log.debug("on_connectionstatechange");
+	private onConnectionStateChange(): void {
+		log.debug("onConnectionStateChange");
 
 		const { webrtcState } = appState.get();
 
@@ -77,7 +77,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		}
 	}
 
-	private on_datachannel(event: RTCDataChannelEvent) {
+	private onDataChannel(event: RTCDataChannelEvent): void {
 		log.info("Data channel established by remote peer");
 
 		appState.dispatch("UPDATE", {
@@ -87,7 +87,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		});
 	}
 
-	public create_data_channel(label: string): CustomDataChannel {
+	public createCustomDataChannel(label: string): CustomDataChannel {
 		const dc = this.createDataChannel(label);
 		return new CustomDataChannel(dc);
 	}

@@ -1,5 +1,13 @@
 type LogLevel = "info" | "success" | "warn" | "error" | "debug";
 
+interface LoggerLevels {
+	info(...args: unknown[]): void;
+	success(...args: unknown[]): void;
+	warn(...args: unknown[]): void;
+	error(...args: unknown[]): void;
+	debug(...args: unknown[]): void;
+}
+
 const levelStyles: Record<LogLevel, string> = {
 	info: "color: dodgerblue; font-weight: bold",
 	success: "color: mediumseagreen; font-weight: bold",
@@ -31,14 +39,14 @@ function getLoggerFn(level: LogLevel): (...args: unknown[]) => void {
 	}
 }
 
-function log(scope: string, level: LogLevel, ...args: unknown[]) {
+function log(scope: string, level: LogLevel, ...args: unknown[]): void {
 	const style = levelStyles[level];
 	const prefix = `%c[${scope}] - ${level.toUpperCase()}`;
 
 	getLoggerFn(level)(prefix, style, ...args);
 }
 
-export function createLogger(scope: string) {
+export function createLogger(scope: string): LoggerLevels {
 	return {
 		info: (...args: unknown[]) => log(scope, "info", ...args),
 		success: (...args: unknown[]) => log(scope, "success", ...args),

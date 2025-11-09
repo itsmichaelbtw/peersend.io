@@ -24,16 +24,16 @@ const RTC_CONFIGURATION: RTCConfiguration = {
 	iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }]
 };
 
-function event_SessionInformation(data: WebSocketDataSessionInformation) {
+function event_SessionInformation(data: WebSocketDataSessionInformation): void {
 	appState.dispatch("SET_SESSION_INFORMATION", data);
 	getWebSocketClient().startLatencyMonitoring();
 }
 
-function event_Pong(data: WebSocketDataPong) {
+function event_Pong(data: WebSocketDataPong): void {
 	getWebSocketClient().latencyChecker.pong(data);
 }
 
-function event_SyncClients(data: WebSocketDataSyncClients) {
+function event_SyncClients(data: WebSocketDataSyncClients): void {
 	const { sessionState } = appState.get();
 
 	if (sessionState.clients.length > data.clients.length) {
@@ -44,11 +44,11 @@ function event_SyncClients(data: WebSocketDataSyncClients) {
 	appState.dispatch("SET_CLIENTS", data);
 }
 
-function event_HostTransferred(data: WebSocketDataHostTransfer) {
+function event_HostTransferred(data: WebSocketDataHostTransfer): void {
 	appState.dispatch("SET_HOST", data);
 }
 
-async function event_WebRTCOffer(data: WebSocketDataWebRTCOffer) {
+async function event_WebRTCOffer(data: WebSocketDataWebRTCOffer): Promise<void> {
 	const { sessionState } = appState.get();
 
 	if (sessionState.isHost) {
@@ -102,7 +102,7 @@ async function event_WebRTCOffer(data: WebSocketDataWebRTCOffer) {
 	}
 }
 
-async function event_WebRTCAccept(data: WebSocketDataWebRTCAccept) {
+async function event_WebRTCAccept(data: WebSocketDataWebRTCAccept): Promise<void> {
 	const { sessionState, webrtcState } = appState.get();
 
 	if (!sessionState.isHost) {
@@ -147,7 +147,7 @@ async function event_WebRTCAccept(data: WebSocketDataWebRTCAccept) {
 	}
 }
 
-async function event_WebRTCIceCandidate(data: WebSocketDataWebRTCIceCandidate) {
+async function event_WebRTCIceCandidate(data: WebSocketDataWebRTCIceCandidate): Promise<void> {
 	const { webrtcState } = appState.get();
 
 	if (!webrtcState.peerConnection) {
@@ -179,7 +179,7 @@ async function event_WebRTCIceCandidate(data: WebSocketDataWebRTCIceCandidate) {
 	}
 }
 
-function event_WebRTCReject(data: WebSocketDataWebRTCReject) {
+function event_WebRTCReject(data: WebSocketDataWebRTCReject): void {
 	log.error(`WebRTC connection was rejected: ${data.reason}`);
 	getWebSocketClient().disconnect();
 
@@ -189,7 +189,7 @@ function event_WebRTCReject(data: WebSocketDataWebRTCReject) {
 	});
 }
 
-function event_Error(data: WebSocketDataError) {
+function event_Error(data: WebSocketDataError): void {
 	log.error(`"WebSocket received an error`);
 
 	appState.dispatch("SET_LAST_ERROR", {

@@ -1,11 +1,11 @@
 import type { PeerSendFile } from "@/state/types";
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { SortableHeader } from "../sorting-header";
 import { columnHelper } from "../helper";
 import { truncateFileName } from "@/lib/file-transfer";
 
-function Cell(name: string) {
+function Cell(name: string): React.ReactNode {
 	const fileName = useMemo(() => {
 		return truncateFileName(name);
 	}, [name]);

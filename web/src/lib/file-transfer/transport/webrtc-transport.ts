@@ -25,7 +25,7 @@ export class WebRTCTransport implements FileTransferTransport {
 		return new Promise((resolve) => {
 			this.datachannel.bufferedAmountLowThreshold = BUFFER_THRESHOLD;
 
-			const listener = () => {
+			const listener = (): void => {
 				log.warn("Data channel buffered amount is low");
 				this.datachannel.removeEventListener("bufferedamountlow", listener);
 				resolve();

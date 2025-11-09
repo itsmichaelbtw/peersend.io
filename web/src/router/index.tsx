@@ -1,3 +1,5 @@
+import React from "react";
+
 import { createBrowserRouter, redirect } from "react-router";
 
 import { MainLayout } from "@/components/layouts/main-layout";
@@ -17,7 +19,9 @@ export const router = createBrowserRouter([
 		children: [
 			{
 				index: true,
-				Component: () => <div>Home Page</div>
+				Component(): React.ReactNode {
+					return <div>Home Page</div>;
+				}
 			}
 		]
 	},
@@ -28,7 +32,7 @@ export const router = createBrowserRouter([
 	{
 		path: "/session",
 		Component: SessionLayout,
-		loader() {
+		loader(): null {
 			if (isBrowserCompatible()) {
 				return null;
 			}
@@ -38,13 +42,13 @@ export const router = createBrowserRouter([
 		children: [
 			{
 				index: true,
-				loader() {
+				loader(): void {
 					throw redirect("/session/create");
 				}
 			},
 			{
 				path: "create",
-				loader() {
+				loader(): void {
 					const { sessionState } = appState.get();
 
 					if (sessionState.isConnected && sessionState.sessionCode) {
@@ -55,7 +59,7 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "join",
-				loader() {
+				loader(): void {
 					const { sessionState } = appState.get();
 
 					if (sessionState.isConnected && sessionState.sessionCode) {
@@ -66,7 +70,7 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: ":session_code",
-				loader() {
+				loader(): void {
 					const { sessionState } = appState.get();
 
 					if (!sessionState.isConnected || sessionState.connectionType === "none") {

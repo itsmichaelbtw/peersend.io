@@ -8,7 +8,7 @@ import { SessionStatusBar } from "@/components/session-status-bar";
 import { ConnectionStatus } from "@/components/containers/connection-status";
 import { Collaboration } from "@/components/containers/collaboration";
 
-export function ActiveSessionView() {
+export function ActiveSessionView(): React.ReactNode {
 	const { sessionState } = useAppState();
 
 	const [showAlert, setShowAlert] = useState(true);

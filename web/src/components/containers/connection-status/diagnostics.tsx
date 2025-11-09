@@ -1,7 +1,9 @@
+import React from "react";
+
 import { useAppState } from "@/hooks/use-app-state";
 import { Box } from "@mantine/core";
 
-export function Diagnostics() {
+export function Diagnostics(): React.ReactNode {
 	const { sessionState, webrtcState } = useAppState();
 
 	return (

@@ -2,7 +2,7 @@ import React from "react";
 
 import { useContext } from "react";
 
-export function useDefinedContext<T>(context: React.Context<T>, target: string) {
+export function useDefinedContext<T>(context: React.Context<T>, target: string): T {
 	const reactContext = useContext(context);
 
 	if (reactContext === undefined) {

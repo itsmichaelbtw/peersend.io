@@ -23,7 +23,7 @@ const log = createLogger("WebRtcEvents");
 
 const throttler = new ProgressThrottler(1, 150);
 
-function event_StartFileTransit(data: WebRTCDataStartFileTransit) {
+function event_StartFileTransit(data: WebRTCDataStartFileTransit): void {
 	if (getPeersendFile(data.id)) {
 		log.error(`File with id ${data.id} already exists, ignoring incoming file transfer.`);
 		return;
@@ -35,7 +35,7 @@ function event_StartFileTransit(data: WebRTCDataStartFileTransit) {
 	fileTransferState.add([file]);
 }
 
-function event_InFileTransit(data: WebRTCDataInFileTransit) {
+function event_InFileTransit(data: WebRTCDataInFileTransit): void {
 	// https://github.com/itsmichaelbtw/peersend.io/issues/37
 
 	const parsed = parseTransitBuffer(data);
@@ -49,7 +49,7 @@ function event_InFileTransit(data: WebRTCDataInFileTransit) {
 	}
 }
 
-function event_EndFileTransit(data: WebRTCDataEndFileTransit) {
+function event_EndFileTransit(data: WebRTCDataEndFileTransit): void {
 	log.info(`Finished receiving file with id ${data.id}`);
 	throttler.reset();
 
@@ -68,11 +68,11 @@ function event_EndFileTransit(data: WebRTCDataEndFileTransit) {
 	}
 }
 
-function event_Pong(data: WebRTCDataPong) {
+function event_Pong(data: WebRTCDataPong): void {
 	getWebRTCClient().latencyChecker.pong(data);
 }
 
-function event_Ping(data: WebRTCDataPing) {
+function event_Ping(data: WebRTCDataPing): void {
 	getWebRTCClient().emit({
 		type: "pong",
 		data: {
@@ -82,7 +82,7 @@ function event_Ping(data: WebRTCDataPing) {
 	});
 }
 
-function event_Error(data: WebRTCDataError) {
+function event_Error(data: WebRTCDataError): void {
 	appState.dispatch("SET_LAST_ERROR", {
 		title: data.type,
 		message: data.reason

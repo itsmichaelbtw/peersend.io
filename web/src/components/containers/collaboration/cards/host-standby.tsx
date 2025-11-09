@@ -1,7 +1,9 @@
+import React from "react";
+
 import { Stack, Card, Group, Center } from "@mantine/core";
 import { ClockIcon } from "lucide-react";
 
-export function HostStandbyCard() {
+export function HostStandbyCard(): React.ReactNode {
 	return (
 		<Card shadow="sm" padding="sm" radius="sm" className="select-none" withBorder>
 			<Card.Section py="sm" inheritPadding withBorder>

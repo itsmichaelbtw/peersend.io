@@ -30,7 +30,7 @@ interface Props extends WithChildren<"required", (args: RenderChildrenArgs) => R
 	files: PeerSendFile[];
 }
 
-export function FileTable({ files, emptyComponent, children }: Props) {
+export function FileTable({ files, emptyComponent, children }: Props): React.ReactNode {
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
 	const columns = useMemo(

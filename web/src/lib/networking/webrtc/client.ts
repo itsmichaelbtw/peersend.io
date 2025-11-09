@@ -48,7 +48,7 @@ export class WebRTCClient extends NetworkClient<WebRTCIncomingMessage, WebRTCOut
 
 		try {
 			const pc = new CustomRTCPeerConnection(RTC_CONFIGURATION);
-			const dc = pc.create_data_channel("peersend.io/rtc");
+			const dc = pc.createCustomDataChannel("peersend.io/rtc");
 			const offer = await pc.createOffer();
 
 			await pc.setLocalDescription(offer);

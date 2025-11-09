@@ -7,7 +7,7 @@ import { useAppState } from "@/hooks/use-app-state";
 import { Button, Group, Stack, Box, Loader } from "@mantine/core";
 import { getWebRTCClient } from "@/lib/networking/utils";
 
-export function ConnectionUpgrade({ id, context }: ContextModalProps) {
+export function ConnectionUpgrade({ id, context }: ContextModalProps): React.ReactNode {
 	const { sessionState, webrtcState } = useAppState();
 
 	return (

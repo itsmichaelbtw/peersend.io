@@ -8,7 +8,7 @@ const initialState: FileTransferState = {
 
 export const fileTransferState = new FileTransferStore(initialState);
 
-export function getFileTransferState() {
+export function getFileTransferState(): FileTransferState {
 	return fileTransferState.get();
 }
 

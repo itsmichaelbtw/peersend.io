@@ -1,6 +1,7 @@
 import type { PeerSendFile } from "@/state/types";
 import type { FileWithPath } from "@mantine/dropzone";
 import type { WebRTCDataStartFileTransit } from "../networking";
+import type { BufferParsed } from "./types";
 
 import { v4, stringify } from "uuid";
 import { FILE_ID_BYTE_LENGTH, DOWNLOAD_CONTAINER_ID } from "./constants";
@@ -53,7 +54,7 @@ export function createBufferWithHeader(id: Uint8Array, data: Uint8Array): Uint8A
 	return buffer;
 }
 
-export function parseTransitBuffer(buffer: Uint8Array) {
+export function parseTransitBuffer(buffer: Uint8Array): BufferParsed {
 	const id = buffer.slice(0, FILE_ID_BYTE_LENGTH);
 	const chunk = buffer.slice(FILE_ID_BYTE_LENGTH);
 

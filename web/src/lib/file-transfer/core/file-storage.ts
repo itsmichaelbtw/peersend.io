@@ -66,7 +66,7 @@ export class FileStorage {
 		return isComplete;
 	}
 
-	public markComplete(id: string, clearMemory = false) {
+	public markComplete(id: string, clearMemory = false): void {
 		const file = this.files.get(id);
 
 		if (!file) {
@@ -105,13 +105,12 @@ export class FileStorage {
 		return this.files.get(id)?.chunks;
 	}
 
-	public remove(id: string) {
+	public remove(id: string): void {
 		log.warn(`File ${id} has been removed`);
 		this.files.delete(id);
 	}
 
-	/** Clear all records */
-	public reset() {
+	public reset(): void {
 		log.warn("All file records have been cleared");
 		this.files.clear();
 	}

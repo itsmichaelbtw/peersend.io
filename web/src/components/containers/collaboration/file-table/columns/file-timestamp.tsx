@@ -1,7 +1,9 @@
+import React from "react";
+
 import { columnHelper } from "../helper";
 import { useTimeDistance } from "@/hooks/use-time-ago";
 
-function Cell(timestamp: number) {
+function Cell(timestamp: number): React.ReactNode {
 	const timeDistance = useTimeDistance(timestamp);
 
 	return <div className="text-right">{timeDistance}</div>;

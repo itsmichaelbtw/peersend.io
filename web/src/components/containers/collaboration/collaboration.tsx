@@ -1,3 +1,5 @@
+import React from "react";
+
 import { useAppState } from "@/hooks/use-app-state";
 
 import {
@@ -8,7 +10,7 @@ import {
 	InvalidConnectionCard
 } from "./cards";
 
-export function Collaboration() {
+export function Collaboration(): React.ReactNode {
 	const { sessionState } = useAppState();
 
 	if (sessionState.connectionType === "websocket") {

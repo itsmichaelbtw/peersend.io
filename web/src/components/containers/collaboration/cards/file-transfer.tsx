@@ -1,6 +1,8 @@
 import type { FileWithPath, FileRejection } from "@mantine/dropzone";
 import type { PeerSendFile } from "@/state/types";
 
+import React from "react";
+
 import { DownloadIcon, SendIcon, Trash2Icon, UploadIcon } from "lucide-react";
 import { Badge, Box, Button, Card, Center, Group, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -12,15 +14,15 @@ import {
 	createCustomFileFromUpload,
 	smartFileDownload
 } from "@/lib/file-transfer";
+import { getWebRTCClient } from "@/lib/networking/utils";
 import { appState, fileTransferState } from "@/state";
 
 import { FileTable } from "../file-table";
-import { getWebRTCClient } from "@/lib/networking/utils";
 
-export function FileTransferCard() {
+export function FileTransferCard(): React.ReactNode {
 	const { fileGroups } = useFileTransferState();
 
-	async function onSend(files: PeerSendFile[]) {
+	async function onSend(files: PeerSendFile[]): Promise<void> {
 		const filesToSend = files.filter((f) => f.status === "pending");
 
 		if (filesToSend.length === 0) {
@@ -41,8 +43,8 @@ export function FileTransferCard() {
 			getWebRTCClient(),
 			webrtcState.dataChannel!.getDataChannel()
 		);
-		const fileTransfer = new FileTransfer(filesToSend, transport);
 
+		const fileTransfer = new FileTransfer(filesToSend, transport);
 		await fileTransfer.initiate();
 
 		// do something here maybe a notif
@@ -50,11 +52,11 @@ export function FileTransferCard() {
 		// maybe look at cancelling in the future?
 	}
 
-	function onDownload(files: PeerSendFile[]) {
+	function onDownload(files: PeerSendFile[]): void {
 		smartFileDownload(files);
 	}
 
-	function onDrop(files: FileWithPath[]) {
+	function onDrop(files: FileWithPath[]): void {
 		const customFiles: PeerSendFile[] = [];
 
 		for (const file of files) {
@@ -66,7 +68,7 @@ export function FileTransferCard() {
 	}
 
 	// need to verify this
-	function onReject(rejections: FileRejection[]) {
+	function onReject(rejections: FileRejection[]): void {
 		for (const rejection of rejections) {
 			notifications.show({
 				title: `File Upload Error: ${rejection.file.name}`,

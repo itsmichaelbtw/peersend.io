@@ -21,7 +21,7 @@ const INFO_LIST_POINTS: string[] = [
 
 const REGEX = /^X-[A-Z0-9]{6}$/;
 
-export function JoinSessionView() {
+export function JoinSessionView(): React.ReactNode {
 	const { websocketState, sessionState } = useAppState();
 
 	const navigate = useNavigate();
@@ -48,12 +48,12 @@ export function JoinSessionView() {
 	}, [sessionState.isConnected, sessionState.sessionCode, navigate]);
 
 	useEffect(() => {
-		return () => {
+		return (): void => {
 			appState.dispatch("RESET_CONNECTING_STATES", null);
 		};
 	}, []);
 
-	async function onEnter() {
+	async function onEnter(): Promise<void> {
 		if (!(await field.validate())) {
 			await getWebSocketClient().connect(field.getValue());
 		}

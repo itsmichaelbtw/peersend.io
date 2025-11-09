@@ -1,3 +1,5 @@
+import React from "react";
+
 import { Button, Card } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useAppState } from "@/hooks/use-app-state";
@@ -8,7 +10,7 @@ import { InfoStatistic } from "./info-statistic";
 import { ClientIndicator } from "./client-indicator";
 import { Diagnostics } from "./diagnostics";
 
-export function ConnectionStatus() {
+export function ConnectionStatus(): React.ReactNode {
 	const { sessionState } = useAppState();
 	const { classNames, joinCls } = useClsx({
 		icon: {
@@ -18,7 +20,7 @@ export function ConnectionStatus() {
 		}
 	});
 
-	function onLeave() {
+	function onLeave(): void {
 		modals.openConfirmModal({
 			title: <span className="font-semibold text-lg">Leave Session</span>,
 			children: <span className="text-gray-500">Are you sure you want to leave this session?</span>,
