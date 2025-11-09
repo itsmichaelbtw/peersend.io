@@ -10,7 +10,7 @@ import { useNavigate } from "react-router";
 import { useAppState } from "@/hooks/use-app-state";
 
 import { appState } from "@/state";
-import { SESSION_CODE_EXAMPLE } from "@/config/constants";
+import { envVar } from "@/config/constants";
 import { getWebSocketClient } from "@/lib/networking/utils";
 
 const INFO_LIST_POINTS: string[] = [
@@ -34,7 +34,7 @@ export function JoinSessionView(): React.ReactNode {
 			}
 
 			if (!REGEX.test(value)) {
-				return `Please enter a valid session code (e.g. ${SESSION_CODE_EXAMPLE})`;
+				return `Please enter a valid session code (e.g. ${envVar.SESSION_CODE_EXAMPLE})`;
 			}
 
 			return null;
@@ -77,7 +77,7 @@ export function JoinSessionView(): React.ReactNode {
 
 					<TextInput
 						{...field.getInputProps()}
-						placeholder={`e.g. ${SESSION_CODE_EXAMPLE}`}
+						placeholder={`e.g. ${envVar.SESSION_CODE_EXAMPLE}`}
 						className="mt-4"
 					/>
 

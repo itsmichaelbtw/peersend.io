@@ -11,7 +11,7 @@ services:
       dockerfile: Dockerfile
       target: development
     ports:
-      - 3001:8080
+      - 3600:8080
     environment:
       - APP_ENV=development
     volumes:
@@ -32,8 +32,10 @@ services:
     ports:
       - 3500:5173
     environment:
+      - CHOKIDAR_USEPOLLING=true
       - VITE_SESSION_CODE_EXAMPLE=X-4FGS6H
-      - VITE_SERVER_ENDPOINT=ws://peersend-server:8080/peersend
+      - VITE_SERVER_ENDPOINT=ws://localhost:3600/exchange
+      - VITE_LOG_LEVEL=debug
     networks:
       - peersend-network
     volumes:

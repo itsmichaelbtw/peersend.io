@@ -1,3 +1,5 @@
+import { envVar } from "@/config/constants";
+
 type LogLevel = "info" | "success" | "warn" | "error" | "debug";
 
 interface LoggerLevels {
@@ -8,7 +10,17 @@ interface LoggerLevels {
 	debug(...args: unknown[]): void;
 }
 
-const levelStyles: Record<LogLevel, string> = {
+const PRIORITY_MAP: Record<LogLevel, number> = {
+	info: 1,
+	success: 1,
+	warn: 2,
+	error: 3,
+	debug: 0
+};
+
+const LOG_PRIORITY = PRIORITY_MAP[envVar.LOG_LEVEL as LogLevel] ?? 1;
+
+const STYLES: Record<LogLevel, string> = {
 	info: "color: dodgerblue; font-weight: bold",
 	success: "color: mediumseagreen; font-weight: bold",
 	warn: "color: orange; font-weight: bold",
@@ -40,10 +52,12 @@ function getLoggerFn(level: LogLevel): (...args: unknown[]) => void {
 }
 
 function log(scope: string, level: LogLevel, ...args: unknown[]): void {
-	const style = levelStyles[level];
+	const style = STYLES[level];
 	const prefix = `%c[${scope}] - ${level.toUpperCase()}`;
 
-	getLoggerFn(level)(prefix, style, ...args);
+	if (PRIORITY_MAP[level] >= LOG_PRIORITY) {
+		getLoggerFn(level)(prefix, style, ...args);
+	}
 }
 
 export function createLogger(scope: string): LoggerLevels {
