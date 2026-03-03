@@ -2,12 +2,12 @@ import React from "react";
 
 import { createBrowserRouter, redirect } from "react-router";
 
-import { MainLayout } from "@/components/layouts/main-layout";
-import { SessionLayout } from "@/components/layouts/session-layout";
-import { CompatibilityView } from "@/components/views/compatiblity";
-import { CreateSessionView } from "@/components/views/session/create-session";
-import { JoinSessionView } from "@/components/views/session/join-session";
-import { ActiveSessionView } from "@/components/views/session/active-session";
+import { MainLayout } from "@/layouts/main-layout";
+import { SessionLayout } from "@/layouts/session-layout";
+import { CompatibilityView } from "@/views/compatibility";
+import { CreateSessionView } from "@/views/session/create-session";
+import { JoinSessionView } from "@/views/session/join-session";
+import { ActiveSessionView } from "@/views/session/active-session";
 
 import { isBrowserCompatible } from "@/hooks/use-compatibility";
 import { appState } from "@/state";

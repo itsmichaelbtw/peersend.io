@@ -1,7 +1,7 @@
 import { appState } from "@/state";
 import { CustomDataChannel } from "./data-channel";
 import { createLogger } from "@/utils/logger";
-import { getWebRTCClient, getWebSocketClient } from "../utils";
+import { getWebRTCClient, getWebSocketClient } from "../client-registry";
 
 const log = createLogger("CustomRTCPeerConnection");
 
@@ -20,7 +20,8 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		log.debug("onICECandiate");
 
 		if (event.candidate) {
-			getWebSocketClient().emit({
+			const ws = getWebSocketClient();
+			ws.emit({
 				type: "webrtc_ice_candidate",
 				data: {
 					candidate: event.candidate.toJSON()
@@ -55,7 +56,7 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 		log.debug(`Connection state changed to: ${webrtcState.peerConnection.connectionState}`);
 
 		switch (webrtcState.peerConnection.connectionState) {
-			case "connected":
+			case "connected": {
 				appState.dispatch("UPDATE", {
 					sessionState: {
 						connectionType: "webrtc"
@@ -66,14 +67,19 @@ export class CustomRTCPeerConnection extends RTCPeerConnection {
 					}
 				});
 
-				getWebSocketClient().stopLatencyMonitoring();
-				getWebRTCClient().startLatencyMonitoring();
+				const ws = getWebSocketClient();
+				const rtc = getWebRTCClient();
+				ws.stopLatencyMonitoring();
+				rtc.startLatencyMonitoring();
 
 				break;
+			}
 			case "disconnected":
 			case "failed":
-			case "closed":
-				getWebRTCClient().disconnect();
+			case "closed": {
+				const rtc = getWebRTCClient();
+				rtc.disconnect();
+			}
 		}
 	}
 

@@ -1,7 +1,7 @@
 import type { WebRTCIncomingMessage } from "./types";
 
 import { appState } from "@/state";
-import { getWebRTCClient } from "../utils";
+import { getWebRTCClient } from "../client-registry";
 import { abortRegistry } from "../core";
 import { createLogger } from "@/utils/logger";
 
@@ -29,7 +29,8 @@ export class CustomDataChannel {
 			return;
 		}
 
-		getWebRTCClient().startLatencyMonitoring();
+		const rtc = getWebRTCClient();
+		rtc.startLatencyMonitoring();
 	}
 
 	private onClose(): void {
@@ -58,24 +59,26 @@ export class CustomDataChannel {
 			appState.dispatch("SET_LAST_ERROR", null);
 		}
 
+		const rtc = getWebRTCClient();
+
 		switch (true) {
 			case event.data instanceof Blob: {
 				const buffer = await event.data.arrayBuffer();
 				log.debug("Received a file chunk as instanceof Blob");
-				getWebRTCClient().messageBus.emit("in_file_transit", buffer);
+				rtc.messageBus.emit("in_file_transit", buffer);
 				return;
 			}
 
 			case event.data instanceof ArrayBuffer: {
 				const chunk = new Uint8Array(event.data);
 				log.debug("Received a file chunk as instanceof ArrayBuffer");
-				getWebRTCClient().messageBus.emit("in_file_transit", chunk);
+				rtc.messageBus.emit("in_file_transit", chunk);
 				return;
 			}
 
 			case event.data instanceof Uint8Array: {
 				log.debug("Received a file chunk as instanceof Uint8Array");
-				getWebRTCClient().messageBus.emit("in_file_transit", event.data);
+				rtc.messageBus.emit("in_file_transit", event.data);
 				return;
 			}
 		}
@@ -87,7 +90,7 @@ export class CustomDataChannel {
 
 			const { type, data } = JSON.parse(event.data) as WebRTCIncomingMessage;
 			log.debug("Received a message of type:", type);
-			getWebRTCClient().messageBus.emit(type, data);
+			rtc.messageBus.emit(type, data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {
 				title: "Failed to parse incoming WebRTC message",

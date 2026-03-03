@@ -5,8 +5,8 @@ import { Alert } from "@mantine/core";
 import { useAppState } from "@/hooks/use-app-state";
 
 import { SessionStatusBar } from "@/components/session-status-bar";
-import { ConnectionStatus } from "@/components/containers/connection-status";
-import { Collaboration } from "@/components/containers/collaboration";
+import { ConnectionStatus } from "@/components/connection-status";
+import { Collaboration } from "@/components/collaboration";
 
 export function ActiveSessionView(): React.ReactNode {
 	const { sessionState } = useAppState();

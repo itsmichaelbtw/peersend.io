@@ -2,7 +2,7 @@ import type { WebSocketIncomingMessage } from "./types";
 
 import { appState } from "@/state";
 import { createLogger } from "@/utils/logger";
-import { getWebSocketClient } from "../utils";
+import { getWebSocketClient } from "../client-registry";
 import { abortRegistry } from "../core";
 
 const log = createLogger("CustomWebSocket");
@@ -25,7 +25,8 @@ export class CustomWebSocket extends WebSocket {
 	private onClose(event: CloseEvent): void {
 		log.debug("onClose event received");
 
-		getWebSocketClient().disconnect();
+		const ws = getWebSocketClient();
+		ws.disconnect();
 
 		appState.dispatch(
 			"SET_LAST_ERROR",
@@ -66,7 +67,8 @@ export class CustomWebSocket extends WebSocket {
 			const { type, data } = JSON.parse(event.data) as WebSocketIncomingMessage;
 
 			log.debug("Received a message of type:", type);
-			getWebSocketClient().messageBus.emit(type, data);
+			const ws = getWebSocketClient();
+			ws.messageBus.emit(type, data);
 		} catch (error) {
 			appState.dispatch("SET_LAST_ERROR", {
 				title: "Message Error happened here",

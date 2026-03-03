@@ -3,7 +3,7 @@ import type { WebSocketIncomingMessage, WebSocketOutgoingMessage } from "./types
 import { NetworkClient } from "../network-client";
 import { CustomWebSocket } from "./websocket";
 import { WebSocketLatencyChecker } from "./latency-checker";
-import { events } from "./events";
+import { messageHandlers } from "./message-handlers";
 
 import {
 	DEFAULT_SESSION_STATE,
@@ -26,7 +26,7 @@ export class WebSocketClient extends NetworkClient<
 		super(new WebSocketLatencyChecker());
 		this.url = url;
 
-		this.registerEvents(events);
+		this.registerEvents(messageHandlers);
 	}
 
 	public override async connect(sessionCode?: string): Promise<this> {

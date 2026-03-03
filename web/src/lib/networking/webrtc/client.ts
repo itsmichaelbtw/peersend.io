@@ -1,10 +1,10 @@
 import type { WebRTCIncomingMessage, WebRTCOutgoingMessage } from "./types";
 
 import { NetworkClient } from "../network-client";
-import { getWebSocketClient } from "../utils";
+import { getWebSocketClient } from "../client-registry";
 import { WebRTCLatencyChecker } from "./latency-checker";
 import { CustomRTCPeerConnection } from "./peer-connection";
-import { events } from "./events";
+import { messageHandlers } from "./message-handlers";
 
 import { appState, isWebRtcConnected } from "@/state";
 import { sleep } from "@/utils/sleep";
@@ -21,7 +21,7 @@ export class WebRTCClient extends NetworkClient<WebRTCIncomingMessage, WebRTCOut
 	constructor() {
 		super(new WebRTCLatencyChecker());
 
-		this.registerEvents(events);
+		this.registerEvents(messageHandlers);
 	}
 
 	public async connect(): Promise<this> {
@@ -66,7 +66,8 @@ export class WebRTCClient extends NetworkClient<WebRTCIncomingMessage, WebRTCOut
 
 			log.info("Created an offer and set local description, sending to peer via WebSocket");
 
-			getWebSocketClient().emit({
+			const ws = getWebSocketClient();
+			ws.emit({
 				type: "webrtc_offer",
 				data: {
 					description: pc.localDescription.toJSON()
@@ -100,7 +101,8 @@ export class WebRTCClient extends NetworkClient<WebRTCIncomingMessage, WebRTCOut
 		this.stopLatencyMonitoring();
 		this.reset();
 
-		getWebSocketClient().startLatencyMonitoring();
+		const ws = getWebSocketClient();
+		ws.startLatencyMonitoring();
 
 		log.info("Disconnected");
 

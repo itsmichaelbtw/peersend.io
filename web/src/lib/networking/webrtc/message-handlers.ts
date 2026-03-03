@@ -16,14 +16,14 @@ import {
 	parseTransitBuffer,
 	ProgressThrottler
 } from "@/lib/file-transfer";
-import { getWebRTCClient } from "../utils";
+import { getWebRTCClient } from "../client-registry";
 import { createLogger } from "@/utils/logger";
 
 const log = createLogger("WebRtcEvents");
 
 const throttler = new ProgressThrottler(1, 150);
 
-function event_StartFileTransit(data: WebRTCDataStartFileTransit): void {
+function handleStartFileTransit(data: WebRTCDataStartFileTransit): void {
 	if (getPeersendFile(data.id)) {
 		log.error(`File with id ${data.id} already exists, ignoring incoming file transfer.`);
 		return;
@@ -35,9 +35,8 @@ function event_StartFileTransit(data: WebRTCDataStartFileTransit): void {
 	fileTransferState.add([file]);
 }
 
-function event_InFileTransit(data: WebRTCDataInFileTransit): void {
+function handleInFileTransit(data: WebRTCDataInFileTransit): void {
 	// https://github.com/itsmichaelbtw/peersend.io/issues/37
-
 	const parsed = parseTransitBuffer(data);
 	const progress = fileStorage.addChunk(parsed.fileId, parsed.chunk);
 
@@ -49,7 +48,7 @@ function event_InFileTransit(data: WebRTCDataInFileTransit): void {
 	}
 }
 
-function event_EndFileTransit(data: WebRTCDataEndFileTransit): void {
+function handleEndFileTransit(data: WebRTCDataEndFileTransit): void {
 	log.info(`Finished receiving file with id ${data.id}`);
 	throttler.reset();
 
@@ -68,12 +67,14 @@ function event_EndFileTransit(data: WebRTCDataEndFileTransit): void {
 	}
 }
 
-function event_Pong(data: WebRTCDataPong): void {
-	getWebRTCClient().latencyChecker.pong(data);
+function handlePong(data: WebRTCDataPong): void {
+	const rtc = getWebRTCClient();
+	rtc.latencyChecker.pong(data);
 }
 
-function event_Ping(data: WebRTCDataPing): void {
-	getWebRTCClient().emit({
+function handlePing(data: WebRTCDataPing): void {
+	const rtc = getWebRTCClient();
+	rtc.emit({
 		type: "pong",
 		data: {
 			client_timestamp: data.client_timestamp,
@@ -82,18 +83,20 @@ function event_Ping(data: WebRTCDataPing): void {
 	});
 }
 
-function event_Error(data: WebRTCDataError): void {
+function handleError(data: WebRTCDataError): void {
+	log.error("WebRTC received an error");
 	appState.dispatch("SET_LAST_ERROR", {
 		title: data.type,
 		message: data.reason
 	});
 }
 
-export const events: NetworkEvents<WebRTCIncomingMessage> = {
-	start_file_transit: event_StartFileTransit,
-	in_file_transit: event_InFileTransit,
-	end_file_transit: event_EndFileTransit,
-	pong: event_Pong,
-	ping: event_Ping,
-	error: event_Error
+export const messageHandlers: NetworkEvents<WebRTCIncomingMessage> = {
+	start_file_transit: handleStartFileTransit,
+	in_file_transit: handleInFileTransit,
+	end_file_transit: handleEndFileTransit,
+	pong: handlePong,
+	ping: handlePing,
+	error: handleError
 };
+

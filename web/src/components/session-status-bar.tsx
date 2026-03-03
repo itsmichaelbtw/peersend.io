@@ -3,7 +3,7 @@ import React from "react";
 import { CopyIcon, WifiIcon, RouterIcon, CrownIcon, CopyCheckIcon } from "lucide-react";
 import { Badge, Box, Button, CopyButton, Tooltip } from "@mantine/core";
 import { useAppState } from "@/hooks/use-app-state";
-import { getWebSocketClient } from "@/lib/networking/utils";
+import { getWebSocketClient } from "@/lib/networking/client-registry";
 
 export function SessionStatusBar(): React.ReactNode {
 	const { sessionState } = useAppState();
@@ -60,7 +60,8 @@ export function SessionStatusBar(): React.ReactNode {
 					size="sm"
 					color="dark"
 					onClick={() => {
-						getWebSocketClient().emit({ type: "transfer_host", data: null });
+						const ws = getWebSocketClient();
+						ws.emit({ type: "transfer_host", data: null });
 					}}
 				>
 					Transfer Host

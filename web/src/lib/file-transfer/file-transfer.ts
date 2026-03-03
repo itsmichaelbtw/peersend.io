@@ -1,11 +1,11 @@
 import type { PeerSendFile } from "@/state/types";
-import type { FileTransferTransport } from "../types";
+import type { FileTransferTransport } from "./types";
 
 import { parse } from "uuid";
 
 import { FileChunker } from "./file-chunker";
-import { calculatePercentage, createBufferWithHeader } from "../utils";
-import { ProgressThrottler } from "../progress-throttler";
+import { calculatePercentage, createBufferWithHeader } from "./utils";
+import { ProgressThrottler } from "./progress-throttler";
 import { sleep } from "@/utils/sleep";
 import { createLogger } from "@/utils/logger";
 
@@ -67,7 +67,7 @@ export class FileTransfer {
 		}
 	}
 
-	public async initiate(): Promise<void> {
+	public async send(): Promise<void> {
 		// change this to concurrent in future
 		// https://github.com/itsmichaelbtw/peersend.io/issues/15
 

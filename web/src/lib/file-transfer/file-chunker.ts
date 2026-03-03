@@ -1,4 +1,4 @@
-import { DEFAULT_CHUNK_SIZE } from "../constants";
+import { DEFAULT_CHUNK_SIZE } from "./constants";
 import { createLogger } from "@/utils/logger";
 
 const log = createLogger("FileChunker");

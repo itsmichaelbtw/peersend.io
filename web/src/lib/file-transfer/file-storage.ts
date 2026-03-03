@@ -1,7 +1,7 @@
 import type { PeerSendFile } from "@/state";
-import type { FileStorageRecord } from "../types";
+import type { FileStorageRecord } from "./types";
 
-import { calculatePercentage } from "../utils";
+import { calculatePercentage } from "./utils";
 import { createLogger } from "@/utils/logger";
 
 const log = createLogger("FileStorage");

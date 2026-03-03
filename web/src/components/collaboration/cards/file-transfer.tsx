@@ -12,9 +12,9 @@ import {
 	FileTransfer,
 	WebRTCTransport,
 	createCustomFileFromUpload,
-	smartFileDownload
+	downloadFiles
 } from "@/lib/file-transfer";
-import { getWebRTCClient } from "@/lib/networking/utils";
+import { getWebRTCClient } from "@/lib/networking/client-registry";
 import { appState, fileTransferState } from "@/state";
 
 import { FileTable } from "../file-table";
@@ -39,13 +39,14 @@ export function FileTransferCard(): React.ReactNode {
 			}))
 		);
 
+		const rtc = getWebRTCClient();
 		const transport = new WebRTCTransport(
-			getWebRTCClient(),
+			rtc,
 			webrtcState.dataChannel!.getDataChannel()
 		);
 
 		const fileTransfer = new FileTransfer(filesToSend, transport);
-		await fileTransfer.initiate();
+		await fileTransfer.send();
 
 		// do something here maybe a notif
 		// if in transit you can't select the checkbox nor remove it until its done
@@ -53,7 +54,7 @@ export function FileTransferCard(): React.ReactNode {
 	}
 
 	function onDownload(files: PeerSendFile[]): void {
-		smartFileDownload(files);
+		downloadFiles(files);
 	}
 
 	function onDrop(files: FileWithPath[]): void {

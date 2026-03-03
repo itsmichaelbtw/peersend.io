@@ -34,7 +34,13 @@ export class MessageBus<T extends string> {
 
 		for (const handler of this.handlers.get(event)!) {
 			try {
-				void (handler as MessageBusHandler<D>)(data);
+				const result = (handler as MessageBusHandler<D>)(data);
+
+				if (result instanceof Promise) {
+					result.catch((error: unknown) => {
+						log.error(`Async error in handler for event: ${event}`, error);
+					});
+				}
 			} catch (error) {
 				log.error(`Error in handler for event: ${event}`, error);
 			}

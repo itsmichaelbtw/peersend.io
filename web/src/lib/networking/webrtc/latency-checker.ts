@@ -2,11 +2,12 @@ import type { PongData } from "../core/latency-checker";
 
 import { appState } from "@/state";
 import { LatencyChecker } from "../core/latency-checker";
-import { getWebRTCClient } from "../utils";
+import { getWebRTCClient } from "../client-registry";
 
 export class WebRTCLatencyChecker extends LatencyChecker {
 	public ping(): void {
-		getWebRTCClient().emit({
+		const rtc = getWebRTCClient();
+		rtc.emit({
 			type: "ping",
 			data: {
 				client_timestamp: Date.now()

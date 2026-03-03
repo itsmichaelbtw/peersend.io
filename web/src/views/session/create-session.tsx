@@ -19,7 +19,7 @@ import { useNavigate } from "react-router";
 import { useAppState } from "@/hooks/use-app-state";
 
 import { appState } from "@/state";
-import { getWebSocketClient } from "@/lib/networking/utils";
+import { getWebSocketClient } from "@/lib/networking/client-registry";
 
 const VARIANTS: Variants = {
 	fadeIn: { opacity: 1, y: 0 },
@@ -201,7 +201,8 @@ export function CreateSessionView(): React.ReactNode {
 								size="sm"
 								fullWidth
 								onClick={() => {
-									void getWebSocketClient().connect();
+									const ws = getWebSocketClient();
+									void ws.connect();
 								}}
 							>
 								Create session

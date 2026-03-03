@@ -2,7 +2,7 @@ import type { AppState } from "@/state";
 
 import { useSyncExternalStore } from "react";
 import { appState } from "@/state";
-import { getWebRTCClient, getWebSocketClient } from "@/lib/networking/utils";
+import { getWebRTCClient, getWebSocketClient } from "@/lib/networking/client-registry";
 
 interface UseAppState extends AppState {
 	resetState(): void;
@@ -16,8 +16,10 @@ export function useAppState(): UseAppState {
 	);
 
 	function resetState(): void {
-		getWebSocketClient().disconnect();
-		getWebRTCClient().disconnect();
+		const ws = getWebSocketClient();
+		const rtc = getWebRTCClient();
+		ws.disconnect();
+		rtc.disconnect();
 	}
 
 	return {

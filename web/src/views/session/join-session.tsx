@@ -11,7 +11,7 @@ import { useAppState } from "@/hooks/use-app-state";
 
 import { appState } from "@/state";
 import { envVar } from "@/config/constants";
-import { getWebSocketClient } from "@/lib/networking/utils";
+import { getWebSocketClient } from "@/lib/networking/client-registry";
 
 const INFO_LIST_POINTS: string[] = [
 	"You'll initially connect to our servers",
@@ -55,7 +55,8 @@ export function JoinSessionView(): React.ReactNode {
 
 	async function onEnter(): Promise<void> {
 		if (!(await field.validate())) {
-			await getWebSocketClient().connect(field.getValue());
+			const ws = getWebSocketClient();
+			await ws.connect(field.getValue());
 		}
 	}
 

@@ -105,7 +105,7 @@ export function calculatePercentage(a: number, b: number): number {
 	return Math.round((a / b) * 100);
 }
 
-export function triggerBrowserDownload(file: File): void {
+export function saveFileToDisk(file: File): void {
 	const container = getContainerElementForDownload(DOWNLOAD_CONTAINER_ID);
 
 	const url = URL.createObjectURL(file);

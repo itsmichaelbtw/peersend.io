@@ -2,11 +2,12 @@ import type { PongData } from "../core/latency-checker";
 
 import { appState } from "@/state";
 import { LatencyChecker } from "../core/latency-checker";
-import { getWebSocketClient } from "../utils";
+import { getWebSocketClient } from "../client-registry";
 
 export class WebSocketLatencyChecker extends LatencyChecker {
 	public ping(): void {
-		getWebSocketClient().emit({
+		const ws = getWebSocketClient();
+		ws.emit({
 			type: "ping",
 			data: {
 				client_timestamp: Date.now()

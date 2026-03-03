@@ -13,7 +13,7 @@ import { router } from "./router";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
-import { ConnectionUpgrade } from "./components/containers/collaboration";
+import { ConnectionUpgrade } from "./components/collaboration";
 
 const root = document.getElementById("root")!;
 

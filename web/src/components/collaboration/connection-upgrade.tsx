@@ -5,7 +5,7 @@ import React from "react";
 import { ArrowUpFromLineIcon, LockIcon, RouterIcon, ShieldIcon } from "lucide-react";
 import { useAppState } from "@/hooks/use-app-state";
 import { Button, Group, Stack, Box, Loader } from "@mantine/core";
-import { getWebRTCClient } from "@/lib/networking/utils";
+import { getWebRTCClient } from "@/lib/networking/client-registry";
 
 export function ConnectionUpgrade({ id, context }: ContextModalProps): React.ReactNode {
 	const { sessionState, webrtcState } = useAppState();
@@ -96,7 +96,8 @@ export function ConnectionUpgrade({ id, context }: ContextModalProps): React.Rea
 					) : (
 						<Button
 							onClick={() => {
-								void getWebRTCClient().connect();
+								const rtc = getWebRTCClient();
+								void rtc.connect();
 							}}
 						>
 							Upgrade connection
