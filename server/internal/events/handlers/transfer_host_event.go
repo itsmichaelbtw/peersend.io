@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// compile-time assertion: TransferHostEventHandler must satisfy EventHandler[any].
 var _ events.EventHandler[any] = (*TransferHostEventHandler)(nil)
 
 type TransferHostEventHandler struct {
@@ -19,10 +20,15 @@ type TransferHostEventHandler struct {
 
 func NewTransferHostEventHandler() *TransferHostEventHandler {
 	return &TransferHostEventHandler{
-		logger: config.WithComponent("transfer_host_event_handler"),
+		logger: config.WithLogComponent("transfer_host_event_handler"),
 	}
 }
 
+// Handle validates that client is in a session, resolves the other peer, and
+// delegates to SessionService.TransferHost. Returns an error if:
+//   - client.SessionID is empty (client has not joined a session),
+//   - no other client exists in the session, or
+//   - the host transfer operation fails (e.g. the caller is not the host).
 func (h *TransferHostEventHandler) Handle(eventContext *events.EventContext, client *domain.Client, incomingData []byte) error {
 	if client.SessionID == "" {
 		return errors.New("cannot transfer host: client is not in a session")

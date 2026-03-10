@@ -1,3 +1,6 @@
+// Package main is the entry point for the peersend signaling server.
+// It loads configuration, wires up the application, and runs the HTTP server
+// with support for graceful shutdown on SIGINT or SIGTERM.
 package main
 
 import (

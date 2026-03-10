@@ -1,3 +1,7 @@
+// Package service contains the business logic layer of the peersend signaling
+// server. It sits between the HTTP/WebSocket transport layer and the
+// repository, coordinating session lifecycle, client membership, and domain
+// event publication.
 package service
 
 import (
@@ -10,6 +14,10 @@ import (
 	"peersend/internal/domain"
 )
 
+// SessionService orchestrates all session-related operations including
+// creation, client join/leave, host management, and session teardown. It
+// publishes domain events via an EventPublisher after state-changing operations
+// so that connected clients receive real-time updates.
 type SessionService struct {
 	repo      domain.SessionRepository
 	publisher domain.EventPublisher
@@ -20,10 +28,12 @@ func NewSessionService(repo domain.SessionRepository, publisher domain.EventPubl
 	return &SessionService{
 		repo:      repo,
 		publisher: publisher,
-		logger:    config.WithComponent("session_service"),
+		logger:    config.WithLogComponent("session_service"),
 	}
 }
 
+// CreateSession allocates a new session in the repository and returns it.
+// Returns an error if the repository cannot generate a unique session ID.
 func (s *SessionService) CreateSession() (*domain.Session, error) {
 	session, err := s.repo.CreateSession()
 	if err != nil {
@@ -33,6 +43,8 @@ func (s *SessionService) CreateSession() (*domain.Session, error) {
 	return session, nil
 }
 
+// GetSession retrieves the session identified by id from the repository.
+// Returns an error if the session does not exist.
 func (s *SessionService) GetSession(id string) (*domain.Session, error) {
 	session, err := s.repo.GetSession(id)
 	if err != nil {
@@ -41,6 +53,15 @@ func (s *SessionService) GetSession(id string) (*domain.Session, error) {
 	return session, nil
 }
 
+// AddClient registers client in the session identified by sessionID.
+// It performs the following steps in order:
+//  1. Adds the client to the repository (returns an error if the session is full).
+//  2. If the session has no host yet, designates client as the host.
+//  3. Stores sessionID on the client record via SetClientSessionID.
+//  4. Publishes a sync_clients event so all peers receive the updated roster.
+//
+// A failed sync_clients publication is logged as a warning but does not cause
+// AddClient to return an error.
 func (s *SessionService) AddClient(ctx context.Context, sessionID string, client *domain.Client) error {
 	if err := s.repo.AddClient(sessionID, client); err != nil {
 		return fmt.Errorf("failed to add client %s to session %s: %w", client.ID, sessionID, err)
@@ -75,7 +96,17 @@ func (s *SessionService) AddClient(ctx context.Context, sessionID string, client
 	return nil
 }
 
+// RemoveClient removes the client identified by clientID from the session.
+// Before removal, if the departing client is the host, host privileges are
+// automatically transferred to the remaining peer (if one exists). After
+// removal, if the session is empty it is destroyed via CleanupSession;
+// otherwise a sync_clients event is published to notify remaining peers.
+//
+// Failed host-transfer attempts are logged as warnings. Failed sync_clients
+// publications are also logged as warnings.
 func (s *SessionService) RemoveClient(ctx context.Context, sessionID, clientID string) error {
+	// clean this up as a double IsHost is checked
+	// maybe add a sentineal error
 	if isHost, _ := s.repo.IsHost(sessionID, clientID); isHost {
 		if otherClient, err := s.repo.GetOtherClient(sessionID, clientID); err == nil && otherClient != nil {
 			if err := s.TransferHost(ctx, sessionID, clientID, otherClient.ID); err != nil {
@@ -106,6 +137,10 @@ func (s *SessionService) RemoveClient(ctx context.Context, sessionID, clientID s
 	return nil
 }
 
+// CleanupSession deletes the session identified by sessionID from the
+// repository. It is called automatically by RemoveClient when the last client
+// leaves. Returns nil in all cases; the error return is reserved for future
+// use.
 func (s *SessionService) CleanupSession(ctx context.Context, sessionID string) error {
 	// check if clients exist and if so just close the connection
 	s.repo.DeleteSession(sessionID)
@@ -113,6 +148,14 @@ func (s *SessionService) CleanupSession(ctx context.Context, sessionID string) e
 	return nil
 }
 
+// TransferHost transfers host privileges in sessionID from fromClientID to
+// toClientID. It verifies that fromClientID is currently the host and that
+// toClientID exists in the session before updating the stored host and
+// publishing a host_transferred event.
+//
+// Returns ErrOnlyHostCanTransfer if fromClientID is not the host, or
+// ErrNoTargetForHostTransfer if toClientID is not found in the session.
+// A failed host_transferred publication is logged as a warning.
 func (s *SessionService) TransferHost(ctx context.Context, sessionID, fromClientID, toClientID string) error {
 	isHost, err := s.repo.IsHost(sessionID, fromClientID)
 	if err != nil {
@@ -145,6 +188,11 @@ func (s *SessionService) TransferHost(ctx context.Context, sessionID, fromClient
 	return nil
 }
 
+// GetSessionData assembles a domain.SessionData snapshot for the client
+// identified by clientID in session sessionID. The snapshot includes the
+// session code, the client's own ID, server capability flags, the current
+// host, and the full client roster. It is sent to the client immediately after
+// it joins.
 func (s *SessionService) GetSessionData(sessionID, clientID string) (*domain.SessionData, error) {
 	session, err := s.repo.GetSession(sessionID)
 	if err != nil {
@@ -179,6 +227,9 @@ func (s *SessionService) GetSessionData(sessionID, clientID string) (*domain.Ses
 	}, nil
 }
 
+// GetOtherClient returns the peer of clientID in the session identified by
+// sessionID. It delegates directly to the repository and is provided as a
+// convenience method for the server and event-handler layers.
 func (s *SessionService) GetOtherClient(sessionID, clientID string) (*domain.Client, error) {
 	return s.repo.GetOtherClient(sessionID, clientID)
 }

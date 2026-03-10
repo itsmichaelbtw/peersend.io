@@ -1,3 +1,8 @@
+// Package server handles WebSocket connection upgrades and per-connection
+// lifecycle management for the peersend signaling server. It owns the
+// gorilla/websocket Upgrader, creates or retrieves sessions, registers clients,
+// and starts the per-connection message loop. Panics in connection goroutines
+// are caught and logged so a single misbehaving client cannot crash the server.
 package server
 
 import (
@@ -16,6 +21,10 @@ import (
 	"peersend/internal/service"
 )
 
+// Server upgrades HTTP requests to WebSocket connections and manages the full
+// lifecycle of each connected peer. It owns a Dispatcher pre-loaded with all
+// recognised inbound message handlers, and an Upgrader configured to accept
+// connections from any origin.
 type Server struct {
 	SessionService *service.SessionService
 	ClientService  *service.ClientService
@@ -42,14 +51,23 @@ func NewServer(sessionService *service.SessionService, clientService *service.Cl
 		Broadcaster:    broadcaster,
 		Dispatcher:     dispatcher,
 		Upgrader: &websocket.Upgrader{
+			// add origin here for production
 			CheckOrigin: func(r *http.Request) bool {
 				return true
 			},
 		},
-		logger: config.WithComponent("server"),
+		logger: config.WithLogComponent("server"),
 	}
 }
 
+// handleConnection is the core per-connection handler. It reads the "mode" and
+// "session_code" query parameters to determine whether the peer is creating a
+// new session ("host") or joining an existing one ("join"). After session
+// resolution, it registers the client, sends the initial session_information
+// message, then delegates to Connection.Listen for the message loop.
+//
+// Any error before the message loop starts causes a WebSocket close frame to
+// be sent and the connection to be shut down.
 func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 	ctx, cancelWs := context.WithCancel(context.Background())
 	defer cancelWs()
@@ -126,6 +144,10 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 	connection.Listen(ctx)
 }
 
+// ServeWebSocket validates that the incoming request is a WebSocket upgrade,
+// performs the upgrade, and dispatches handleConnection in a new goroutine.
+// A deferred panic recovery in the goroutine ensures that handler panics are
+// logged and the connection is closed cleanly without crashing the server.
 func (s *Server) ServeWebSocket(w http.ResponseWriter, r *http.Request) {
 	if !websocket.IsWebSocketUpgrade(r) {
 		w.WriteHeader(http.StatusUpgradeRequired)

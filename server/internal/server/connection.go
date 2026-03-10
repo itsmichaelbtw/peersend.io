@@ -13,6 +13,10 @@ import (
 	"peersend/internal/service"
 )
 
+// Connection represents the active WebSocket session for a single connected
+// client. It owns the read loop, message dispatch, and peer relay logic for
+// that client's lifetime. When the loop exits the connection is torn down and
+// the client is removed from the session.
 type Connection struct {
 	client         *domain.Client
 	session        *domain.Session
@@ -35,13 +39,17 @@ func NewConnection(
 		sessionService: sessionService,
 		dispatcher:     dispatcher,
 		broadcaster:    broadcaster,
-		logger: config.WithComponent("connection").With().
+		logger: config.WithLogComponent("connection").With().
 			Str("client_id", client.ID).
 			Str("session_id", session.ID).
 			Logger(),
 	}
 }
 
+// destroyConnection closes the client's WebSocket connection and removes the
+// client from the session, triggering host transfer and session cleanup as
+// needed. Errors during removal are logged but do not propagate, as the
+// connection is already being torn down.
 func (c *Connection) destroyConnection(ctx context.Context) {
 	if c.client.Conn != nil {
 		_ = c.client.Conn.Close()
@@ -52,6 +60,11 @@ func (c *Connection) destroyConnection(ctx context.Context) {
 	}
 }
 
+// passMessage forwards rawMessage as a raw WebSocket text frame (opcode 1)
+// directly to the other client in the session, bypassing JSON serialisation.
+// This enables transparent relay of peer-to-peer signaling payloads (e.g.
+// SDP offers/answers, ICE candidates) whose structure is unknown to the server.
+// The call is a no-op if no other client is present.
 func (c *Connection) passMessage(rawMessage []byte) {
 	otherClient, err := c.sessionService.GetOtherClient(c.client.SessionID, c.client.ID)
 	if err != nil || otherClient == nil {
@@ -66,6 +79,14 @@ func (c *Connection) passMessage(rawMessage []byte) {
 	}
 }
 
+// Listen runs the blocking read loop for the connection. It reads text frames
+// from the client's WebSocket and dispatches them through the Dispatcher. If
+// no handler is registered for a message type (ErrNoHandlerRegistered), the
+// message is transparently relayed to the other peer via passMessage. The loop
+// exits when ctx is cancelled, the WebSocket read returns an error (including
+// normal closure), or a non-text frame is received.
+//
+// Listen always calls destroyConnection via defer when it returns.
 func (c *Connection) Listen(ctx context.Context) {
 	defer c.destroyConnection(ctx)
 
@@ -82,6 +103,8 @@ func (c *Connection) Listen(ctx context.Context) {
 				return
 			}
 
+			// Only text frames (opcode 1) are processed; binary and control
+			// frames are ignored.
 			if messageType != 1 {
 				c.logger.Warn().Int("message_type", messageType).Msg("received non-text message, ignoring")
 				continue

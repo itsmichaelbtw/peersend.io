@@ -1,3 +1,7 @@
+// Package broadcast provides the Broadcaster, which delivers JSON-encoded
+// WebSocket messages to individual clients or to all clients within a session.
+// All write operations are serialised per-client via the client's mutex so
+// that the gorilla/websocket library's single-writer constraint is respected.
 package broadcast
 
 import (
@@ -11,6 +15,9 @@ import (
 	"peersend/internal/domain"
 )
 
+// Broadcaster delivers outbound messages to connected WebSocket clients.
+// It uses the SessionRepository to look up session membership and dispatches
+// per-client writes in separate goroutines when broadcasting to a whole session.
 type Broadcaster struct {
 	sessionRepo domain.SessionRepository
 	logger      zerolog.Logger
@@ -19,10 +26,14 @@ type Broadcaster struct {
 func NewBroadcaster(sessionRepo domain.SessionRepository) *Broadcaster {
 	return &Broadcaster{
 		sessionRepo: sessionRepo,
-		logger:      config.WithComponent("broadcaster"),
+		logger:      config.WithLogComponent("broadcaster"),
 	}
 }
 
+// broadcastToSession sends message to every client in session concurrently.
+// Each client write is performed in its own goroutine; failures are logged as
+// warnings but do not abort delivery to other clients. Returns an error only
+// if session is nil or the client list cannot be retrieved.
 func (b *Broadcaster) broadcastToSession(ctx context.Context, session *domain.Session, message any) error {
 	if session == nil {
 		return errors.New("cannot broadcast to session as the session is nil")
@@ -44,6 +55,9 @@ func (b *Broadcaster) broadcastToSession(ctx context.Context, session *domain.Se
 	return nil
 }
 
+// BroadcastSyncClients sends a domain.MessageOutSyncClients message carrying
+// clientIDs to every client in the session identified by sessionID.
+// Returns an error if the session cannot be found.
 func (b *Broadcaster) BroadcastSyncClients(ctx context.Context, sessionID string, clientIDs []string) error {
 	session, err := b.sessionRepo.GetSession(sessionID)
 	if err != nil {
@@ -57,6 +71,9 @@ func (b *Broadcaster) BroadcastSyncClients(ctx context.Context, sessionID string
 	return b.broadcastToSession(ctx, session, message)
 }
 
+// BroadcastHostTransferred sends a domain.MessageOutHostTransferred message
+// carrying newHostID to every client in the session identified by sessionID.
+// Returns an error if the session cannot be found.
 func (b *Broadcaster) BroadcastHostTransferred(ctx context.Context, sessionID string, newHostID string) error {
 	session, err := b.sessionRepo.GetSession(sessionID)
 	if err != nil {
@@ -70,6 +87,11 @@ func (b *Broadcaster) BroadcastHostTransferred(ctx context.Context, sessionID st
 	return b.broadcastToSession(ctx, session, message)
 }
 
+// MessageClient sends msg as a JSON-encoded WebSocket text frame to client.
+// The write is serialised via client.Mu so concurrent callers do not race.
+// If ctx carries a deadline, it is applied as the WebSocket write deadline.
+// Returns an error if client or its connection is nil, the deadline cannot
+// be set, or the JSON write fails.
 func (b *Broadcaster) MessageClient(ctx context.Context, client *domain.Client, msg any) error {
 	if client == nil {
 		return errors.New("cannot message client has the client is nil")

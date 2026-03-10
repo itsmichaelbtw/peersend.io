@@ -11,10 +11,18 @@ import (
 )
 
 type HealthResponse struct {
-	Version     string    `json:"version"`
-	Environment string    `json:"environment"`
-	Status      string    `json:"status"`
-	Timestamp   time.Time `json:"timestamp"`
+	// Version is the running server version (see config.Version).
+	Version string `json:"version"`
+
+	// Environment is the runtime environment name (e.g. "production").
+	Environment string `json:"environment"`
+
+	// Status is a human-readable availability string; currently always
+	// "healthy" when the endpoint responds successfully.
+	Status string `json:"status"`
+
+	// Timestamp is the UTC time at which the response was generated.
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type Handler struct {
@@ -25,7 +33,7 @@ type Handler struct {
 func NewHandler(env string) *Handler {
 	return &Handler{
 		environment: env,
-		logger:      config.WithComponent("http_handler"),
+		logger:      config.WithLogComponent("http_handler"),
 	}
 }
 
