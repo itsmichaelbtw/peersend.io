@@ -91,7 +91,9 @@ async function handleWebRTCOffer(data: WebSocketDataWebRTCOffer): Promise<void> 
 			data: { description: pc.localDescription.toJSON() }
 		});
 	} catch (error) {
-		rejectWebRTCConnection(error instanceof Error ? error.message : "Failed to handle remote offer");
+		rejectWebRTCConnection(
+			error instanceof Error ? error.message : "Failed to handle remote offer"
+		);
 	}
 }
 
@@ -168,4 +170,3 @@ export const messageHandlers: NetworkEvents<WebSocketIncomingMessage> = {
 	webrtc_ice_candidate: handleWebRTCIceCandidate,
 	error: handleError
 };
-

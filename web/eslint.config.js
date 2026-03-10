@@ -38,7 +38,7 @@ export default [
 			"react-hooks": reactHooks
 		},
 		settings: {
-			react: { version: "detect" }
+			react: { version: "19.0" }
 		},
 		rules: {
 			...tsPlugin.configs["recommended"].rules,

@@ -40,10 +40,7 @@ export function FileTransferCard(): React.ReactNode {
 		);
 
 		const rtc = getWebRTCClient();
-		const transport = new WebRTCTransport(
-			rtc,
-			webrtcState.dataChannel!.getDataChannel()
-		);
+		const transport = new WebRTCTransport(rtc, webrtcState.dataChannel!.getDataChannel());
 
 		const fileTransfer = new FileTransfer(filesToSend, transport);
 		await fileTransfer.send();

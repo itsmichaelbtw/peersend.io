@@ -19,8 +19,7 @@ export interface WebSocketDataWebRTCIceCandidate {
 }
 
 export interface WebSocketDataSessionInformation
-	extends WebSocketDataHostTransfer,
-		WebSocketDataSyncClients {
+	extends WebSocketDataHostTransfer, WebSocketDataSyncClients {
 	session_code: string;
 	client_id: string;
 	maximum_clients: number;

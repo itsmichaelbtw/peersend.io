@@ -99,4 +99,3 @@ export const messageHandlers: NetworkEvents<WebRTCIncomingMessage> = {
 	ping: handlePing,
 	error: handleError
 };
-
