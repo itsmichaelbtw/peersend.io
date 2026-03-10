@@ -81,7 +81,7 @@ export function truncateFileName(filename: string): string {
 	const name = filename.slice(0, lastDotIndex);
 	const extension = filename.slice(lastDotIndex);
 
-	const availableLength = maxLength - extension.length - 1;
+	const availableLength = maxLength - extension.length - 3; // "..." is 3 chars
 	const front = Math.ceil(availableLength / 2);
 	const back = Math.floor(availableLength / 2);
 
@@ -102,6 +102,12 @@ export function formatFileSize(bytes: number, decimals = 2): string {
 }
 
 export function calculatePercentage(a: number, b: number): number {
+	if (b === 0) {
+		// Guard against division by zero (e.g. empty files).
+		// A 0-byte file that has been "received" (a === 0) is 100% complete;
+		// any other combination returns 0 to avoid NaN propagation.
+		return a === 0 ? 100 : 0;
+	}
 	return Math.round((a / b) * 100);
 }
 

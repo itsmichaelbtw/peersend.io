@@ -12,6 +12,10 @@ export class CustomDataChannel {
 
 	constructor(channel: RTCDataChannel) {
 		this.channel = channel;
+		// Firefox defaults binaryType to "blob"; force "arraybuffer" on all
+		// browsers so binary file-chunk frames are always delivered as
+		// ArrayBuffer (never Blob) and handling is consistent.
+		this.channel.binaryType = "arraybuffer";
 		this.channel.addEventListener("open", this.onOpen.bind(this));
 		this.channel.addEventListener("close", this.onClose.bind(this));
 		this.channel.addEventListener("error", this.onError.bind(this));
@@ -63,9 +67,13 @@ export class CustomDataChannel {
 
 		switch (true) {
 			case event.data instanceof Blob: {
+				// Firefox may still deliver a Blob if binaryType was not yet set
+				// at the moment the message arrived. Convert to Uint8Array so the
+				// downstream parseTransitBuffer receives the expected typed array.
 				const buffer = await event.data.arrayBuffer();
+				const chunk = new Uint8Array(buffer);
 				log.debug("Received a file chunk as instanceof Blob");
-				rtc.messageBus.emit("in_file_transit", buffer);
+				rtc.messageBus.emit("in_file_transit", chunk);
 				return;
 			}
 
@@ -114,6 +122,9 @@ export class CustomDataChannel {
 			// @ts-expect-error Controlled data type
 			this.channel.send(data);
 		} catch (error) {
+			// Re-throw so that callers (e.g. WebRTCTransport.chunk) can detect a
+			// mid-transfer disconnect and mark the file as errored instead of
+			// silently completing it with missing data.
 			appState.dispatch("SET_LAST_ERROR", {
 				title: "Message Transfer Failed",
 				message:
@@ -121,6 +132,7 @@ export class CustomDataChannel {
 						? error.message
 						: "Something happened when sending a message to the other client"
 			});
+			throw error;
 		}
 	}
 
