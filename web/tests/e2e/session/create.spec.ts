@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { openCreateSession, createSession, waitForActiveSession } from "../../tests/helpers/session";
+import { openCreateSession, createSession, waitForActiveSession } from "../../helpers/session";
 
 test.describe("Session creation", () => {
   test("creates a session and displays a valid session code", async ({ page }) => {

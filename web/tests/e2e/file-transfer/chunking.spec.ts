@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BASE_URL } from "../../tests/helpers/session";
+import { BASE_URL } from "../../helpers/session";
 
 const DEFAULT_CHUNK_SIZE = 16 * 1024;
 const FILE_ID_BYTE_LENGTH = 16;

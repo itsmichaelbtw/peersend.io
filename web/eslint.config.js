@@ -25,7 +25,7 @@ export default [
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
-				project: ["./tsconfig.app.json", "./tsconfig.node.json"],
+				project: ["./tsconfig.app.json", "./tsconfig.node.json", "./tests/tsconfig.json", "./tests/e2e/tsconfig.json"],
 				tsconfigRootDir: fileURLToPath(new URL(".", import.meta.url)),
 				ecmaVersion: 2022,
 				sourceType: "module",

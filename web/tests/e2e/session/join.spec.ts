@@ -5,7 +5,7 @@ import {
   createSession,
   joinSession,
   setupTwoPeers,
-} from "../../tests/helpers/session";
+} from "../../helpers/session";
 
 test.describe("Session joining", () => {
   test("join page renders input and Enter button", async ({ page }) => {

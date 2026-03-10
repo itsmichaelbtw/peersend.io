@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BASE_URL, setupTwoPeers } from "../../tests/helpers/session";
+import { BASE_URL, setupTwoPeers } from "../../helpers/session";
 
 test.describe("Active session view", () => {
   test("both peers see collaboration panel after connecting", async ({ browser }) => {

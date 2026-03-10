@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setupTwoPeers } from "../../tests/helpers/session";
+import { setupTwoPeers } from "../../helpers/session";
 
 test.describe("Connection resilience", () => {
   test("peer disconnect causes other peer to update client count", async ({ browser }) => {

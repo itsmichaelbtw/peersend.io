@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { setupTwoPeers } from "../../tests/helpers/session";
+import { setupTwoPeers } from "../../helpers/session";
 
 test.describe("File transfer: session setup", () => {
   test("host sees Establish Direct Connection card", async ({ browser }) => {

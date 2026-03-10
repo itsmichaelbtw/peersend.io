@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { SERVER_URL } from "../../tests/helpers/session";
+import { SERVER_URL } from "../../helpers/session";
 
 test.describe("Server health", () => {
   test("GET /health returns 200 with healthy status", async ({ request }) => {

@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BASE_URL } from "../../tests/helpers/session";
+import { BASE_URL } from "../../helpers/session";
 
 test.describe("File transfer: filenames", () => {
   test("download attribute supports special characters", async ({ page }) => {

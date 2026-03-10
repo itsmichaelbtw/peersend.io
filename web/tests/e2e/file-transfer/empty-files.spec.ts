@@ -4,7 +4,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { BASE_URL } from "../../tests/helpers/session";
+import { BASE_URL } from "../../helpers/session";
 
 test.describe("File transfer: empty files", () => {
   test("calculatePercentage(0, 0) returns 100, not NaN (regression)", async ({ page }) => {

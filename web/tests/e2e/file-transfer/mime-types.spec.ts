@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { BASE_URL } from "../../tests/helpers/session";
+import { BASE_URL } from "../../helpers/session";
 
 test.describe("File transfer: MIME types", () => {
   test("Blob constructor accepts various MIME types", async ({ page }) => {
