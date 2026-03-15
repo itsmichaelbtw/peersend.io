@@ -7,11 +7,17 @@ RUN go mod download
 
 FROM base AS development
 
+ENV CGO_ENABLED=1
+
+RUN apk add --no-cache gcc musl-dev
+
 WORKDIR /usr/src/app
 
 COPY . .
 
-CMD ["go", "run", "./cmd/peersend/main.go"]
+ENV PATH="/usr/bin:${PATH}"
+
+CMD ["go", "run", "-race", "./cmd/peersend/main.go"]
 
 FROM base AS build
 
