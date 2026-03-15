@@ -1,6 +1,6 @@
 import type { EncryptionModes, NetworkConnectionTypes } from "@/state/types";
 import type { NetworkMessagePayload } from "../types";
-import type { PongData } from "../core/latency-checker";
+import type { PongData } from "../core/latency-tracker";
 
 export interface WebSocketDataWebRTCOffer {
 	description: RTCSessionDescriptionInit;

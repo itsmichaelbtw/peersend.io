@@ -1,4 +1,4 @@
 export * from "./abort-registry";
-export * from "./latency-checker";
-export * from "./latency-monitor";
+export * from "./latency-tracker";
 export * from "./message-bus";
+export * from "./network-client";

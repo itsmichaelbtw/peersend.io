@@ -50,7 +50,7 @@ export function isWebSocketConnected(): boolean {
 export function isWebRtcConnected(): boolean {
 	const { webrtcState } = appState.get();
 
-	if (webrtcState.dataChannel === null || webrtcState.peerConnection === null) {
+	if (webrtcState.dataChannel === null) {
 		return false;
 	}
 

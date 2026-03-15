@@ -21,9 +21,7 @@ export function Diagnostics(): React.ReactNode {
 				{sessionState.connectionType === "webrtc" && webrtcState.dataChannel !== null && (
 					<div className="flex justify-between">
 						<span className="text-xs text-gray-500">Data Channel</span>
-						<span className="text-xs font-medium font-mono">
-							{webrtcState.dataChannel.getDataChannel().label}
-						</span>
+						<span className="text-xs font-medium font-mono">{webrtcState.dataChannel.label}</span>
 					</div>
 				)}
 

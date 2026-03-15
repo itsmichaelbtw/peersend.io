@@ -15,7 +15,7 @@ export function getWebRTCClient(): WebRTCClient {
 
 export function getWebSocketClient(): WebSocketClient {
 	if (webSocketClient === null) {
-		webSocketClient = new WebSocketClient(envVar.WEBSOCKET_ENDPOINT);
+		webSocketClient = new WebSocketClient(envVar.WEBSOCKET_ENDPOINT, getWebRTCClient());
 	}
 
 	return webSocketClient;

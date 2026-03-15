@@ -19,7 +19,6 @@ export const DEFAULT_WEBSOCKET_STATE: WebSocketConnectionState = {
 
 export const DEFAULT_WEBRTC_STATE: WebRTCConnectionState = {
 	dataChannel: null,
-	peerConnection: null,
 	isConnected: false,
 	isConnecting: false
 };

@@ -1,5 +1,5 @@
 import type { FileWithPath } from "@mantine/dropzone";
-import type { CustomDataChannel, CustomRTCPeerConnection, CustomWebSocket } from "@/lib/networking";
+import type { DataChannelAdapter, WebSocketAdapter } from "@/lib/networking";
 import type { WithNullable } from "@/types/misc";
 
 export type FileTransferType = "incoming" | "outgoing";
@@ -19,12 +19,11 @@ export interface ConnectionErrorData {
 }
 
 export interface WebRTCConnectionState extends ConnectionState {
-	dataChannel: WithNullable<CustomDataChannel>;
-	peerConnection: WithNullable<CustomRTCPeerConnection>;
+	dataChannel: WithNullable<DataChannelAdapter>;
 }
 
 export interface WebSocketConnectionState extends ConnectionState {
-	ws: WithNullable<CustomWebSocket>;
+	ws: WithNullable<WebSocketAdapter>;
 }
 
 export interface AppState {

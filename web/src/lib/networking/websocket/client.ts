@@ -1,9 +1,12 @@
 import type { WebSocketIncomingMessage, WebSocketOutgoingMessage } from "./types";
+import type { WebSocketHandlerContext } from "./handlers";
+import type { WebRTCClient } from "../webrtc/client";
 
-import { NetworkClient } from "../network-client";
-import { CustomWebSocket } from "./websocket";
-import { WebSocketLatencyChecker } from "./latency-checker";
-import { messageHandlers } from "./message-handlers";
+import { NetworkClient } from "../core/network-client";
+import { LatencyTracker } from "../core/latency-tracker";
+import { WebSocketAdapter } from "../adapters/websocket-adapter";
+import { messageHandlers } from "./handlers";
+import { abortRegistry } from "../core/abort-registry";
 
 import {
 	DEFAULT_SESSION_STATE,
@@ -18,14 +21,20 @@ const log = createLogger("WebSocketClient");
 
 export class WebSocketClient extends NetworkClient<
 	WebSocketIncomingMessage,
-	WebSocketOutgoingMessage
+	WebSocketOutgoingMessage,
+	WebSocketHandlerContext
 > {
-	private url: string;
+	private readonly url: string;
 
-	constructor(url: string) {
-		super(new WebSocketLatencyChecker());
+	constructor(url: string, rtc: WebRTCClient) {
+		super(
+			new LatencyTracker((timestamp) => {
+				this.emit({ type: "ping", data: { client_timestamp: timestamp } });
+			})
+		);
 		this.url = url;
 
+		this.messageBus.setContext({ ws: this, rtc });
 		this.registerEvents(messageHandlers);
 	}
 
@@ -52,7 +61,33 @@ export class WebSocketClient extends NetworkClient<
 				url.searchParams.set("mode", "host");
 			}
 
-			appState.dispatch("UPDATE", { websocketState: { ws: new CustomWebSocket(url.toString()) } });
+			const ws = new WebSocketAdapter(url.toString(), {
+				onOpen: (): void => {
+					log.debug("onOpen event received");
+					abortRegistry.start();
+				},
+				onClose: (event): void => {
+					log.debug("onClose event received");
+					this.disconnect();
+					appState.dispatch(
+						"SET_LAST_ERROR",
+						event.reason ? { title: "Connection Issue", message: event.reason } : null
+					);
+					abortRegistry.end();
+				},
+				onError: (): void => {
+					log.error("onError event received");
+					appState.dispatch("SET_LAST_ERROR", {
+						title: "Connection Issue",
+						message: "Failed to connect: The server may be offline"
+					});
+				},
+				onMessage: (event): void => {
+					this.handleRawMessage(event);
+				}
+			});
+
+			appState.dispatch("UPDATE", { websocketState: { ws } });
 		} catch (error) {
 			log.error("Failed to establish a WebSocket connection");
 
@@ -111,5 +146,32 @@ export class WebSocketClient extends NetworkClient<
 		websocketState.ws!.send(payload);
 
 		return this;
+	}
+
+	private handleRawMessage(event: MessageEvent): void {
+		log.debug("onMessage event received");
+
+		const { sessionState, websocketState } = appState.get();
+
+		if (sessionState.lastError || websocketState.isConnecting) {
+			appState.dispatch("SET_LAST_ERROR", null);
+		}
+
+		try {
+			if (typeof event.data !== "string") {
+				throw new Error("Invalid message format: expected string");
+			}
+
+			const { type, data } = JSON.parse(event.data) as WebSocketIncomingMessage;
+
+			log.debug("Received a message of type:", type);
+			this.messageBus.emit(type, data);
+		} catch (error) {
+			appState.dispatch("SET_LAST_ERROR", {
+				title: "Message Error",
+				message:
+					error instanceof Error ? error.message : "Failed to parse incoming WebSocket message"
+			});
+		}
 	}
 }

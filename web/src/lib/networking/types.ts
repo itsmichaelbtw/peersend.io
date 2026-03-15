@@ -13,6 +13,6 @@ export type NetworkDataForType<
 	T extends M["type"]
 > = Extract<M, { type: T }>["data"];
 
-export type NetworkEvents<I extends NetworkMessagePayload<string, unknown>> = {
-	[T in I["type"]]: MessageBusHandler<NetworkDataForType<I, T>>;
+export type NetworkEvents<I extends NetworkMessagePayload<string, unknown>, S = void> = {
+	[T in I["type"]]: MessageBusHandler<NetworkDataForType<I, T>, S>;
 };

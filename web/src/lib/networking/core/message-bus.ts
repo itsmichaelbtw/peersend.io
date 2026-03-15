@@ -2,20 +2,25 @@ import { createLogger } from "@/utils/logger";
 
 const log = createLogger("MessageBus");
 
-export type MessageBusHandler<T = unknown> = (data: T) => void | Promise<void>;
+export type MessageBusHandler<T = unknown, S = void> = (data: T, context: S) => void | Promise<void>;
 
-export class MessageBus<T extends string> {
-	private handlers: Map<T, MessageBusHandler<unknown>[]> = new Map();
+export class MessageBus<T extends string, S = void> {
+	private handlers: Map<T, MessageBusHandler<unknown, S>[]> = new Map();
+	private context: S = undefined as unknown as S;
 
-	public on<D = unknown>(event: T, handler: MessageBusHandler<D>): void {
+	public setContext(context: S): void {
+		this.context = context;
+	}
+
+	public on<D = unknown>(event: T, handler: MessageBusHandler<D, S>): void {
 		log.debug(`Registering handler for event: ${event}`);
 		if (!this.handlers.has(event)) {
 			this.handlers.set(event, []);
 		}
-		this.handlers.get(event)!.push(handler as MessageBusHandler<unknown>);
+		this.handlers.get(event)!.push(handler as MessageBusHandler<unknown, S>);
 	}
 
-	public off<D = unknown>(event: T, handler: MessageBusHandler<D>): void {
+	public off<D = unknown>(event: T, handler: MessageBusHandler<D, S>): void {
 		if (!this.handlers.has(event)) {
 			return;
 		}
@@ -23,7 +28,7 @@ export class MessageBus<T extends string> {
 		log.debug(`Unregistering handler for event: ${event}`);
 		const handlers = this.handlers
 			.get(event)!
-			.filter((h) => h !== (handler as MessageBusHandler<unknown>));
+			.filter((h) => h !== (handler as MessageBusHandler<unknown, S>));
 		this.handlers.set(event, handlers);
 	}
 
@@ -34,7 +39,7 @@ export class MessageBus<T extends string> {
 
 		for (const handler of this.handlers.get(event)!) {
 			try {
-				const result = (handler as MessageBusHandler<D>)(data);
+				const result = (handler as MessageBusHandler<D, S>)(data, this.context);
 
 				if (result instanceof Promise) {
 					result.catch((error: unknown) => {
@@ -45,11 +50,5 @@ export class MessageBus<T extends string> {
 				log.error(`Error in handler for event: ${event}`, error);
 			}
 		}
-	}
-
-	public createEmitter<D = unknown>(event: T): (data: D) => void {
-		return (data: D) => {
-			return this.emit(event, data);
-		};
 	}
 }

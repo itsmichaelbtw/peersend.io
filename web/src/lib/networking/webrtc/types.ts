@@ -1,5 +1,5 @@
 import type { PeerSendFile } from "@/state/types";
-import type { PongData } from "../core/latency-checker";
+import type { PongData } from "../core/latency-tracker";
 import type { NetworkMessagePayload } from "../types";
 
 export interface WebRTCDataPing {
