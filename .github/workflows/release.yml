@@ -1,0 +1,46 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - development
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4.2.0
+        id: release
+        with:
+          config-file: .release-please/config.json
+          manifest-file: .release-please/manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      # - uses: actions/checkout@v4
+      #   if: ${{ steps.release.outputs.releases_created == 'true' }}
+      #   with:
+      #     fetch-depth: ${{ github.event_name == 'pull_request' && 1 || 2 }}
+      #     ref: ${{ steps.release.outputs.tag_name }}
+
+      - name: Generate Release Summary
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        run: |
+          echo "### 🎉 New Release Created!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ steps.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Release URL:** ${{ steps.release.outputs.html_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY

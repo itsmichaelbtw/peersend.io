@@ -1,0 +1,21 @@
+{
+  "packages": {
+    ".": {
+      "include-v-in-tag": true,
+      "pull-request-title-pattern": "chore: release v${version}",
+      "release-type": "go",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "web/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "generic",
+          "path": "server/internal/config/version.go"
+        }
+      ]
+    }
+  },
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}
