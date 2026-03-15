@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { Buffer } from "node:buffer";
 import type { Page } from "@playwright/test";
 
 let tmpDir: string | null = null;
@@ -36,7 +37,8 @@ export async function waitForFileStatus(
 	timeout = 30_000
 ): Promise<void> {
 	const { expect } = await import("@playwright/test");
+	const escapedFileName = fileName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	await expect(
-		page.locator(`text=${fileName}`).locator("..").locator(`text=${status}`)
+		page.getByRole("row", { name: new RegExp(`${escapedFileName}.*${status}`, "i") })
 	).toBeVisible({ timeout });
 }

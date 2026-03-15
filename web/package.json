@@ -13,8 +13,9 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,json,css}\"",
     "test": "playwright test --config=tests/playwright.config.ts && playwright test --config=tests/e2e/playwright.config.ts",
     "test:unit": "playwright test --config=tests/playwright.config.ts",
-    "test:e2e": "playwright test --config=tests/e2e/playwright.config.ts --project=chromium",
-    "test:firefox": "playwright test --config=tests/e2e/playwright.config.ts --project=firefox"
+    "test:e2e": "playwright test --config=tests/e2e/playwright.config.ts",
+    "test:e2e:chromium": "playwright test --config=tests/e2e/playwright.config.ts --project=chromium",
+    "test:e2e:firefox": "playwright test --config=tests/e2e/playwright.config.ts --project=firefox"
   },
   "dependencies": {
     "@mantine/core": "^8.3.15",

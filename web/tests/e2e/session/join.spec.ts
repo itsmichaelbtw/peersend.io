@@ -3,7 +3,6 @@ import {
   BASE_URL,
   openCreateSession,
   createSession,
-  joinSession,
   setupTwoPeers,
 } from "../../helpers/session";
 
@@ -66,7 +65,7 @@ test.describe("Session joining", () => {
       await openCreateSession(page);
       await createSession(page);
       await page.click('button:has-text("Enter")');
-      await page.waitForURL(/\/session\/[A-Z0-9\-]+$/, { timeout: 10_000 });
+      await page.waitForURL(/\/session\/[A-Z0-9-]+$/, { timeout: 10_000 });
       await expect(page.locator("text=Host").first()).toBeVisible({ timeout: 5_000 });
     } finally {
       await ctx.close();
