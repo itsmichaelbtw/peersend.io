@@ -5,7 +5,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { ProgressThrottler } from "../../src/lib/file-transfer/progress-throttler";
+import { ProgressThrottler } from "@/lib/file-transfer/progress-throttler";
 
 test.describe("ProgressThrottler", () => {
   test("allows update when threshold and time delta are met", async () => {

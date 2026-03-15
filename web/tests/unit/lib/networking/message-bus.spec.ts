@@ -3,15 +3,44 @@
  *
  * MessageBus is the core pub-sub event router used by WebSocket and WebRTC
  * clients. Tests cover: on/off/emit lifecycle, multiple handlers, error
- * isolation, async handler error catching, and the createEmitter helper.
+ * isolation, and async handler error catching.
  */
 
 import { test, expect } from "@playwright/test";
-import { MessageBus } from "../../src/lib/networking/core/message-bus";
+import { MessageBus } from "@/lib/networking/core/message-bus";
 
 type TestEvents = "event_a" | "event_b" | "event_c";
 
 test.describe("MessageBus", () => {
+	test("handlers receive configured context object", () => {
+		const bus = new MessageBus<TestEvents, { transport: "webrtc" | "websocket" }>();
+		bus.setContext({ transport: "webrtc" });
+		let seenContext = "";
+
+		bus.on("event_a", (_data, context) => {
+			seenContext = context.transport;
+		});
+
+		bus.emit("event_a", null);
+		expect(seenContext).toBe("webrtc");
+	});
+
+	test("setContext updates context used by later emits", () => {
+		const bus = new MessageBus<TestEvents, { id: string }>();
+		const seen: string[] = [];
+
+		bus.on("event_a", (_data, context) => {
+			seen.push(context.id);
+		});
+
+		bus.setContext({ id: "first" });
+		bus.emit("event_a", null);
+		bus.setContext({ id: "second" });
+		bus.emit("event_a", null);
+
+		expect(seen).toEqual(["first", "second"]);
+	});
+
 	test("registered handler receives emitted data", () => {
 		const bus = new MessageBus<TestEvents>();
 		let received: unknown;
@@ -93,45 +122,15 @@ test.describe("MessageBus", () => {
 
 	test("async handler errors are caught silently", async () => {
 		const bus = new MessageBus<TestEvents>();
-		let afterEmitReached = false;
 
-		bus.on("event_a", async () => {
-			throw new Error("async error");
+		bus.on("event_a", () => {
+			return Promise.reject(new Error("async error"));
 		});
 
-		// emit should return synchronously without throwing
-		bus.emit("event_a", {});
-		afterEmitReached = true;
+		expect(() => bus.emit("event_a", {})).not.toThrow();
 
 		// give the microtask queue a tick
 		await new Promise((r) => setTimeout(r, 10));
-		expect(afterEmitReached).toBe(true);
-	});
-
-	test("createEmitter returns a function that emits the event", () => {
-		const bus = new MessageBus<TestEvents>();
-		let received: unknown;
-
-		bus.on<string>("event_c", (d) => {
-			received = d;
-		});
-		const emitter = bus.createEmitter<string>("event_c");
-
-		emitter("hello");
-		expect(received).toBe("hello");
-	});
-
-	test("createEmitter function can be called multiple times", () => {
-		const bus = new MessageBus<TestEvents>();
-		const log: number[] = [];
-
-		bus.on<number>("event_b", (d) => void log.push(d));
-		const emitter = bus.createEmitter<number>("event_b");
-
-		emitter(1);
-		emitter(2);
-		emitter(3);
-		expect(log).toEqual([1, 2, 3]);
 	});
 
 	test("handlers receive the exact data passed to emit", () => {

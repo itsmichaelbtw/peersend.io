@@ -10,7 +10,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { abortRegistry } from "../../src/lib/networking/core/abort-registry";
+import { abortRegistry } from "@/lib/networking/core/abort-registry";
 
 test.describe("AbortRegistry", () => {
   test.afterEach(() => {

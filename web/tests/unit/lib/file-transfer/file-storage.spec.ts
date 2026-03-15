@@ -11,7 +11,7 @@
  */
 
 import { test, expect } from "@playwright/test";
-import { FileStorage } from "../../src/lib/file-transfer/file-storage";
+import { FileStorage } from "@/lib/file-transfer/file-storage";
 
 function makeStorage(): FileStorage {
   return new FileStorage();

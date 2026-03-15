@@ -15,6 +15,7 @@
 import { test, expect } from "@playwright/test";
 import { AppStateStore } from "../../src/state/app-state/store";
 import type { AppState } from "../../src/state/types";
+import type { WebSocketDataSessionInformation } from "../../src/lib/networking/websocket/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -37,7 +38,6 @@ function makeInitialState(): AppState {
     },
     webrtcState: {
       dataChannel: null,
-      peerConnection: null,
       isConnected: false,
       isConnecting: false
     },
@@ -53,7 +53,7 @@ function makeStore(): AppStateStore {
   return new AppStateStore(makeInitialState());
 }
 
-function makeSessionInfo() {
+function makeSessionInfo(): WebSocketDataSessionInformation {
   return {
     session_code: "ABCDE",
     client_id: "client-1",

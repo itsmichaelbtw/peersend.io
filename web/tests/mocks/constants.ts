@@ -23,7 +23,6 @@ export const DEFAULT_WEBSOCKET_STATE = {
 
 export const DEFAULT_WEBRTC_STATE = {
 	dataChannel: null,
-	peerConnection: null,
 	isConnected: false,
 	isConnecting: false
 };
