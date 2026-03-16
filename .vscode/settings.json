@@ -10,4 +10,5 @@
   "eslint.enable": true,
   "eslint.useFlatConfig": true,
   "eslint.validate": ["typescript", "typescriptreact"],
+  "eslint.workingDirectories": [{ "directory": "./web", "changeProcessCWD": true }],
 }
