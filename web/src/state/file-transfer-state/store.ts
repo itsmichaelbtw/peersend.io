@@ -30,13 +30,15 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
 	}
 
 	public remove(files: StateActions["BULK_REMOVE_FILES"]): void {
-		if (files.length === 0) {
+		const safeFiles = files.filter((f) => f.status !== "in-transit");
+
+		if (safeFiles.length === 0) {
 			return;
 		}
 
-		this.dispatch("BULK_REMOVE_FILES", files);
+		this.dispatch("BULK_REMOVE_FILES", safeFiles);
 
-		for (const file of files) {
+		for (const file of safeFiles) {
 			fileStorage.remove(file.id);
 		}
 	}

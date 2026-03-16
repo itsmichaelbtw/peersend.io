@@ -58,7 +58,7 @@ export function FileTable({ files, emptyComponent, children }: Props): React.Rea
 		},
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
-		enableRowSelection: true,
+		enableRowSelection: (row) => row.original.status !== "in-transit",
 		enableMultiSort: false
 	});
 

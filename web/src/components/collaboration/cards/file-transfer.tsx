@@ -103,39 +103,44 @@ export function FileTransferCard(): React.ReactNode {
 						</Group>
 					</Dropzone>
 					<FileTable files={fileGroups.outgoing}>
-						{({ isUsingSelection, files }) => (
-							<Group justify="space-between">
-								<Box>
-									{isUsingSelection && (
-										<p className="text-sm text-gray-500">
-											{files.length} of {fileGroups.outgoing.length} selected
-										</p>
-									)}
-								</Box>
-								<Group gap="xs">
-									<Button
-										size="sm"
-										color="dark"
-										leftSection={<Trash2Icon size={16} />}
-										onClick={() => {
-											fileTransferState.remove(isUsingSelection ? files : fileGroups.outgoing);
-										}}
-									>
-										{isUsingSelection ? `Remove (${files.length})` : "Clear"}
-									</Button>
-									<Button
-										color="teal"
-										size="sm"
-										leftSection={<SendIcon size={16} />}
-										onClick={() => {
-											void onSend(isUsingSelection ? files : fileGroups.outgoing);
-										}}
-									>
-										Send {isUsingSelection && `(${files.length})`}
-									</Button>
+						{({ isUsingSelection, files }) => {
+							const filesToRemove = isUsingSelection ? files : fileGroups.outgoing;
+							const hasInTransit = filesToRemove.some((f) => f.status === "in-transit");
+							return (
+								<Group justify="space-between">
+									<Box>
+										{isUsingSelection && (
+											<p className="text-sm text-gray-500">
+												{files.length} of {fileGroups.outgoing.length} selected
+											</p>
+										)}
+									</Box>
+									<Group gap="xs">
+										<Button
+											size="sm"
+											color="dark"
+											disabled={hasInTransit}
+											leftSection={<Trash2Icon size={16} />}
+											onClick={() => {
+												fileTransferState.remove(filesToRemove);
+											}}
+										>
+											{isUsingSelection ? `Remove (${files.length})` : "Clear"}
+										</Button>
+										<Button
+											color="teal"
+											size="sm"
+											leftSection={<SendIcon size={16} />}
+											onClick={() => {
+												void onSend(isUsingSelection ? files : fileGroups.outgoing);
+											}}
+										>
+											Send {isUsingSelection && `(${files.length})`}
+										</Button>
+									</Group>
 								</Group>
-							</Group>
-						)}
+							);
+						}}
 					</FileTable>
 				</Card.Section>
 			</Card>
@@ -154,39 +159,44 @@ export function FileTransferCard(): React.ReactNode {
 							</Center>
 						}
 					>
-						{({ isUsingSelection, files }) => (
-							<Group justify="space-between">
-								<Box>
-									{isUsingSelection && (
-										<p className="text-sm text-gray-500">
-											{files.length} of {fileGroups.incoming.length} selected
-										</p>
-									)}
-								</Box>
-								<Group gap="xs">
-									<Button
-										size="sm"
-										color="dark"
-										leftSection={<Trash2Icon size={16} />}
-										onClick={() => {
-											fileTransferState.remove(isUsingSelection ? files : fileGroups.incoming);
-										}}
-									>
-										{isUsingSelection ? `Remove (${files.length})` : "Clear"}
-									</Button>
-									<Button
-										color="teal"
-										size="sm"
-										leftSection={<DownloadIcon size={16} />}
-										onClick={() => {
-											onDownload(isUsingSelection ? files : fileGroups.incoming);
-										}}
-									>
-										Download {isUsingSelection && `(${files.length})`}
-									</Button>
+						{({ isUsingSelection, files }) => {
+							const filesToRemove = isUsingSelection ? files : fileGroups.incoming;
+							const hasInTransit = filesToRemove.some((f) => f.status === "in-transit");
+							return (
+								<Group justify="space-between">
+									<Box>
+										{isUsingSelection && (
+											<p className="text-sm text-gray-500">
+												{files.length} of {fileGroups.incoming.length} selected
+											</p>
+										)}
+									</Box>
+									<Group gap="xs">
+										<Button
+											size="sm"
+											color="dark"
+											disabled={hasInTransit}
+											leftSection={<Trash2Icon size={16} />}
+											onClick={() => {
+												fileTransferState.remove(filesToRemove);
+											}}
+										>
+											{isUsingSelection ? `Remove (${files.length})` : "Clear"}
+										</Button>
+										<Button
+											color="teal"
+											size="sm"
+											leftSection={<DownloadIcon size={16} />}
+											onClick={() => {
+												onDownload(isUsingSelection ? files : fileGroups.incoming);
+											}}
+										>
+											Download {isUsingSelection && `(${files.length})`}
+										</Button>
+									</Group>
 								</Group>
-							</Group>
-						)}
+							);
+						}}
 					</FileTable>
 				</Card.Section>
 			</Card>
