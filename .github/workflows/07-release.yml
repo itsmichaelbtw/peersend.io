@@ -1,0 +1,64 @@
+name: 07 - Release
+run-name: "Release ${{ github.ref_name }} by @${{ github.actor }}"
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Release Please
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4.4.0
+        id: release
+        with:
+          config-file: .release-please/config.json
+          manifest-file: .release-please/manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      - name: Generate Release Summary
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        run: |
+          echo "### 🎉 New Release Created!" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ steps.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Release URL:** ${{ steps.release.outputs.html_url }}" >> $GITHUB_STEP_SUMMARY
+
+  build-server:
+    name: Build Server (production)
+    needs: release
+    if: ${{ needs.release.outputs.releases_created == 'true' }}
+    uses: ./.github/workflows/03-build.yml
+    with:
+      tag: ${{ needs.release.outputs.version }}
+      push_latest: true
+      checkout_ref: ${{ needs.release.outputs.tag_name }}
+    secrets: inherit
+
+  # Deploys web to CF Pages production and server via SSH (docker image tag: version).
+  # Tests are already run by ci.yml on every push to main before this point.
+  deploy-production:
+    name: Deploy (production)
+    needs: [release, build-server]
+    if: ${{ needs.release.outputs.releases_created == 'true' }}
+    uses: ./.github/workflows/04-deploy.yml
+    with:
+      environment: production
+      server_tag: ${{ needs.release.outputs.version }}
+      checkout_ref: ${{ needs.release.outputs.tag_name }}
+    secrets: inherit

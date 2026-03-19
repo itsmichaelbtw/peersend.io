@@ -1,0 +1,115 @@
+name: 04 - Deploy
+run-name: "Deploy ${{ github.ref_name }} (${{ inputs.environment }})"
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub environment to deploy to (development | production)
+        required: true
+        type: string
+      server_tag:
+        description: Docker image tag for the server image
+        required: true
+        type: string
+      checkout_ref:
+        description: Git ref to checkout. Defaults to the triggering SHA.
+        required: false
+        type: string
+        default: ""
+      cf_pages_branch:
+        description: Cloudflare Pages branch for preview deployments. Leave empty for production deployment.
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy-web:
+    name: Deploy Web (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.sha }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - uses: actions/cache@v5
+        id: npm-cache
+        with:
+          path: web/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('web/package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm install --legacy-peer-deps
+        working-directory: ./web
+
+      - name: Write Vite env file
+        run: echo "${{ secrets.VITE_ENV }}" > web/.env
+
+      - name: Build
+        run: npm run build
+        working-directory: ./web
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: >-
+            pages deploy web/dist
+            --project-name=${{ vars.CF_PAGES_PROJECT }}
+            ${{ inputs.cf_pages_branch != '' && format('--branch={0}', inputs.cf_pages_branch) || '' }}
+
+  deploy-server:
+    name: Deploy Server (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.sha }}
+
+      - name: Write server env file
+        run: echo "${{ secrets.GOLANG_ENV }}" > deploy/server.env
+
+      - name: Prepare nginx config
+        run: cp deploy/nginx.${{ inputs.environment }}.conf deploy/nginx.conf
+
+      - name: Copy deploy folder to server
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: deploy/
+          target: ${{ vars.SERVER_DIRECTORY }}/
+
+      - name: Deploy server via SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            chmod +x "${SERVER_DIRECTORY}/deploy/deploy.sh"
+            sh "${SERVER_DIRECTORY}/deploy/deploy.sh"
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          SERVER_IMAGE: ${{ vars.SERVER_IMAGE }}
+          SERVER_TAG: ${{ inputs.server_tag }}
+          SERVER_CONTAINER_NAME: ${{ vars.SERVER_CONTAINER_NAME }}
+          DOCKER_NETWORK: ${{ vars.DOCKER_NETWORK }}
+          NGINX_CONTAINER_NAME: ${{ vars.NGINX_CONTAINER_NAME }}
+          SERVER_DIRECTORY: ${{ vars.SERVER_DIRECTORY }}

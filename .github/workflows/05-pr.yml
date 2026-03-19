@@ -1,0 +1,16 @@
+name: 05 - PR
+run-name: "Pull Request #${{ github.event.pull_request.number }} (${{ github.head_ref }} → ${{ github.base_ref }})"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    uses: ./.github/workflows/02-test.yml
+    secrets: inherit
