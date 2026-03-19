@@ -1,5 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 import process from "node:process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const webRoot = path.resolve(__dirname, "../../");
+const serverRoot = path.resolve(__dirname, "../../../server");
 
 export default defineConfig({
   testDir: "./",
@@ -12,11 +19,32 @@ export default defineConfig({
   timeout: 30_000,
   reporter: [["list"]],
   use: {
-    baseURL: "http://localhost:3500",
+    baseURL: "http://localhost:3501",
     trace: "on-first-retry",
     video: "retain-on-failure",
     actionTimeout: 10_000,
   },
+  webServer: [
+    {
+      command: "go run ./cmd/testserver/main.go",
+      url: "http://localhost:8081/health",
+      cwd: serverRoot,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
+      command: "npm run dev -- --port 3501",
+      url: "http://localhost:3501",
+      cwd: webRoot,
+      env: {
+        VITE_SERVER_ENDPOINT: "ws://localhost:8081/exchange",
+        VITE_SESSION_CODE_EXAMPLE: "X-4FGS6H",
+        VITE_LOG_LEVEL: "debug",
+      },
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+  ],
   projects: [
     {
       name: "chromium",

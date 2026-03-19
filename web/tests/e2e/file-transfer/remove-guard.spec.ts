@@ -49,7 +49,7 @@ test.describe("File transfer: remove guard during in-transit", () => {
 
 			await expect(pageA.locator('input[type="checkbox"]').nth(1)).toBeDisabled();
 
-			await expect(pageA.locator('[role="progressbar"]')).toHaveCount(0, { timeout: 30_000 });
+			await expect(pageA.locator('table [role="progressbar"]')).toHaveCount(0, { timeout: 30_000 });
 			await expect(pageA.locator('input[type="checkbox"]').nth(1)).toBeEnabled();
 		} finally {
 			await ctxA.close();
