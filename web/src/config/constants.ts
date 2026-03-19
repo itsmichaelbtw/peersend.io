@@ -2,7 +2,7 @@ import type { SessionState, WebRTCConnectionState, WebSocketConnectionState } fr
 import type { EnvironmentVariables } from "@/types/env";
 
 export const envVar: EnvironmentVariables = {
-	SESSION_CODE_EXAMPLE: import.meta.env.VITE_SESSION_CODE_EXAMPLE as string,
+	SESSION_CODE_EXAMPLE: (import.meta.env.VITE_SESSION_CODE_EXAMPLE as string) || "X-BG74DT",
 	SESSION_CODE_LENGTH: 5,
 	WEBSOCKET_ENDPOINT: import.meta.env.VITE_SERVER_ENDPOINT as string,
 	NODE_ENV: import.meta.env.MODE || "development",
