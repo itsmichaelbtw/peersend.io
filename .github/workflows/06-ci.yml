@@ -1,36 +1,105 @@
-name: 06 - CI
-run-name: "Continuous Integrations ${{ github.ref_name }} by @${{ github.actor }}"
+name: 06 - CI / CD
+run-name: "CI/CD – ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Push' }} on ${{ github.ref_name }} by @${{ github.actor }}"
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy_production:
+        description: Deploy to production after dev
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
+  # Tests only run on push — manual dispatch skips tests for fast targeted deploys.
   test:
+    name: Tests
+    if: github.event_name == 'push'
     uses: ./.github/workflows/02-test.yml
     secrets: inherit
 
-  # Server image is only built and pushed when all tests pass.
-  build-server:
+  release:
+    name: Release Please
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release.outputs.releases_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4.4.0
+        id: release
+        with:
+          config-file: .release-please/config.json
+          manifest-file: .release-please/manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+
+      - name: Release summary
+        if: steps.release.outputs.releases_created == 'true'
+        run: |
+          echo "### 🎉 Release ${{ steps.release.outputs.version }} created" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ steps.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Release URL:** ${{ steps.release.outputs.html_url }}" >> $GITHUB_STEP_SUMMARY
+
+  build-dev:
     name: Build Server (dev)
-    needs: test
+    needs: [test, release]
+    if: |
+      always() &&
+      needs.release.result == 'success' &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped')
     uses: ./.github/workflows/03-build.yml
     with:
       tag: dev
     secrets: inherit
 
-  # Dev deployment only happens when all tests pass and the image is built.
-  deploy-development:
+  deploy-dev:
     name: Deploy (development)
-    needs: [test, build-server]
+    needs: [release, build-dev]
+    if: needs.build-dev.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
     with:
       environment: development
       server_tag: dev
       cf_pages_branch: development
+    secrets: inherit
+
+  # Production runs if dev succeeded AND either:
+  # - push: release-please created a new release
+  # - workflow_dispatch: deploy_production input is true
+  build-prod:
+    name: Build Server (production)
+    needs: [release, deploy-dev]
+    if: |
+      needs.deploy-dev.result == 'success' &&
+      (
+        needs.release.outputs.releases_created == 'true' ||
+        (github.event_name == 'workflow_dispatch' && inputs.deploy_production == true)
+      )
+    uses: ./.github/workflows/03-build.yml
+    with:
+      tag: ${{ needs.release.outputs.version || 'latest' }}
+      push_latest: ${{ needs.release.outputs.releases_created == 'true' }}
+      checkout_ref: ${{ needs.release.outputs.tag_name || '' }}
+    secrets: inherit
+
+  deploy-prod:
+    name: Deploy (production)
+    needs: [release, build-prod, deploy-dev]
+    if: needs.build-prod.result == 'success'
+    uses: ./.github/workflows/04-deploy.yml
+    with:
+      environment: production
+      server_tag: ${{ needs.release.outputs.version || 'latest' }}
+      checkout_ref: ${{ needs.release.outputs.tag_name || '' }}
     secrets: inherit
