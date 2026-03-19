@@ -131,12 +131,14 @@ jobs:
         working-directory: ./web
         env:
           CI: true
+          PLAYWRIGHT_BASE_URL: ${{ vars.DEVELOPMENT_BASE_URL }}
 
       - name: Run E2E tests (Firefox)
         run: npm run test:e2e:firefox
         working-directory: ./web
         env:
           CI: true
+          PLAYWRIGHT_BASE_URL: ${{ vars.DEVELOPMENT_BASE_URL }}
 
       - name: Upload test artifacts
         if: failure()

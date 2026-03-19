@@ -22,11 +22,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Tests only run on push — manual dispatch skips tests for fast targeted deploys.
-  test:
-    name: Tests
+  # Fast checks on every push — lint, unit tests, Go tests. Gates dev deployment.
+  test-fast:
+    name: Tests (lint, unit, go)
     if: github.event_name == 'push'
     uses: ./.github/workflows/02-test.yml
+    with:
+      web: true
+      server: true
+      e2e: false
     secrets: inherit
 
   release:
@@ -53,11 +57,11 @@ jobs:
 
   build-dev:
     name: Build Server (dev)
-    needs: [test, release]
+    needs: [test-fast, release]
     if: |
       always() &&
       needs.release.result == 'success' &&
-      (needs.test.result == 'success' || needs.test.result == 'skipped')
+      (needs.test-fast.result == 'success' || needs.test-fast.result == 'skipped')
     uses: ./.github/workflows/03-build.yml
     with:
       tag: dev
@@ -74,14 +78,30 @@ jobs:
       cf_pages_branch: development
     secrets: inherit
 
-  # Production runs if dev succeeded AND either:
-  # - push: release-please created a new release
-  # - workflow_dispatch: deploy_production input is true
-  build-prod:
-    name: Build Server (production)
+  # E2E runs against the live dev environment after deployment.
+  # Only triggered when a release is being created or manual prod deploy is requested.
+  test-e2e:
+    name: Tests (E2E)
     needs: [release, deploy-dev]
     if: |
       needs.deploy-dev.result == 'success' &&
+      (
+        needs.release.outputs.releases_created == 'true' ||
+        (github.event_name == 'workflow_dispatch' && inputs.deploy_production == true)
+      )
+    uses: ./.github/workflows/02-test.yml
+    with:
+      web: false
+      server: false
+      e2e: true
+    secrets: inherit
+
+  # Production build and deploy only run if E2E passed against live dev environment.
+  build-prod:
+    name: Build Server (production)
+    needs: [release, deploy-dev, test-e2e]
+    if: |
+      needs.test-e2e.result == 'success' &&
       (
         needs.release.outputs.releases_created == 'true' ||
         (github.event_name == 'workflow_dispatch' && inputs.deploy_production == true)

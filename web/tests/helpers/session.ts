@@ -5,8 +5,7 @@
 
 import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
-export const BASE_URL = "http://localhost:3501";
-export const SERVER_URL = "http://localhost:8081";
+export const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3501";
 
 /** Navigate to /session/create and wait for the app to mount. */
 export async function openCreateSession(page: Page): Promise<void> {

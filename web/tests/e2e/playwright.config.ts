@@ -8,6 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(__dirname, "../../");
 const serverRoot = path.resolve(__dirname, "../../../server");
 
+const remoteUrl = process.env.PLAYWRIGHT_BASE_URL;
+
 export default defineConfig({
   testDir: "./",
   outputDir: "../test-results",
@@ -19,12 +21,14 @@ export default defineConfig({
   timeout: 30_000,
   reporter: [["list"]],
   use: {
-    baseURL: "http://localhost:3501",
+    baseURL: remoteUrl ?? "http://localhost:3501",
     trace: "on-first-retry",
     video: "retain-on-failure",
     actionTimeout: 10_000,
   },
-  webServer: [
+  // Only spawn local servers when not targeting a remote environment.
+  // When PLAYWRIGHT_BASE_URL is set, the servers are already running remotely.
+  webServer: remoteUrl ? undefined : [
     {
       command: "go run ./cmd/testserver/main.go",
       url: "http://localhost:8081/health",
