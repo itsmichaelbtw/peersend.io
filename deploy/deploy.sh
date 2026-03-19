@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -e
 
+mkdir -p "$SERVER_DIRECTORY"
+
 echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
 docker pull "${SERVER_IMAGE}:${SERVER_TAG}"
