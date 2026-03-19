@@ -25,17 +25,22 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o server ./cmd/peersend/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server ./cmd/peersend/main.go
 
 FROM alpine:latest AS production
 
 WORKDIR /usr/src/app
 
 COPY --from=build /usr/src/app/server /usr/src/app/
+COPY --from=build /usr/src/app/configs /usr/src/app/configs/
 
 RUN adduser -D -H -h /usr/src/app appuser && \
     chown -R appuser:appuser /usr/src/app
 
 USER appuser
+
+ENV SERVER_CONFIG_PATH=/usr/src/app/configs/peersend.yml
+
+EXPOSE 8080
 
 CMD ["./server"]
