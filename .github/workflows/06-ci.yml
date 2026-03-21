@@ -57,10 +57,9 @@ jobs:
 
   build-dev:
     name: Build Server (dev)
-    needs: [test-fast, release]
+    needs: [test-fast]
     if: |
       always() &&
-      needs.release.result == 'success' &&
       (needs.test-fast.result == 'success' || needs.test-fast.result == 'skipped')
     uses: ./.github/workflows/03-build.yml
     with:
@@ -69,7 +68,7 @@ jobs:
 
   deploy-dev:
     name: Deploy (development)
-    needs: [release, build-dev]
+    needs: [build-dev]
     if: needs.build-dev.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
     with:
@@ -81,7 +80,7 @@ jobs:
   # E2E always runs after dev deployment so failures are caught before a release is ever created.
   test-e2e:
     name: Tests (E2E)
-    needs: [release, deploy-dev]
+    needs: [deploy-dev]
     if: needs.deploy-dev.result == 'success'
     uses: ./.github/workflows/02-test.yml
     with:
