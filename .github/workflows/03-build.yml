@@ -61,3 +61,13 @@ jobs:
           target: production
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Build summary
+        run: |
+          echo "### 🐳 Docker Image Built" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ vars.SERVER_IMAGE }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** \`${{ inputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Package URL:** https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/pkgs/container/$(basename ${{ vars.SERVER_IMAGE }})" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.push_latest }}" = "true" ]; then
+            echo "**Also tagged as:** \`latest\`" >> $GITHUB_STEP_SUMMARY
+          fi
