@@ -78,17 +78,11 @@ jobs:
       cf_pages_branch: development
     secrets: inherit
 
-  # E2E runs against the live dev environment after deployment.
-  # Only triggered when a release is being created or manual prod deploy is requested.
+  # E2E always runs after dev deployment so failures are caught before a release is ever created.
   test-e2e:
     name: Tests (E2E)
     needs: [release, deploy-dev]
-    if: |
-      needs.deploy-dev.result == 'success' &&
-      (
-        needs.release.outputs.releases_created == 'true' ||
-        (github.event_name == 'workflow_dispatch' && inputs.deploy_production == true)
-      )
+    if: needs.deploy-dev.result == 'success'
     uses: ./.github/workflows/02-test.yml
     with:
       web: false
