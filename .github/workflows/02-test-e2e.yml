@@ -3,6 +3,7 @@ run-name: "Tests: E2E - ${{ github.ref_name }}"
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   test-e2e:

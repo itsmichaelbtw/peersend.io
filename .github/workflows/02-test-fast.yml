@@ -3,6 +3,7 @@ run-name: "Tests: Lint, Unit, Go - ${{ github.ref_name }}"
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   lint:
