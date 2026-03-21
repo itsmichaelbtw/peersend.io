@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download
 
-FROM base AS development
+FROM base AS local
 
 ENV CGO_ENABLED=1
 
@@ -27,6 +27,26 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server ./cmd/peersend/main.go
 
+FROM alpine:latest AS development
+
+WORKDIR /usr/src/app
+
+COPY --from=build /usr/src/app/server /usr/src/app/
+COPY --from=build /usr/src/app/configs /usr/src/app/configs/
+
+RUN apk add --no-cache curl && \
+    adduser -D -H -h /usr/src/app appuser && \
+    chown -R appuser:appuser /usr/src/app
+
+USER appuser
+
+ENV SERVER_CONFIG_PATH=/usr/src/app/configs/peersend.yml
+ENV APP_ENV=development
+
+EXPOSE 8080
+
+CMD ["./server"]
+
 FROM alpine:latest AS production
 
 WORKDIR /usr/src/app
@@ -40,6 +60,7 @@ RUN adduser -D -H -h /usr/src/app appuser && \
 USER appuser
 
 ENV SERVER_CONFIG_PATH=/usr/src/app/configs/peersend.yml
+ENV APP_ENV=production
 
 EXPOSE 8080
 

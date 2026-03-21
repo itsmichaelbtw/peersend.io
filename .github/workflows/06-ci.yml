@@ -1,5 +1,5 @@
 name: 06 - CI / CD
-run-name: "CI/CD – ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Push' }} on ${{ github.ref_name }} by @${{ github.actor }}"
+run-name: "${{ github.event_name == 'workflow_dispatch' && (inputs.deploy_production && 'Manual deploy to Production' || 'Manual deploy to Development') || format('Automatic deployment by @{0}', github.actor) }}"
 
 on:
   push:
@@ -24,13 +24,9 @@ concurrency:
 jobs:
   # Fast checks on every push — lint, unit tests, Go tests. Gates dev deployment.
   test-fast:
-    name: Tests (lint, unit, go)
+    name: Test Fast
     if: github.event_name == 'push'
-    uses: ./.github/workflows/02-test.yml
-    with:
-      web: true
-      server: true
-      e2e: false
+    uses: ./.github/workflows/02-test-fast.yml
     secrets: inherit
 
   release:
@@ -56,7 +52,7 @@ jobs:
           echo "**Release URL:** ${{ steps.release.outputs.html_url }}" >> $GITHUB_STEP_SUMMARY
 
   build-dev:
-    name: Build Server (dev)
+    name: Build Server (development)
     needs: [test-fast]
     if: |
       always() &&
@@ -64,10 +60,11 @@ jobs:
     uses: ./.github/workflows/03-build.yml
     with:
       tag: dev
+      target: development
     secrets: inherit
 
   deploy-dev:
-    name: Deploy (development)
+    name: Deployment
     needs: [build-dev]
     if: needs.build-dev.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
@@ -79,14 +76,10 @@ jobs:
 
   # E2E always runs after dev deployment so failures are caught before a release is ever created.
   test-e2e:
-    name: Tests (E2E)
+    name: Tests
     needs: [deploy-dev]
     if: needs.deploy-dev.result == 'success'
-    uses: ./.github/workflows/02-test.yml
-    with:
-      web: false
-      server: false
-      e2e: true
+    uses: ./.github/workflows/02-test-e2e.yml
     secrets: inherit
 
   # Production build and deploy only run if E2E passed against live dev environment.
