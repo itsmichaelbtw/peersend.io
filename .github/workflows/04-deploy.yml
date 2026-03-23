@@ -73,29 +73,35 @@ jobs:
     name: Deploy Server (${{ inputs.environment }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+      SSH_KEY_PATH: /tmp/deploy_key
+      SERVER_DIRECTORY: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.sha }}
 
-      - name: Copy deployment folder to server
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          debug: true
-          source: deploy/
-          target: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}/
+      - name: Write server env file
+        run: |
+          mkdir -p deploy/${{ inputs.environment }}
+          echo "${{ secrets.GOLANG_ENV }}" > deploy/${{ inputs.environment }}/server.env
 
-      # - name: Write server env file
-      #   run: |
-      #     mkdir -p deploy/${{ inputs.environment }}
-      #     echo "${{ secrets.GOLANG_ENV }}" > deploy/${{ inputs.environment }}/server.env
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > "${SSH_KEY_PATH}"
+          chmod 600 "${SSH_KEY_PATH}"
+
+      - name: Copy deploy folder to server
+        run: |
+          rsync -az --delete \
+            -e "ssh -i '${SSH_KEY_PATH}' -p '${SSH_PORT}' -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o ServerAliveInterval=15 -o ServerAliveCountMax=6" \
+            deploy/ \
+            "${SSH_USER}@${SSH_HOST}:${SERVER_DIRECTORY}/deploy/"
 
       - name: Deploy server via SSH
-        uses: appleboy/ssh-action@v1.2.5
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -104,15 +110,28 @@ jobs:
           SERVER_CONTAINER_NAME: ${{ vars.SERVER_CONTAINER_NAME }}
           DOCKER_NETWORK: ${{ vars.DOCKER_NETWORK }}
           NGINX_CONTAINER_NAME: ${{ vars.NGINX_CONTAINER_NAME }}
-          SERVER_DIRECTORY: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}
           ENVIRONMENT: ${{ inputs.environment }}
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          timeout: 30s
-          command_timeout: 300s
-          script: |
-            chmod +x "${SERVER_DIRECTORY}/deploy/deploy.sh"
-            sh "${SERVER_DIRECTORY}/deploy/deploy.sh"
+        run: |
+          ssh \
+            -i "${SSH_KEY_PATH}" \
+            -p "${SSH_PORT}" \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=60 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=6 \
+            "${SSH_USER}@${SSH_HOST}" \
+            "SERVER_DIRECTORY='${SERVER_DIRECTORY}' \
+             GHCR_TOKEN='${GHCR_TOKEN}' \
+             GITHUB_ACTOR='${GITHUB_ACTOR}' \
+             SERVER_IMAGE='${SERVER_IMAGE}' \
+             SERVER_TAG='${SERVER_TAG}' \
+             SERVER_CONTAINER_NAME='${SERVER_CONTAINER_NAME}' \
+             DOCKER_NETWORK='${DOCKER_NETWORK}' \
+             NGINX_CONTAINER_NAME='${NGINX_CONTAINER_NAME}' \
+             ENVIRONMENT='${ENVIRONMENT}' \
+             chmod +x '${SERVER_DIRECTORY}/deploy/deploy.sh' && \
+             sh '${SERVER_DIRECTORY}/deploy/deploy.sh'"
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f "${SSH_KEY_PATH}"
