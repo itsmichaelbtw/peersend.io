@@ -78,11 +78,6 @@ jobs:
         with:
           ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.sha }}
 
-      - name: Write server env file
-        run: |
-          mkdir -p deploy/${{ inputs.environment }}
-          echo "${{ secrets.GOLANG_ENV }}" > deploy/${{ inputs.environment }}/server.env
-
       - name: Copy deployment folder to server
         uses: appleboy/scp-action@v1.0.0
         with:
@@ -93,6 +88,11 @@ jobs:
           debug: true
           source: deploy/
           target: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}/
+
+      # - name: Write server env file
+      #   run: |
+      #     mkdir -p deploy/${{ inputs.environment }}
+      #     echo "${{ secrets.GOLANG_ENV }}" > deploy/${{ inputs.environment }}/server.env
 
       - name: Deploy server via SSH
         uses: appleboy/ssh-action@v1.2.5
