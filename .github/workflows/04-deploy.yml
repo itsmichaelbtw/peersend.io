@@ -90,7 +90,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          capture_stdout: true
           debug: true
           source: deploy/
           target: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}/
