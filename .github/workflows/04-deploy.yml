@@ -84,16 +84,27 @@ jobs:
           echo "${{ secrets.GOLANG_ENV }}" > deploy/${{ inputs.environment }}/server.env
 
       - name: Copy deploy folder to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          timeout: 30s
-          command_timeout: 300s
-          source: deploy/
-          target: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}/
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
+          DEST: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}/
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+          scp -r \
+            -i /tmp/deploy_key \
+            -P "${SSH_PORT}" \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=60 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=6 \
+            deploy/ \
+            "${SSH_USER}@${SSH_HOST}:${DEST}"
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f /tmp/deploy_key
 
       - name: Deploy server via SSH
         uses: appleboy/ssh-action@master
