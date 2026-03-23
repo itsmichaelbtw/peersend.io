@@ -83,9 +83,6 @@ jobs:
           mkdir -p deploy/${{ inputs.environment }}
           echo "${{ secrets.GOLANG_ENV }}" > deploy/${{ inputs.environment }}/server.env
 
-      - name: Prepare nginx config
-        run: cp deploy/nginx.${{ inputs.environment }}.conf deploy/${{ inputs.environment }}/nginx.conf
-
       - name: Copy deploy folder to server
         uses: appleboy/scp-action@v1.0.0
         with:

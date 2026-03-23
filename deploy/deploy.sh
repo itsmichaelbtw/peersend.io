@@ -17,6 +17,6 @@ docker run -d \
   --env-file "${SERVER_DIRECTORY}/deploy/${ENVIRONMENT}/server.env" \
   "${SERVER_IMAGE}:${SERVER_TAG}"
 
-docker cp "${SERVER_DIRECTORY}/deploy/${ENVIRONMENT}/nginx.conf" \
-  "${NGINX_CONTAINER_NAME}:/etc/nginx/conf.d/peersend.io.conf"
+docker cp "${SERVER_DIRECTORY}/deploy/nginx.server.conf" \
+  "${NGINX_CONTAINER_NAME}:/etc/nginx/conf.d/server.peersend.io.conf"
 docker exec "$NGINX_CONTAINER_NAME" nginx -s reload
