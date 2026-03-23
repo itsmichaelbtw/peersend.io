@@ -83,41 +83,20 @@ jobs:
           mkdir -p deploy/${{ inputs.environment }}
           echo "${{ secrets.GOLANG_ENV }}" > deploy/${{ inputs.environment }}/server.env
 
-      - name: Copy deploy folder to server
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT || 22 }}
-          DEST: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}/
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/deploy_key
-          chmod 600 /tmp/deploy_key
-          scp -r \
-            -i /tmp/deploy_key \
-            -P "${SSH_PORT}" \
-            -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=60 \
-            -o ServerAliveInterval=15 \
-            -o ServerAliveCountMax=6 \
-            deploy/ \
-            "${SSH_USER}@${SSH_HOST}:${DEST}"
-
-      - name: Clean up SSH key
-        if: always()
-        run: rm -f /tmp/deploy_key
-
-      - name: Deploy server via SSH
-        uses: appleboy/ssh-action@master
+      - name: Copy deployment folder to server
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          timeout: 30s
-          command_timeout: 300s
-          script: |
-            chmod +x "${SERVER_DIRECTORY}/deploy/deploy.sh"
-            sh "${SERVER_DIRECTORY}/deploy/deploy.sh"
+          capture_stdout: true
+          debug: true
+          source: deploy/
+          target: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}/
+
+      - name: Deploy server via SSH
+        uses: appleboy/ssh-action@v1.2.5
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -128,3 +107,13 @@ jobs:
           NGINX_CONTAINER_NAME: ${{ vars.NGINX_CONTAINER_NAME }}
           SERVER_DIRECTORY: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}
           ENVIRONMENT: ${{ inputs.environment }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          timeout: 30s
+          command_timeout: 300s
+          script: |
+            chmod +x "${SERVER_DIRECTORY}/deploy/deploy.sh"
+            sh "${SERVER_DIRECTORY}/deploy/deploy.sh"
