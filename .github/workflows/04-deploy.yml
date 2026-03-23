@@ -119,18 +119,19 @@ jobs:
             -o ConnectTimeout=60 \
             -o ServerAliveInterval=15 \
             -o ServerAliveCountMax=6 \
-            "${SSH_USER}@${SSH_HOST}" \
-            "SERVER_DIRECTORY='${SERVER_DIRECTORY}' \
-             GHCR_TOKEN='${GHCR_TOKEN}' \
-             GITHUB_ACTOR='${GITHUB_ACTOR}' \
-             SERVER_IMAGE='${SERVER_IMAGE}' \
-             SERVER_TAG='${SERVER_TAG}' \
-             SERVER_CONTAINER_NAME='${SERVER_CONTAINER_NAME}' \
-             DOCKER_NETWORK='${DOCKER_NETWORK}' \
-             NGINX_CONTAINER_NAME='${NGINX_CONTAINER_NAME}' \
-             ENVIRONMENT='${ENVIRONMENT}' \
-             chmod +x '${SERVER_DIRECTORY}/deploy/deploy.sh' && \
-             sh '${SERVER_DIRECTORY}/deploy/deploy.sh'"
+            "${SSH_USER}@${SSH_HOST}" << ENDSSH
+          export SERVER_DIRECTORY="${SERVER_DIRECTORY}"
+          export GHCR_TOKEN="${GHCR_TOKEN}"
+          export GITHUB_ACTOR="${GITHUB_ACTOR}"
+          export SERVER_IMAGE="${SERVER_IMAGE}"
+          export SERVER_TAG="${SERVER_TAG}"
+          export SERVER_CONTAINER_NAME="${SERVER_CONTAINER_NAME}"
+          export DOCKER_NETWORK="${DOCKER_NETWORK}"
+          export NGINX_CONTAINER_NAME="${NGINX_CONTAINER_NAME}"
+          export ENVIRONMENT="${ENVIRONMENT}"
+          chmod +x "\${SERVER_DIRECTORY}/deploy/deploy.sh"
+          sh "\${SERVER_DIRECTORY}/deploy/deploy.sh"
+          ENDSSH
 
       - name: Clean up SSH key
         if: always()
