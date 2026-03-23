@@ -79,10 +79,12 @@ jobs:
           ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.sha }}
 
       - name: Write server env file
-        run: echo "${{ secrets.GOLANG_ENV }}" > deploy/server.env
+        run: |
+          mkdir -p deploy/${{ inputs.environment }}
+          echo "${{ secrets.GOLANG_ENV }}" > deploy/${{ inputs.environment }}/server.env
 
       - name: Prepare nginx config
-        run: cp deploy/nginx.${{ inputs.environment }}.conf deploy/nginx.conf
+        run: cp deploy/nginx.${{ inputs.environment }}.conf deploy/${{ inputs.environment }}/nginx.conf
 
       - name: Copy deploy folder to server
         uses: appleboy/scp-action@v1.0.0
@@ -91,8 +93,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
+          timeout: 60s
           source: deploy/
-          target: ${{ vars.SERVER_DIRECTORY }}/
+          target: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}/
 
       - name: Deploy server via SSH
         uses: appleboy/ssh-action@v1.2.5
@@ -101,6 +104,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
+          command_timeout: 5m
           script: |
             chmod +x "${SERVER_DIRECTORY}/deploy/deploy.sh"
             sh "${SERVER_DIRECTORY}/deploy/deploy.sh"
@@ -112,4 +116,5 @@ jobs:
           SERVER_CONTAINER_NAME: ${{ vars.SERVER_CONTAINER_NAME }}
           DOCKER_NETWORK: ${{ vars.DOCKER_NETWORK }}
           NGINX_CONTAINER_NAME: ${{ vars.NGINX_CONTAINER_NAME }}
-          SERVER_DIRECTORY: ${{ vars.SERVER_DIRECTORY }}
+          SERVER_DIRECTORY: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}
+          ENVIRONMENT: ${{ inputs.environment }}
