@@ -78,7 +78,7 @@ jobs:
   deploy-dev:
     name: Deployment (development)
     needs: [build-dev]
-    if: needs.build-dev.result == 'success'
+    if: always() && needs.build-dev.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
     with:
       environment: Development
@@ -87,16 +87,18 @@ jobs:
     secrets: inherit
 
   # Runs if release was created, or manual workflow_dispatch with deploy_production checked.
+  # Waits for deploy-dev when it runs; proceeds if deploy-dev was skipped (release path or dev checkbox unchecked).
   build-prod:
     name: Build Server (production)
-    needs: [release]
+    needs: [release, deploy-dev]
     if: |
       always() &&
       (
         needs.release.outputs.releases_created == 'true' ||
         (
           github.event_name == 'workflow_dispatch' &&
-          inputs.deploy_production == true
+          inputs.deploy_production == true &&
+          (needs.deploy-dev.result == 'success' || needs.deploy-dev.result == 'skipped')
         )
       )
     uses: ./.github/workflows/03-build.yml
