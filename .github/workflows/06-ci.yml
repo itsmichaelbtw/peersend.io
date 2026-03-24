@@ -68,7 +68,7 @@ jobs:
     if: needs.build-dev.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
     with:
-      environment: development
+      environment: Development
       server_tag: dev
       cf_pages_branch: development
     secrets: inherit
@@ -76,15 +76,14 @@ jobs:
   # Runs if release was created, or manual workflow_dispatch with deploy_production.
   build-prod:
     name: Build Server (production)
-    needs: [release, deploy-dev]
+    needs: [release]
     if: |
       always() &&
       (
         needs.release.outputs.releases_created == 'true' ||
         (
           github.event_name == 'workflow_dispatch' &&
-          inputs.deploy_production == true &&
-          needs.deploy-dev.result == 'success'
+          inputs.deploy_production == true
         )
       )
     uses: ./.github/workflows/03-build.yml
@@ -100,7 +99,7 @@ jobs:
     if: needs.build-prod.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
     with:
-      environment: production
+      environment: Production
       server_tag: ${{ needs.release.outputs.version || 'latest' }}
       checkout_ref: ${{ needs.release.outputs.tag_name || '' }}
     secrets: inherit
