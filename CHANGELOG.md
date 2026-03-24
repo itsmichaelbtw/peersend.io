@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.1](https://github.com/itsmichaelbtw/peersend.io/compare/v0.2.0...v0.2.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* **ci:** add always() to deploy-prod to prevent transitive skip ([efc02cd](https://github.com/itsmichaelbtw/peersend.io/commit/efc02cd71e2f33082ca2ca82366cdb412ec63251))
+* **ci:** add separate dev/prod dispatch inputs and simplify build-dev condition ([4ac1829](https://github.com/itsmichaelbtw/peersend.io/commit/4ac18297216af90eadc6a75c0ec02362bd3c53fd))
+* **ci:** fix deploy-dev transitive skip and gate build-prod on deploy-dev ([704c0f3](https://github.com/itsmichaelbtw/peersend.io/commit/704c0f3d917f4aca289ec88e412ae01fbab30c2d))
+* **ci:** match environment casing and remove deploy-dev from prod needs ([0426d6b](https://github.com/itsmichaelbtw/peersend.io/commit/0426d6b48b20dbcf0e47f5230b6a3f641f791ae0))
+* **ci:** merge deploy-web and deploy-server into single job for one deployment entry ([5da90b1](https://github.com/itsmichaelbtw/peersend.io/commit/5da90b1168d9196ad36a7660bffac44914e5832b))
+* **ci:** pass release version and tag_name through build-prod outputs to deploy-prod ([42030ae](https://github.com/itsmichaelbtw/peersend.io/commit/42030aeba4963e07af54110c1964357e8d403b46))
+* **ci:** run dev on workflow_dispatch and deploy prod to main CF branch ([761595f](https://github.com/itsmichaelbtw/peersend.io/commit/761595f25d5df4e9a7154d4f124edbb3ac3ee255))
+
 ## [0.2.0](https://github.com/itsmichaelbtw/peersend.io/compare/v0.1.0...v0.2.0) (2026-03-24)
 
 
