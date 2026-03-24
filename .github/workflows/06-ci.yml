@@ -1,5 +1,5 @@
 name: 06 - CI / CD
-run-name: "${{ github.event_name == 'workflow_dispatch' && (inputs.deploy_production && 'Manual deploy to Production' || 'Manual deploy to Development') || format('Automatic deployment by @{0}', github.actor) }}"
+run-name: "${{ github.event_name == 'workflow_dispatch' && format('Manual deploy ({0}) by @{1}', (inputs.deploy_development && inputs.deploy_production && 'dev + prod' || inputs.deploy_production && 'prod only' || 'dev only'), github.actor) || format('Automatic deployment by @{0}', github.actor) }}"
 
 on:
   push:
@@ -7,8 +7,12 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      deploy_development:
+        description: Deploy to Development
+        type: boolean
+        default: true
       deploy_production:
-        description: Deploy to production after dev
+        description: Deploy to Production
         type: boolean
         default: false
 
@@ -58,7 +62,13 @@ jobs:
     if: |
       always() &&
       needs.release.outputs.releases_created != 'true' &&
-      (needs.test-fast.result == 'success' || needs.test-fast.result == 'skipped')
+      (
+        needs.test-fast.result == 'success' ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          inputs.deploy_development == true
+        )
+      )
     uses: ./.github/workflows/03-build.yml
     with:
       tag: dev
@@ -76,7 +86,7 @@ jobs:
       cf_pages_branch: development
     secrets: inherit
 
-  # Runs if release was created, or manual workflow_dispatch with deploy_production.
+  # Runs if release was created, or manual workflow_dispatch with deploy_production checked.
   build-prod:
     name: Build Server (production)
     needs: [release]
