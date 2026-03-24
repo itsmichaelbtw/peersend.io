@@ -111,7 +111,7 @@ jobs:
   deploy-prod:
     name: Deploy (production)
     needs: [build-prod]
-    if: needs.build-prod.result == 'success'
+    if: always() && needs.build-prod.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
     with:
       environment: Production
