@@ -28,10 +28,16 @@ permissions:
   packages: read
 
 jobs:
-  deploy-web:
-    name: Deploy Web (${{ inputs.environment }})
+  deploy:
+    name: Deploy (${{ inputs.environment }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+      SSH_KEY_PATH: /tmp/deploy_key
+      SERVER_DIRECTORY: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -55,7 +61,7 @@ jobs:
       - name: Write Vite env file
         run: echo "${{ secrets.VITE_ENV }}" > web/.env
 
-      - name: Build
+      - name: Build web
         run: npm run build
         working-directory: ./web
 
@@ -68,21 +74,6 @@ jobs:
             pages deploy web/dist
             --project-name=${{ vars.CF_PAGES_PROJECT }}
             ${{ inputs.cf_pages_branch != '' && format('--branch={0}', inputs.cf_pages_branch) || '' }}
-
-  deploy-server:
-    name: Deploy Server (${{ inputs.environment }})
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
-      SSH_USER: ${{ secrets.SSH_USER }}
-      SSH_PORT: ${{ secrets.SSH_PORT }}
-      SSH_KEY_PATH: /tmp/deploy_key
-      SERVER_DIRECTORY: ${{ vars.HOME_DIRECTORY }}/${{ github.event.repository.name }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.sha }}
 
       - name: Write server env file
         run: |
