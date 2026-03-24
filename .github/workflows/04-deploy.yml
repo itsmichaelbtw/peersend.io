@@ -29,7 +29,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy (${{ inputs.environment }})
+    name: Web and Server Deployment
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     env:
