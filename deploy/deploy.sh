@@ -19,9 +19,9 @@ docker run -d \
 
 NGINX_CONF_DIR=$(docker inspect "$NGINX_CONTAINER_NAME" --format '{{range .Mounts}}{{if eq .Destination "/etc/nginx/conf.d"}}{{.Source}}{{end}}{{end}}')
 if [ -n "$NGINX_CONF_DIR" ]; then
-  cp "${SERVER_DIRECTORY}/deploy/nginx.${ENVIRONMENT}.conf" "${NGINX_CONF_DIR}/server.peersend.io.conf"
+  cp "${SERVER_DIRECTORY}/deploy/nginx.server.conf" "${NGINX_CONF_DIR}/server.peersend.io.conf"
 else
-  docker cp "${SERVER_DIRECTORY}/deploy/nginx.${ENVIRONMENT}.conf" \
+  docker cp "${SERVER_DIRECTORY}/deploy/nginx.server.conf" \
     "${NGINX_CONTAINER_NAME}:/etc/nginx/conf.d/server.peersend.io.conf"
 fi
 docker exec "$NGINX_CONTAINER_NAME" nginx -s reload
