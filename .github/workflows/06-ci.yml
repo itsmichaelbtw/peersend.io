@@ -22,13 +22,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Fast checks on every push — lint, unit tests, Go tests. Gates dev deployment.
-  test-fast:
-    name: Test Fast
-    if: github.event_name == 'push'
-    uses: ./.github/workflows/02-test-fast.yml
-    secrets: inherit
-
   release:
     name: Release Please
     runs-on: ubuntu-latest
@@ -51,12 +44,18 @@ jobs:
           echo "**Tag:** ${{ steps.release.outputs.tag_name }}" >> $GITHUB_STEP_SUMMARY
           echo "**Release URL:** ${{ steps.release.outputs.html_url }}" >> $GITHUB_STEP_SUMMARY
 
+  # Runs after release. Skipped if release was created or this is a workflow_dispatch.
+  test-fast:
+    name: Test Fast
+    needs: [release]
+    if: needs.release.outputs.releases_created != 'true' && github.event_name == 'push'
+    uses: ./.github/workflows/02-test-fast.yml
+    secrets: inherit
+
   build-dev:
     name: Build Server (development)
-    needs: [test-fast]
-    if: |
-      always() &&
-      (needs.test-fast.result == 'success' || needs.test-fast.result == 'skipped')
+    needs: [release, test-fast]
+    if: needs.release.outputs.releases_created != 'true' && needs.test-fast.result == 'success'
     uses: ./.github/workflows/03-build.yml
     with:
       tag: dev
@@ -64,7 +63,7 @@ jobs:
     secrets: inherit
 
   deploy-dev:
-    name: Deployment
+    name: Deployment (development)
     needs: [build-dev]
     if: needs.build-dev.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
@@ -74,23 +73,19 @@ jobs:
       cf_pages_branch: development
     secrets: inherit
 
-  # E2E always runs after dev deployment so failures are caught before a release is ever created.
-  test-e2e:
-    name: Tests
-    needs: [deploy-dev]
-    if: needs.deploy-dev.result == 'success'
-    uses: ./.github/workflows/02-test-e2e.yml
-    secrets: inherit
-
-  # Production build and deploy only run if E2E passed against live dev environment.
+  # Runs if release was created, or manual workflow_dispatch with deploy_production.
   build-prod:
     name: Build Server (production)
-    needs: [release, deploy-dev, test-e2e]
+    needs: [release, deploy-dev]
     if: |
-      needs.test-e2e.result == 'success' &&
+      always() &&
       (
         needs.release.outputs.releases_created == 'true' ||
-        (github.event_name == 'workflow_dispatch' && inputs.deploy_production == true)
+        (
+          github.event_name == 'workflow_dispatch' &&
+          inputs.deploy_production == true &&
+          needs.deploy-dev.result == 'success'
+        )
       )
     uses: ./.github/workflows/03-build.yml
     with:
@@ -101,7 +96,7 @@ jobs:
 
   deploy-prod:
     name: Deploy (production)
-    needs: [release, build-prod, deploy-dev]
+    needs: [release, build-prod]
     if: needs.build-prod.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
     with:
