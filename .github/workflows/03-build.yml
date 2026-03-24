@@ -23,6 +23,13 @@ on:
         required: false
         type: string
         default: production
+    outputs:
+      version:
+        description: The Docker image tag that was built
+        value: ${{ jobs.build.outputs.version }}
+      tag_name:
+        description: The git ref that was checked out
+        value: ${{ jobs.build.outputs.tag_name }}
 
 permissions:
   contents: read
@@ -32,6 +39,9 @@ jobs:
   build:
     name: Build & Push Server Image
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ inputs.tag }}
+      tag_name: ${{ inputs.checkout_ref }}
     steps:
       - uses: actions/checkout@v6
         with:

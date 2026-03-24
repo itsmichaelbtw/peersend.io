@@ -95,11 +95,11 @@ jobs:
 
   deploy-prod:
     name: Deploy (production)
-    needs: [release, build-prod]
+    needs: [build-prod]
     if: needs.build-prod.result == 'success'
     uses: ./.github/workflows/04-deploy.yml
     with:
       environment: Production
-      server_tag: ${{ needs.release.outputs.version || 'latest' }}
-      checkout_ref: ${{ needs.release.outputs.tag_name || '' }}
+      server_tag: ${{ needs.build-prod.outputs.version }}
+      checkout_ref: ${{ needs.build-prod.outputs.tag_name }}
     secrets: inherit
