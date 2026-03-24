@@ -55,7 +55,10 @@ jobs:
   build-dev:
     name: Build Server (development)
     needs: [release, test-fast]
-    if: needs.release.outputs.releases_created != 'true' && needs.test-fast.result == 'success'
+    if: |
+      always() &&
+      needs.release.outputs.releases_created != 'true' &&
+      (needs.test-fast.result == 'success' || needs.test-fast.result == 'skipped')
     uses: ./.github/workflows/03-build.yml
     with:
       tag: dev
@@ -102,4 +105,5 @@ jobs:
       environment: Production
       server_tag: ${{ needs.build-prod.outputs.version }}
       checkout_ref: ${{ needs.build-prod.outputs.tag_name }}
+      cf_pages_branch: main
     secrets: inherit
