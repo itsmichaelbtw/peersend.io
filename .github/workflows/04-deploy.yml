@@ -94,6 +94,16 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > "${SSH_KEY_PATH}"
           chmod 600 "${SSH_KEY_PATH}"
 
+      - name: Create server directory
+        run: |
+          ssh \
+            -i "${SSH_KEY_PATH}" \
+            -p "${SSH_PORT}" \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=60 \
+            "${SSH_USER}@${SSH_HOST}" \
+            "mkdir -p '${SERVER_DIRECTORY}/deploy'"
+
       - name: Copy deploy folder to server
         run: |
           rsync -az --delete \
