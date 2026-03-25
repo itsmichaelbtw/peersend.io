@@ -1,10 +1,8 @@
-import React from "react";
-
 import { createBrowserRouter, redirect } from "react-router";
 
-import { MainLayout } from "@/layouts/main-layout";
 import { SessionLayout } from "@/layouts/session-layout";
 import { CompatibilityView } from "@/views/compatibility";
+import { LandingView } from "@/views/landing";
 import { CreateSessionView } from "@/views/session/create-session";
 import { JoinSessionView } from "@/views/session/join-session";
 import { ActiveSessionView } from "@/views/session/active-session";
@@ -15,15 +13,7 @@ import { appState } from "@/state";
 export const router = createBrowserRouter([
 	{
 		path: "/",
-		Component: MainLayout,
-		children: [
-			{
-				index: true,
-				Component(): React.ReactNode {
-					return <div>Home Page</div>;
-				}
-			}
-		]
+		element: <LandingView />
 	},
 	{
 		path: "/compatibility",
