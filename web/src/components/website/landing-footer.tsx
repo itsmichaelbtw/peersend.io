@@ -1,24 +1,35 @@
 import React from "react";
 
+import { Anchor } from "@mantine/core";
+
 export function LandingFooter(): React.ReactNode {
   return (
-    <footer className="bg-white max-w-[1200px] mx-auto px-6 py-8 border-t border-gray-200 flex flex-wrap justify-between items-center gap-4">
-      <div className="text-sm font-black text-gray-900 uppercase tracking-tighter">PeerSend</div>
-      <div className="flex gap-8 text-xs tracking-widest uppercase text-gray-400">
-        <a
+    <footer className="bg-white max-w-[1200px] mx-auto px-6 py-8 border-t border-(--mantine-color-default-border) flex flex-wrap justify-between items-center gap-4">
+      <div className="text-sm font-black text-(--mantine-color-gray-9) uppercase tracking-tighter">
+        PeerSend
+      </div>
+      <div className="flex gap-8">
+        <Anchor
           href="/privacy"
-          className="hover:text-teal-600 underline decoration-1 underline-offset-4 transition-colors"
+          size="xs"
+          c="dimmed"
+          className="uppercase tracking-widest underline-offset-4"
         >
           Privacy Policy
-        </a>
-        <a
+        </Anchor>
+        <Anchor
           href="/terms"
-          className="hover:text-teal-600 underline decoration-1 underline-offset-4 transition-colors"
+          size="xs"
+          c="dimmed"
+          className="uppercase tracking-widest underline-offset-4"
         >
           Terms
-        </a>
+        </Anchor>
       </div>
-      <div className="text-xs tracking-widest uppercase text-gray-400">© 2025 PeerSend.io</div>
+      <div className="text-xs tracking-widest uppercase text-(--mantine-color-gray-5)">
+        © 2025 PeerSend.io
+      </div>
     </footer>
   );
 }
+

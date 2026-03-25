@@ -1,7 +1,5 @@
 import React from "react";
 
-import { useNavigate } from "react-router";
-
 import { BrowserBanner } from "@/components/website/browser-banner";
 import { CtaSection } from "@/components/website/cta-section";
 import { FaqSection } from "@/components/website/faq-section";
@@ -13,26 +11,16 @@ import { ProcessSection } from "@/components/website/process-section";
 import { StatsGrid } from "@/components/website/stats-grid";
 
 export function LandingView(): React.ReactNode {
-	const navigate = useNavigate();
-
-	function handleOpenApp(): void {
-		void navigate("/session/create");
-	}
-
-	function handleStartSending(): void {
-		void navigate("/session/create");
-	}
-
 	return (
 		<div className="min-h-screen bg-white">
-			<LandingNav onOpenApp={handleOpenApp} />
+			<LandingNav />
 			<main>
-				<HeroSection onStartSending={handleStartSending} />
+				<HeroSection />
 				<BrowserBanner />
 				<StatsGrid />
 				<FeaturesGrid />
 				<ProcessSection />
-				<CtaSection onStartSending={handleStartSending} />
+				<CtaSection />
 				<FaqSection />
 			</main>
 			<LandingFooter />

@@ -11,8 +11,6 @@ import type { FaqItem, Feature, ProcessStep, Stat } from "@/components/website/t
 
 export const GITHUB_URL = "https://github.com/peersend-io/peersend";
 
-export const BROWSERS = ["Chrome", "Firefox", "Safari", "Edge"] as const;
-
 export const FEATURES: Feature[] = [
   {
     Icon: LockIcon,
