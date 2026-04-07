@@ -1,4 +1,4 @@
-import type { FileWithPath } from "@mantine/dropzone";
+import type { FileWithPath } from "react-dropzone";
 import type { DataChannelAdapter, WebSocketAdapter } from "@/lib/networking";
 import type { WithNullable } from "@/types/misc";
 

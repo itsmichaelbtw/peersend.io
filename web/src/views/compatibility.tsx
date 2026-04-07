@@ -1,7 +1,6 @@
 import React from "react";
 
 import { AlertTriangleIcon, CheckIcon } from "lucide-react";
-import { Box } from "@mantine/core";
 import { useCompatibility } from "@/hooks/use-compatibility";
 
 export function CompatibilityView(): React.ReactNode {
@@ -9,9 +8,9 @@ export function CompatibilityView(): React.ReactNode {
 
 	if (isCompatible) {
 		return (
-			<Box w="100%" mx="auto" className="max-w-lg">
-				<Box display="flex" h="100vh" px={32} className="flex-col items-center justify-center">
-					<div className="mb-6 h-fit w-fit rounded-full bg-green-100 p-4">
+			<div className="w-full mx-auto max-w-lg">
+				<div className="flex h-screen px-8 flex-col items-center justify-center">
+					<div className="mb-6 h-fit w-fit bg-green-100 p-4">
 						<CheckIcon size={36} className="text-green-400" />
 					</div>
 
@@ -22,15 +21,15 @@ export function CompatibilityView(): React.ReactNode {
 						allowing you to establish secure, peer-to-peer connections for real-time communication
 						and data transfers.
 					</p>
-				</Box>
-			</Box>
+				</div>
+			</div>
 		);
 	}
 
 	return (
-		<Box w="100%" mx="auto" className="max-w-lg">
-			<Box display="flex" h="100vh" px={32} className="flex-col items-center justify-center">
-				<div className="mb-6 h-fit w-fit rounded-full bg-red-100 p-4">
+		<div className="w-full mx-auto max-w-lg">
+			<div className="flex h-screen px-8 flex-col items-center justify-center">
+				<div className="mb-6 h-fit w-fit bg-red-100 p-4">
 					<AlertTriangleIcon size={36} className="text-red-400" />
 				</div>
 
@@ -50,7 +49,7 @@ export function CompatibilityView(): React.ReactNode {
 						receive files.
 					</p>
 				</div>
-			</Box>
-		</Box>
+			</div>
+		</div>
 	);
 }

@@ -1,5 +1,5 @@
 import type { PeerSendFile } from "@/state/types";
-import type { FileWithPath } from "@mantine/dropzone";
+import type { FileWithPath } from "react-dropzone";
 import type { WebRTCDataStartFileTransit } from "../networking";
 import type { BufferParsed } from "./types";
 

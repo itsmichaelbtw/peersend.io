@@ -1,12 +1,13 @@
-import type { FileWithPath, FileRejection } from "@mantine/dropzone";
 import type { PeerSendFile } from "@/state/types";
 
 import React from "react";
 
-import { DownloadIcon, SendIcon, Trash2Icon, UploadIcon } from "lucide-react";
-import { Badge, Box, Button, Card, Center, Group, Stack } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
-import { Dropzone } from "@mantine/dropzone";
+import { DownloadIcon, SendIcon, Trash2Icon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dropzone } from "@/components/ui/dropzone";
+import type { FileWithPath } from "@/components/ui/dropzone";
+import { toast } from "sonner";
 import { useFileTransferState } from "@/hooks/use-file-transfer-state";
 import {
 	FileTransfer,
@@ -44,10 +45,6 @@ export function FileTransferCard(): React.ReactNode {
 
 		const fileTransfer = new FileTransfer(filesToSend, transport);
 		await fileTransfer.send();
-
-		// do something here maybe a notif
-		// if in transit you can't select the checkbox nor remove it until its done
-		// maybe look at cancelling in the future?
 	}
 
 	function onDownload(files: PeerSendFile[]): void {
@@ -65,141 +62,118 @@ export function FileTransferCard(): React.ReactNode {
 		fileTransferState.add(customFiles);
 	}
 
-	// need to verify this
-	function onReject(rejections: FileRejection[]): void {
+	function onReject(
+		rejections: { file: FileWithPath; errors: { code: string; message: string }[] }[]
+	): void {
 		for (const rejection of rejections) {
-			notifications.show({
-				title: `File Upload Error: ${rejection.file.name}`,
-				message: rejection.errors.map((e) => e.message).join(", "),
-				color: "red",
-				withBorder: true
+			toast.error(`File Upload Error: ${rejection.file.name}`, {
+				description: rejection.errors.map((e) => e.message).join(", ")
 			});
 		}
 	}
 
 	return (
-		<Stack>
-			<Card shadow="sm" padding="sm" radius="sm" className="select-none" withBorder>
-				<Card.Section py="sm" inheritPadding withBorder>
-					<Group justify="space-between">
-						<h2 className="font-semibold text-lg leading-snug">File Transfer</h2>
+		<div className="divide-y">
+			<div className="p-3 sm:p-4 md:p-6 flex items-center justify-between">
+				<h2 className="font-semibold text-base md:text-lg leading-snug">File Transfer</h2>
+				<Badge variant="secondary">500MB limit</Badge>
+			</div>
 
-						<Badge radius="md" size="md" variant="light" color="gray">
-							<span>500MB limit</span>
-						</Badge>
-					</Group>
-				</Card.Section>
+			<Dropzone onDrop={onDrop} onReject={onReject} />
+			<FileTable files={fileGroups.outgoing}>
+				{({ isUsingSelection, files }) => {
+					const filesToRemove = isUsingSelection ? files : fileGroups.outgoing;
+					const hasInTransit = filesToRemove.some((f) => f.status === "in-transit");
+					return (
+						<div className="flex items-center justify-between pl-4">
+							<div>
+								{isUsingSelection && (
+									<p className="text-sm text-muted-foreground">
+										{files.length} of {fileGroups.outgoing.length} selected
+									</p>
+								)}
+							</div>
+							<div className="flex items-center">
+								<Button
+									size="sm"
+									variant="secondary"
+									disabled={hasInTransit}
+									className="gap-1.5"
+									onClick={() => {
+										fileTransferState.remove(filesToRemove);
+									}}
+								>
+									<Trash2Icon size={16} />
+									{isUsingSelection ? `Remove (${files.length})` : "Clear"}
+								</Button>
+								<Button
+									size="sm"
+									className="gap-1.5"
+									onClick={() => {
+										void onSend(isUsingSelection ? files : fileGroups.outgoing);
+									}}
+								>
+									<SendIcon size={16} />
+									Send {isUsingSelection && `(${files.length})`}
+								</Button>
+							</div>
+						</div>
+					);
+				}}
+			</FileTable>
 
-				<Card.Section py="sm" className="space-y-3" inheritPadding withBorder>
-					<Dropzone onDrop={onDrop} onReject={onReject}>
-						<Group justify="center" gap="xl" className="pointer-events-auto" p="lg">
-							<Stack gap={0} align="center">
-								<div className="mb-2 flex p-3 items-center justify-center rounded-full bg-gray-100">
-									<UploadIcon size={24} className="text-gray-500" />
-								</div>
-								<h3 className="text-lg font-medium">Drag & Drop files</h3>
-								<p className="text-sm text-gray-400">or click to browse from your computer</p>
-							</Stack>
-						</Group>
-					</Dropzone>
-					<FileTable files={fileGroups.outgoing}>
-						{({ isUsingSelection, files }) => {
-							const filesToRemove = isUsingSelection ? files : fileGroups.outgoing;
-							const hasInTransit = filesToRemove.some((f) => f.status === "in-transit");
-							return (
-								<Group justify="space-between">
-									<Box>
-										{isUsingSelection && (
-											<p className="text-sm text-gray-500">
-												{files.length} of {fileGroups.outgoing.length} selected
-											</p>
-										)}
-									</Box>
-									<Group gap="xs">
-										<Button
-											size="sm"
-											color="dark"
-											disabled={hasInTransit}
-											leftSection={<Trash2Icon size={16} />}
-											onClick={() => {
-												fileTransferState.remove(filesToRemove);
-											}}
-										>
-											{isUsingSelection ? `Remove (${files.length})` : "Clear"}
-										</Button>
-										<Button
-											color="teal"
-											size="sm"
-											leftSection={<SendIcon size={16} />}
-											onClick={() => {
-												void onSend(isUsingSelection ? files : fileGroups.outgoing);
-											}}
-										>
-											Send {isUsingSelection && `(${files.length})`}
-										</Button>
-									</Group>
-								</Group>
-							);
-						}}
-					</FileTable>
-				</Card.Section>
-			</Card>
+			<div className="p-3 sm:p-4 md:p-6">
+				<h2 className="font-semibold text-base md:text-lg leading-snug">Shared Files</h2>
+			</div>
 
-			<Card shadow="sm" padding="sm" radius="sm" className="select-none" withBorder>
-				<Card.Section py="sm" inheritPadding withBorder>
-					<h2 className="font-semibold text-lg leading-snug">Shared Files</h2>
-				</Card.Section>
-
-				<Card.Section py="sm" className="space-y-3" inheritPadding withBorder>
-					<FileTable
-						files={fileGroups.incoming}
-						emptyComponent={
-							<Center p="xl">
-								<p className="text-sm text-gray-500">Files sent by others will appear here</p>
-							</Center>
-						}
-					>
-						{({ isUsingSelection, files }) => {
-							const filesToRemove = isUsingSelection ? files : fileGroups.incoming;
-							const hasInTransit = filesToRemove.some((f) => f.status === "in-transit");
-							return (
-								<Group justify="space-between">
-									<Box>
-										{isUsingSelection && (
-											<p className="text-sm text-gray-500">
-												{files.length} of {fileGroups.incoming.length} selected
-											</p>
-										)}
-									</Box>
-									<Group gap="xs">
-										<Button
-											size="sm"
-											color="dark"
-											disabled={hasInTransit}
-											leftSection={<Trash2Icon size={16} />}
-											onClick={() => {
-												fileTransferState.remove(filesToRemove);
-											}}
-										>
-											{isUsingSelection ? `Remove (${files.length})` : "Clear"}
-										</Button>
-										<Button
-											color="teal"
-											size="sm"
-											leftSection={<DownloadIcon size={16} />}
-											onClick={() => {
-												onDownload(isUsingSelection ? files : fileGroups.incoming);
-											}}
-										>
-											Download {isUsingSelection && `(${files.length})`}
-										</Button>
-									</Group>
-								</Group>
-							);
-						}}
-					</FileTable>
-				</Card.Section>
-			</Card>
-		</Stack>
+			<FileTable
+				files={fileGroups.incoming}
+				emptyComponent={
+					<div className="flex justify-center p-12">
+						<p className="text-sm text-muted-foreground">Files sent by others will appear here</p>
+					</div>
+				}
+			>
+				{({ isUsingSelection, files }) => {
+					const filesToRemove = isUsingSelection ? files : fileGroups.incoming;
+					const hasInTransit = filesToRemove.some((f) => f.status === "in-transit");
+					return (
+						<div className="flex items-center justify-between pl-4">
+							<div>
+								{isUsingSelection && (
+									<p className="text-sm text-muted-foreground">
+										{files.length} of {fileGroups.incoming.length} selected
+									</p>
+								)}
+							</div>
+							<div className="flex items-center">
+								<Button
+									size="sm"
+									variant="secondary"
+									disabled={hasInTransit}
+									className="gap-1.5"
+									onClick={() => {
+										fileTransferState.remove(filesToRemove);
+									}}
+								>
+									<Trash2Icon size={16} />
+									{isUsingSelection ? `Remove (${files.length})` : "Clear"}
+								</Button>
+								<Button
+									size="sm"
+									className="gap-1.5"
+									onClick={() => {
+										onDownload(isUsingSelection ? files : fileGroups.incoming);
+									}}
+								>
+									<DownloadIcon size={16} />
+									Download {isUsingSelection && `(${files.length})`}
+								</Button>
+							</div>
+						</div>
+					);
+				}}
+			</FileTable>
+		</div>
 	);
 }

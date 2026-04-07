@@ -2,7 +2,10 @@ import { createLogger } from "@/utils/logger";
 
 const log = createLogger("MessageBus");
 
-export type MessageBusHandler<T = unknown, S = void> = (data: T, context: S) => void | Promise<void>;
+export type MessageBusHandler<T = unknown, S = void> = (
+	data: T,
+	context: S
+) => void | Promise<void>;
 
 export class MessageBus<T extends string, S = void> {
 	private handlers: Map<T, MessageBusHandler<unknown, S>[]> = new Map();

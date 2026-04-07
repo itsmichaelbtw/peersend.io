@@ -1,42 +1,21 @@
-import type { Variants } from "framer-motion";
+import React, { useEffect } from "react";
+import { ArrowRightIcon, ChevronLeftIcon } from "lucide-react";
+import { Link, useNavigate } from "react-router";
 
-import React, { useEffect, useState } from "react";
-
-import {
-	CopyIcon,
-	CopyCheckIcon,
-	ArrowRightIcon,
-	ShieldIcon,
-	GlobeIcon,
-	ClockIcon,
-	ChevronLeftIcon
-} from "lucide-react";
-
-import { Card, Button, Tooltip, CopyButton, ActionIcon, Group, Box, Stack } from "@mantine/core";
-import { AnimatePresence, motion } from "framer-motion";
-
-import { useNavigate } from "react-router";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/ui/copy-button";
+import { WEBSITE_FEATURES } from "@/config/constants";
 import { useAppState } from "@/hooks/use-app-state";
-
 import { appState } from "@/state";
 import { getWebSocketClient } from "@/lib/networking/client-registry";
 
-const VARIANTS: Variants = {
-	fadeIn: { opacity: 1, y: 0 },
-	enter: (direction: number) => ({ y: direction > 0 ? 50 : -50, opacity: 0 }),
-	center: { y: 0, opacity: 1, transition: { duration: 0.1 } },
-	exit: (direction: number) => ({
-		y: direction < 0 ? 50 : -50,
-		opacity: 0,
-		transition: { duration: 0.1 }
-	})
-};
+const FEATURE_HIGHLIGHTS = [...WEBSITE_FEATURES].sort(() => Math.random() - 0.5).slice(0, 3);
 
 export function CreateSessionView(): React.ReactNode {
 	const { sessionState, websocketState } = useAppState();
 
 	const navigate = useNavigate();
-	const [isFirstRender, setIsFirstRender] = useState(true);
 
 	useEffect(() => {
 		return (): void => {
@@ -45,213 +24,177 @@ export function CreateSessionView(): React.ReactNode {
 	}, []);
 
 	return (
-		<Card shadow="sm" padding="lg" radius="sm" className="select-none w-md" withBorder>
-			<Card.Section withBorder inheritPadding py="md">
-				<Group gap="sm">
-					<ActionIcon variant="light" size="md" disabled={websocketState.isConnecting}>
-						<ChevronLeftIcon size={22} />
-					</ActionIcon>
-					<h1 className="font-semibold text-lg">Create a session</h1>
-				</Group>
-			</Card.Section>
+		<Card className="select-none w-md">
+			<CardHeader className="border-b">
+				<div className="flex items-center justify-between">
+					<div className="border-r">
+						<Link to="/">
+							<Button
+								className="h-16 w-16"
+								variant="secondary"
+								size="icon"
+								disabled={websocketState.isConnecting}
+							>
+								<ChevronLeftIcon size={22} />
+							</Button>
+						</Link>
+					</div>
+					<h2 className="font-semibold text-base md:text-lg pr-3 sm:pr-4 md:pr-6">Create a session</h2>
+				</div>
+			</CardHeader>
 
-			<Card.Section withBorder inheritPadding py="xl">
-				<AnimatePresence mode="wait" custom={sessionState.isConnected ? 1 : -1}>
-					{sessionState.isConnected ? (
-						<motion.div
-							key="connected"
-							variants={VARIANTS}
-							custom={1}
-							initial={isFirstRender ? { opacity: 0 } : "enter"}
-							animate={isFirstRender ? "fadeIn" : "center"}
-							exit="exit"
-							onAnimationComplete={() => {
-								if (isFirstRender) {
-									setIsFirstRender(false);
-								}
-							}}
-						>
-							<h2 className="font-semibold text-lg leading-snug">Session created</h2>
-							<p className="text-black/50 leading-snug">
+			<CardContent className="border-b py-0 px-0">
+				{sessionState.isConnected ? (
+					<React.Fragment>
+						<div className="p-3 sm:p-4 md:p-6">
+							<h2 className="font-semibold text-base md:text-lg leading-snug">Session created</h2>
+							<p className="text-muted-foreground leading-snug text-sm">
 								Share this code with another user to join this session
 							</p>
+						</div>
 
-							{sessionState.sessionCode !== null && (
-								<React.Fragment>
-									<Box p="md" mt="xs" mb="xs" className="rounded border border-gray-200 bg-gray-50">
-										<Group justify="space-between">
-											<p className="font-mono text-sm select-text">{sessionState.sessionCode}</p>
-											<CopyButton value={sessionState.sessionCode}>
-												{({ copy, copied }) => (
-													<Tooltip label={copied ? "Copied!" : "Copy session code"}>
-														<ActionIcon
-															onClick={copy}
-															variant="light"
-															color={copied ? "teal" : "gray"}
-														>
-															{copied ? <CopyCheckIcon size={20} /> : <CopyIcon size={20} />}
-														</ActionIcon>
-													</Tooltip>
-												)}
-											</CopyButton>
-										</Group>
-									</Box>
-									<div className="ml-auto w-fit leading-none">
-										<span className="text-sm text-gray-500">
-											{sessionState.clients.length}/{sessionState.maximumClients} connected
-										</span>
+						<div className="h-8 w-full relative border-t">
+							<div className="absolute inset-0 bg-[linear-gradient(-45deg,transparent_48%,var(--color-border)_48%,var(--color-border)_52%,transparent_52%)] bg-size-[20px_20px]" />
+						</div>
+
+						{sessionState.sessionCode !== null && (
+							<React.Fragment>
+								<div className="px-3 sm:px-4 md:px-6 py-3 border-y bg-secondary">
+									<div className="flex items-center justify-between">
+										<p className="font-mono text-sm select-text">{sessionState.sessionCode}</p>
+										<CopyButton value={sessionState.sessionCode} />
 									</div>
-								</React.Fragment>
-							)}
-
-							<Box p="md" mt="xs" mb="sm" className="rounded border border-gray-200 bg-gray-50">
-								<h3 className="text-base mb-2">Session details</h3>
-								<div className="space-y-1 text-sm">
-									<Group justify="space-between">
-										<span className="text-gray-500">Maximum connections:</span>
-										<span className="font-semibold">{sessionState.maximumClients}</span>
-									</Group>
-									<Group justify="space-between">
-										<span className="text-gray-500">Auto WebRTC:</span>
-										{sessionState.autoWebRTC ? (
-											<span className="text-(--mantine-color-teal-7) font-semibold">Enabled</span>
-										) : (
-											<span className="text-(--mantine-color-red-7) font-semibold">Disabled</span>
-										)}
-									</Group>
-									<Group justify="space-between">
-										<span className="text-gray-500">End-to-end encryption:</span>
-										{sessionState.encryptionMode !== "none" ? (
-											<span className="text-(--mantine-color-teal-7) font-semibold">
-												{sessionState.encryptionMode}
-											</span>
-										) : (
-											<span className="text-(--mantine-color-red-7) font-semibold">Disabled</span>
-										)}
-									</Group>
 								</div>
-							</Box>
+								<div className="ml-auto w-fit leading-none py-3 px-3 sm:px-4 md:px-6">
+									<span className="text-sm text-muted-foreground">
+										{sessionState.clients.length}/{sessionState.maximumClients} connected
+									</span>
+								</div>
+							</React.Fragment>
+						)}
 
-							<Button
-								loading={websocketState.isConnecting}
-								size="sm"
-								fullWidth
-								onClick={() => {
-									void navigate(`/session/${sessionState.sessionCode}`);
-								}}
-							>
-								Enter <ArrowRightIcon size={18} />
-							</Button>
-						</motion.div>
-					) : (
-						<motion.div
-							key="not-connected"
-							variants={VARIANTS}
-							custom={-1}
-							initial={isFirstRender ? { opacity: 0 } : "enter"}
-							animate={isFirstRender ? "fadeIn" : "center"}
-							exit="exit"
-							onAnimationComplete={() => {
-								if (isFirstRender) {
-									setIsFirstRender(false);
-								}
+						<div className="p-3 sm:p-4 md:p-6 border-y bg-secondary">
+							<h3 className="text-base mb-2">Session details</h3>
+							<div className="space-y-1 text-sm">
+								<div className="flex justify-between">
+									<span className="text-muted-foreground">Maximum connections:</span>
+									<span className="font-semibold">{sessionState.maximumClients}</span>
+								</div>
+								<div className="flex justify-between">
+									<span className="text-muted-foreground">Auto WebRTC:</span>
+									{sessionState.autoWebRTC ? (
+										<span className="text-primary font-semibold">Enabled</span>
+									) : (
+										<span className="text-destructive font-semibold">Disabled</span>
+									)}
+								</div>
+								<div className="flex justify-between">
+									<span className="text-muted-foreground">End-to-end encryption:</span>
+									{sessionState.encryptionMode !== "none" ? (
+										<span className="text-primary font-semibold">
+											{sessionState.encryptionMode}
+										</span>
+									) : (
+										<span className="text-destructive font-semibold">Disabled</span>
+									)}
+								</div>
+							</div>
+						</div>
+
+						<Button
+							disabled={websocketState.isConnecting}
+							size="sm"
+							className="w-full"
+							onClick={() => {
+								void navigate(`/session/${sessionState.sessionCode}`);
 							}}
 						>
-							<h2 className="font-semibold text-lg leading-tight">Start a new session</h2>
-							<p className="text-black/50 leading-tight">
-								Create a secure session to share files with another person
+							{websocketState.isConnecting && (
+								<div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+							)}
+							Enter <ArrowRightIcon size={18} />
+						</Button>
+					</React.Fragment>
+				) : (
+					<React.Fragment>
+						<div className="p-3 sm:p-4 md:p-6">
+							<h2 className="font-semibold text-base md:text-lg leading-snug">Start a new session</h2>
+							<p className="text-muted-foreground leading-snug text-sm">
+								Create a secure session to share files with another person or device
 							</p>
+						</div>
 
-							<Stack mt="xs" mb="sm">
-								<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-									<Stack
-										gap={0}
-										align="center"
-										className="rounded-lg border border-gray-200 p-3 text-center"
-									>
-										<ShieldIcon size={30} className="mb-2" />
-										<h3 className="text-sm font-medium">End-to-end Encrypted</h3>
-										<p className="text-xs text-gray-500">Your files stay private</p>
-									</Stack>
-									<Stack
-										gap={0}
-										align="center"
-										className="rounded-lg border border-gray-200 p-3 text-center"
-									>
-										<GlobeIcon size={30} className="mb-2" />
-										<h3 className="text-sm font-medium">Direct Connection</h3>
-										<p className="text-xs text-gray-500">No server storage</p>
-									</Stack>
+						<div className="h-8 w-full relative border-t">
+							<div className="absolute inset-0 bg-[linear-gradient(-45deg,transparent_48%,var(--color-border)_48%,var(--color-border)_52%,transparent_52%)] bg-size-[20px_20px]" />
+						</div>
+
+						<div className="grid grid-cols-2 divide-x divide-border border-t">
+							{FEATURE_HIGHLIGHTS.slice(0, 2).map(({ Icon, title, subDescription }) => (
+								<div key={title} className="flex flex-col items-center py-6 text-center">
+									<Icon size={22} className="text-primary mb-2" />
+									<h3 className="text-sm font-medium">{title}</h3>
+									<p className="text-xs text-muted-foreground">{subDescription}</p>
 								</div>
-								<Stack
-									gap={0}
-									align="center"
-									className="rounded-lg border border-gray-200 p-3 text-center"
-								>
-									<ClockIcon size={30} className="mb-2" />
-									<h3 className="text-sm font-medium">Temporary Sessions</h3>
-									<p className="text-xs text-gray-500">
-										Sessions expire after 30 minutes of inactivity
-									</p>
-								</Stack>
-							</Stack>
+							))}
+						</div>
+						{FEATURE_HIGHLIGHTS[2] &&
+							((): React.ReactNode => {
+								const { Icon: ThirdIcon, title, subDescription } = FEATURE_HIGHLIGHTS[2];
+								return (
+									<div className="flex flex-col items-center border-t border-border py-6 text-center">
+										<ThirdIcon size={22} className="text-primary mb-2" />
+										<h3 className="text-sm font-medium">{title}</h3>
+										<p className="text-xs text-muted-foreground">{subDescription}</p>
+									</div>
+								);
+							})()}
 
-							<Button
-								loading={websocketState.isConnecting}
-								size="sm"
-								fullWidth
-								onClick={() => {
-									const ws = getWebSocketClient();
-									void ws.connect();
-								}}
-							>
-								Create session
-							</Button>
-						</motion.div>
+						<Button
+							disabled={websocketState.isConnecting}
+							size="sm"
+							className="w-full"
+							onClick={() => {
+								const ws = getWebSocketClient();
+								void ws.connect();
+							}}
+						>
+							{websocketState.isConnecting && (
+								<div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+							)}
+							Create session
+						</Button>
+					</React.Fragment>
+				)}
+			</CardContent>
+
+			<div className="h-8 w-full relative border-b">
+				<div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_48%,var(--color-border)_48%,var(--color-border)_52%,transparent_52%)] bg-size-[20px_20px]" />
+			</div>
+
+			<div className="pl-3 sm:pl-4 md:pl-6 h-14">
+				<div className="w-full h-full flex items-stretch justify-between gap-6">
+					{websocketState.isConnecting ? (
+						<p className="text-sm text-muted-foreground flex items-center">Connecting...</p>
+					) : !sessionState.isConnected ? (
+						<React.Fragment>
+							<div className="flex items-center">
+								<p className="text-sm text-muted-foreground">Already have a session code?</p>
+							</div>
+							<div className="flex items-center border-l px-3 sm:px-4 md:px-6 bg-secondary">
+								<Link to="/session/join">
+									<Button variant="link" size="sm" className="px-0 py-0 text-sm h-auto">
+										Join session
+									</Button>
+								</Link>
+							</div>
+						</React.Fragment>
+					) : (
+						<p className="text-sm text-muted-foreground flex items-center">
+							This room will expire in 30 minutes if unused
+						</p>
 					)}
-				</AnimatePresence>
-			</Card.Section>
-
-			<Card.Section withBorder inheritPadding py="xs" className="h-14">
-				<motion.div
-					key={
-						websocketState.isConnecting
-							? "connecting"
-							: sessionState.isConnected
-								? "connected"
-								: "idle"
-					}
-					initial={{ opacity: 0, y: -5 }}
-					animate={{ opacity: 1, y: 0 }}
-					exit={{ opacity: 0, y: -5 }}
-					transition={{ duration: 0.1 }}
-				>
-					<Group gap="xs">
-						{websocketState.isConnecting ? (
-							<p className="text-sm text-gray-500 leading-none mt-2.5">Connecting...</p>
-						) : !sessionState.isConnected ? (
-							<React.Fragment>
-								<p className="leading-tight text-sm text-gray-500">Already have a session code?</p>
-								<Button
-									variant="transparent"
-									px={0}
-									py={0}
-									classNames={{
-										label: "text-sm hover:underline"
-									}}
-									onClick={() => void navigate("/session/join")}
-								>
-									Join session
-								</Button>
-							</React.Fragment>
-						) : (
-							<p className="my-3 text-sm text-gray-500 leading-none">
-								This room will expire in 30 minutes if unused
-							</p>
-						)}
-					</Group>
-				</motion.div>
-			</Card.Section>
+				</div>
+			</div>
 		</Card>
 	);
 }

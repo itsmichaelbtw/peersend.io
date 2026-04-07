@@ -1,31 +1,29 @@
 import React from "react";
 
-import { Stack, Card, Group, Center } from "@mantine/core";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ClockIcon } from "lucide-react";
 
 export function HostStandbyCard(): React.ReactNode {
 	return (
-		<Card shadow="sm" padding="sm" radius="sm" className="select-none" withBorder>
-			<Card.Section py="sm" inheritPadding withBorder>
-				<h2 className="font-semibold text-lg leading-snug">Standby</h2>
-				<p className="text-black/50 leading-snug">Waiting for the host to begin the connection</p>
-			</Card.Section>
+		<Card className="select-none border-0 flex flex-col">
+			<CardHeader className="border-b p-3 sm:p-4 md:p-6">
+				<h2 className="font-semibold text-base md:text-lg leading-snug">Standby</h2>
+				<p className="text-muted-foreground leading-snug">
+					Waiting for the host to begin the connection
+				</p>
+			</CardHeader>
 
-			<Card.Section py="sm" inheritPadding>
-				<Center>
-					<Group justify="center" gap="xl" className="pointer-events-auto max-w-sm" p="lg">
-						<Stack gap={2} align="center">
-							<div className="mb-2 flex p-4 items-center justify-center rounded-full bg-gray-100">
-								<ClockIcon size={28} className="text-gray-500" />
-							</div>
-							<h3 className="text-lg font-medium">Pending Host Action</h3>
-							<p className="text-sm text-gray-400 text-center leading-tight">
-								Hang tight — the host will kick off the file transfer once they&#39;re ready
-							</p>
-						</Stack>
-					</Group>
-				</Center>
-			</Card.Section>
+			<CardContent className="flex flex-1 items-center justify-center p-3 sm:p-4 md:p-6">
+				<div className="flex flex-col gap-0.5 items-center text-center max-w-sm">
+					<div className="mb-2 flex p-4 items-center justify-center bg-secondary">
+						<ClockIcon size={28} className="text-muted-foreground" />
+					</div>
+					<h3 className="text-base md:text-lg font-medium">Pending Host Action</h3>
+					<p className="text-sm text-muted-foreground text-center leading-tight">
+						Hang tight — the host will kick off the file transfer once they&#39;re ready
+					</p>
+				</div>
+			</CardContent>
 		</Card>
 	);
 }

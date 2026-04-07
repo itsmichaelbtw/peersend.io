@@ -3,7 +3,18 @@ import type { PeerSendFile } from "@/state/types";
 import { useMemo } from "react";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { ActionIcon, Badge, Checkbox, Menu, Progress, ThemeIcon, Tooltip } from "@mantine/core";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { EllipsisIcon, FileIcon } from "lucide-react";
 
 import { formatFileSize, truncateFileName } from "@/lib/file-transfer";
@@ -17,21 +28,19 @@ export const selectionColumn = columnHelper.display({
 	header({ table }) {
 		return (
 			<Checkbox
-				size="xs"
-				styles={{ input: { cursor: "pointer" } }}
 				checked={table.getIsAllRowsSelected()}
-				onChange={table.getToggleAllRowsSelectedHandler()}
+				onCheckedChange={() => table.toggleAllRowsSelected()}
+				className="cursor-pointer"
 			/>
 		);
 	},
 	cell({ row }) {
 		return (
 			<Checkbox
-				size="xs"
-				styles={{ input: { cursor: "pointer" } }}
 				checked={row.getIsSelected()}
 				disabled={!row.getCanSelect()}
-				onChange={row.getToggleSelectedHandler()}
+				onCheckedChange={() => row.toggleSelected()}
+				className="cursor-pointer"
 			/>
 		);
 	},
@@ -43,9 +52,9 @@ export const fileIconColumn = columnHelper.display({
 	size: 48,
 	cell() {
 		return (
-			<ThemeIcon variant="light" color="gray">
-				<FileIcon size={18} className="text-gray-800" />
-			</ThemeIcon>
+			<div className="flex items-center justify-center h-8 w-8 bg-secondary text-muted-foreground">
+				<FileIcon size={18} />
+			</div>
 		);
 	}
 });
@@ -103,13 +112,18 @@ export const fileStatusColumn = columnHelper.accessor((file) => file, {
 		return (
 			<div className="flex justify-center-safe w-full">
 				{file.status === "in-transit" ? (
-					<Tooltip label={`${file.transfer.percentage}%`}>
-						<Progress value={file.transfer.percentage} h={6} w={90} animated />
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<div>
+								<Progress value={file.transfer.percentage} className="h-1.5 w-22.5" />
+							</div>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>{file.transfer.percentage}%</p>
+						</TooltipContent>
 					</Tooltip>
 				) : (
-					<Badge variant={file.status === "pending" ? "light" : "dot"} color="gray">
-						{file.status}
-					</Badge>
+					<Badge variant={file.status === "pending" ? "secondary" : "outline"}>{file.status}</Badge>
 				)}
 			</div>
 		);
@@ -138,18 +152,19 @@ export const fileActionsColumn = columnHelper.display({
 	maxSize: 52,
 	cell() {
 		return (
-			<Menu>
-				<Menu.Target>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
 					<div className="flex justify-end">
-						<ActionIcon variant="subtle" color="gray" size="sm">
-							<EllipsisIcon />
-						</ActionIcon>
+						<Button variant="ghost" size="icon" className="h-7 w-7">
+							<EllipsisIcon size={16} />
+						</Button>
 					</div>
-				</Menu.Target>
-				<Menu.Dropdown>
-					<Menu.Label>Hello</Menu.Label>
-				</Menu.Dropdown>
-			</Menu>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent>
+					<DropdownMenuLabel>Hello</DropdownMenuLabel>
+					<DropdownMenuItem>Action</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 		);
 	}
 });

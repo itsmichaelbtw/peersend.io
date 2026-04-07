@@ -3,7 +3,14 @@ import type { PeerSendFile } from "@/state/types";
 import type { RowSelectionState } from "@tanstack/react-table";
 
 import React, { useState, useMemo } from "react";
-import { Table } from "@mantine/core";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow
+} from "@/components/ui/table";
 import {
 	useReactTable,
 	flexRender,
@@ -70,41 +77,42 @@ export function FileTable({ files, emptyComponent, children }: Props): React.Rea
 
 	return (
 		<React.Fragment>
-			<Table layout="fixed" withRowBorders={false} striped>
-				<Table.Thead>
+			<Table>
+				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
-						<Table.Tr key={headerGroup.id}>
+						<TableRow key={headerGroup.id}>
 							{headerGroup.headers.map((header) => (
-								<Table.Th
+								<TableHead
 									key={header.id}
 									style={{
-										width: header.column.columnDef.size ? header.getSize() : undefined,
-										fontWeight: 600
+										width: header.column.columnDef.size ? header.getSize() : undefined
 									}}
 								>
 									{header.isPlaceholder
 										? null
 										: flexRender(header.column.columnDef.header, header.getContext())}
-								</Table.Th>
+								</TableHead>
 							))}
-						</Table.Tr>
+						</TableRow>
 					))}
-				</Table.Thead>
-				<Table.Tbody>
+				</TableHeader>
+				<TableBody>
 					{table.getRowModel().rows.map((row) => (
-						<Table.Tr
+						<TableRow
 							key={row.id}
 							data-selected={row.getIsSelected()}
+							data-state={row.getIsSelected() ? "selected" : undefined}
 							onClick={row.getToggleSelectedHandler()}
+							className="cursor-pointer"
 						>
 							{row.getVisibleCells().map((cell) => (
-								<Table.Td key={cell.id} id={cell.id}>
+								<TableCell key={cell.id}>
 									{flexRender(cell.column.columnDef.cell, cell.getContext())}
-								</Table.Td>
+								</TableCell>
 							))}
-						</Table.Tr>
+						</TableRow>
 					))}
-				</Table.Tbody>
+				</TableBody>
 			</Table>
 			{files.length > 0 &&
 				children({

@@ -7,10 +7,10 @@ interface Props {
 
 export function InfoStatistic({ title, stat }: Props): React.ReactNode {
 	return (
-		<div className="flex flex-row items-center justify-between border-b border-gray-200 pb-2 text-sm">
-			<p className="text-gray-500">{title}</p>
+		<div className="flex flex-row items-center justify-between border-b pb-2 text-sm">
+			<p className="text-muted-foreground">{title}</p>
 			{typeof stat === "string" || typeof stat === "number" ? (
-				<p className="text-gray-900">{stat}</p>
+				<p>{stat}</p>
 			) : (
 				stat
 			)}

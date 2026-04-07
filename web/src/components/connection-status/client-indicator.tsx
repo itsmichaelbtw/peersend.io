@@ -1,7 +1,7 @@
 import React from "react";
 
 import { UsersRoundIcon } from "lucide-react";
-import { Progress } from "@mantine/core";
+import { Progress } from "@/components/ui/progress";
 
 interface Props {
 	clientsConnected: number;
@@ -20,11 +20,7 @@ export function ClientIndicator({ clientsConnected, maximumClients }: Props): Re
 					{clientsConnected}/{maximumClients}
 				</span>
 			</div>
-			<Progress
-				size="md"
-				value={(clientsConnected * 100) / maximumClients}
-				transitionDuration={1500}
-			/>
+			<Progress className="h-2" value={(clientsConnected * 100) / maximumClients} />
 		</div>
 	);
 }

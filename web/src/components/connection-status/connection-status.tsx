@@ -1,9 +1,7 @@
 import React from "react";
 
-import { Button, Card } from "@mantine/core";
-import { modals } from "@mantine/modals";
 import { useAppState } from "@/hooks/use-app-state";
-import { useClsx } from "@/hooks/use-clsx";
+import { cn } from "@/lib/utils";
 import { ZapIcon } from "lucide-react";
 
 import { InfoStatistic } from "./info-statistic";
@@ -12,38 +10,21 @@ import { Diagnostics } from "./diagnostics";
 
 export function ConnectionStatus(): React.ReactNode {
 	const { sessionState } = useAppState();
-	const { classNames, joinCls } = useClsx({
-		icon: {
-			"bg-(--mantine-color-teal-filled)/45 text-(--mantine-color-teal-9)":
-				sessionState.connectionType === "webrtc",
-			"bg-gray-200": sessionState.connectionType === "websocket"
-		}
-	});
 
-	function onLeave(): void {
-		modals.openConfirmModal({
-			title: <span className="font-semibold text-lg">Leave Session</span>,
-			children: <span className="text-gray-500">Are you sure you want to leave this session?</span>,
-			labels: {
-				cancel: "No",
-				confirm: "Yes, leave this session"
-			},
-			size: "sm",
-			confirmProps: { color: "red" },
-			centered: true,
-			onConfirm() {
-				window.location.reload();
-			}
-		});
-	}
+	const iconClass = cn(
+		"relative flex h-6 w-6 items-center justify-center",
+		sessionState.connectionType === "webrtc"
+			? "bg-primary bg-primary/20 text-primary"
+			: "bg-secondary text-muted-foreground"
+	);
 
 	return (
-		<Card shadow="sm" padding="sm" radius="sm" className="select-none" withBorder>
-			<Card.Section py="sm" inheritPadding withBorder>
-				<h1 className="font-semibold text-lg leading-snug">Connection Status</h1>
-			</Card.Section>
+		<div className="h-full flex flex-col">
+			<div className="border-b p-3 sm:p-4 md:p-6">
+				<h2 className="font-semibold text-base md:text-lg leading-snug">Connection Status</h2>
+			</div>
 
-			<Card.Section py="sm" className="space-y-2" inheritPadding>
+			<div className="p-3 sm:p-4 md:p-6 flex flex-col gap-3">
 				<InfoStatistic
 					title="Connection type"
 					stat={
@@ -53,15 +34,9 @@ export function ConnectionStatus(): React.ReactNode {
 							</p>
 							<div className="relative ml-2 inline-flex items-center justify-center align-middle">
 								{sessionState.connectionType === "webrtc" && (
-									<span className="bg-(--mantine-color-teal-filled)/35 absolute h-8 w-8 animate-ping rounded-full" />
+									<span className="absolute bg-primary/35 h-8 w-8 animate-ping" />
 								)}
-
-								<span
-									className={joinCls(
-										"relative flex h-6 w-6 items-center justify-center rounded-full",
-										classNames.icon
-									)}
-								>
+								<span className={iconClass}>
 									<ZapIcon size={14} />
 								</span>
 							</div>
@@ -73,9 +48,9 @@ export function ConnectionStatus(): React.ReactNode {
 					title="Auto WebRTC"
 					stat={
 						sessionState.autoWebRTC ? (
-							<span className="text-(--mantine-color-teal-7) font-semibold">Enabled</span>
+							<span className="text-primary font-semibold">Enabled</span>
 						) : (
-							<span className="text-(--mantine-color-red-7) font-semibold">Disabled</span>
+							<span className="text-destructive font-semibold">Disabled</span>
 						)
 					}
 				/>
@@ -83,11 +58,9 @@ export function ConnectionStatus(): React.ReactNode {
 					title="Encryption"
 					stat={
 						sessionState.encryptionMode !== "none" ? (
-							<span className="text-(--mantine-color-teal-7) font-semibold">
-								{sessionState.encryptionMode}
-							</span>
+							<span className="text-primary font-semibold">{sessionState.encryptionMode}</span>
 						) : (
-							<span className="text-(--mantine-color-red-7) font-semibold">Disabled</span>
+							<span className="text-destructive font-semibold">Disabled</span>
 						)
 					}
 				/>
@@ -96,13 +69,9 @@ export function ConnectionStatus(): React.ReactNode {
 					clientsConnected={sessionState.clients.length}
 					maximumClients={sessionState.maximumClients}
 				/>
+			</div>
 
-				<Diagnostics />
-
-				<Button fullWidth size="sm" color="red" variant="filled" onClick={onLeave}>
-					Leave session
-				</Button>
-			</Card.Section>
-		</Card>
+			<Diagnostics />
+		</div>
 	);
 }

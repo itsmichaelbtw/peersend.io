@@ -1,96 +1,93 @@
-import type { ContextModalProps } from "@mantine/modals";
-
 import React from "react";
 
 import { ArrowUpFromLineIcon, LockIcon, RouterIcon, ShieldIcon } from "lucide-react";
 import { useAppState } from "@/hooks/use-app-state";
-import { Button, Group, Stack, Box, Loader } from "@mantine/core";
+import { Button } from "@/components/ui/button";
 import { getWebRTCClient } from "@/lib/networking/client-registry";
 
-export function ConnectionUpgrade({ id, context }: ContextModalProps): React.ReactNode {
+interface Props {
+	onClose: () => void;
+}
+
+export function ConnectionUpgrade({ onClose }: Props): React.ReactNode {
 	const { sessionState, webrtcState } = useAppState();
 
 	return (
 		<React.Fragment>
 			{!webrtcState.isConnected && (
 				<div>
-					<span className="leading-snug text-gray-500">
+					<span className="leading-snug text-muted-foreground">
 						To transfer files securely between peers, we need to upgrade your connection
 					</span>
 				</div>
 			)}
 
-			<Box my="lg">
+			<div className="my-6">
 				{webrtcState.isConnected ? (
-					<Stack gap="xs">
-						<div className="flex w-fit mx-auto items-center justify-center rounded-full bg-green-100 p-4">
+					<div className="flex flex-col gap-2">
+						<div className="flex w-fit mx-auto items-center justify-center bg-green-100 p-4">
 							<RouterIcon size={36} className="text-green-600" />
 						</div>
 						<div className="text-center space-y-1">
 							<h3 className="text-lg font-medium">Connection Upgraded Successfully!</h3>
-							<p className="text-gray-500 text-sm">
+							<p className="text-muted-foreground text-sm">
 								You&apos;re now connected via WebRTC and can transfer files up to 500MB in size.
 							</p>
 						</div>
-					</Stack>
+					</div>
 				) : webrtcState.isConnecting ? (
-					<Stack gap="xs" align="center">
+					<div className="flex flex-col gap-2 items-center">
 						<h3 className="text-lg font-medium">Establishing WebRTC Connection</h3>
-						<Loader type="dots" size="md" />
-						<p className="text-xs text-gray-500">Do not close this dialog</p>
-					</Stack>
+						<div className="animate-spin rounded-full h-5 w-5 border-2 border-border border-t-foreground" />
+						<p className="text-xs text-muted-foreground">Do not close this dialog</p>
+					</div>
 				) : (
-					<Stack gap="xs">
-						<Box p="md" className="rounded-lg border-2 border-blue-200 bg-blue-50">
-							<Group gap="md" align="center" justify="flex-start" wrap="nowrap">
-								<ArrowUpFromLineIcon size={30} className="text-blue-500" />
+					<div className="flex flex-col gap-2">
+						<div className="p-4 border-2 border-blue-200 bg-blue-50">
+							<div className="flex gap-4 items-center flex-nowrap">
+								<ArrowUpFromLineIcon size={30} className="text-blue-500 shrink-0" />
 								<div>
 									<h3 className="font-medium text-blue-800">Connection Upgrade Process</h3>
 									<p className="text-sm text-blue-700">
 										This is a one-time process that takes just a few seconds to complete
 									</p>
 								</div>
-							</Group>
-						</Box>
+							</div>
+						</div>
 
 						{sessionState.encryptionMode !== "none" && (
-							<Box p="md" className="rounded-lg border-2 border-gray-200 bg-gray-50">
-								<Group gap="md" align="center" justify="flex-start" wrap="nowrap">
-									<ShieldIcon size={30} />
+							<div className="p-4 border-2 border-border bg-secondary">
+								<div className="flex gap-4 items-center flex-nowrap">
+									<ShieldIcon size={30} className="shrink-0" />
 									<div>
-										<h3 className="font-medium">Enchanced Security</h3>
-										<p className="text-sm text-gray-500">
+										<h3 className="font-medium">Enhanced Security</h3>
+										<p className="text-sm text-muted-foreground">
 											WebRTC provides end-to-end encryption for your file transfers
 										</p>
 									</div>
-								</Group>
-							</Box>
+								</div>
+							</div>
 						)}
 
-						<Box p="md" className="rounded-lg border-2 border-gray-200 bg-gray-50">
-							<Group gap="md" align="center" justify="flex-start" wrap="nowrap">
-								<LockIcon size={30} className="text-(--mantine-color-teal-5)" />
+						<div className="p-4 border-2 border-border bg-secondary">
+							<div className="flex gap-4 items-center flex-nowrap">
+								<LockIcon size={30} className="text-primary shrink-0" />
 								<div>
 									<h3 className="font-medium">Direct Peer-to-Peer</h3>
-									<p className="text-sm text-gray-500">
+									<p className="text-sm text-muted-foreground">
 										Files are transferred directly between devices, not through our servers
 									</p>
 								</div>
-							</Group>
-						</Box>
-					</Stack>
+							</div>
+						</div>
+					</div>
 				)}
-			</Box>
+			</div>
 
 			{!webrtcState.isConnecting && (
-				<Group justify="end">
+				<div className="flex justify-end">
 					{webrtcState.isConnected ? (
-						<Button
-							color="dark"
-							onClick={() => {
-								context.closeModal(id);
-							}}
-						>
+						<Button variant="secondary" onClick={onClose}>
 							Close
 						</Button>
 					) : (
@@ -103,7 +100,7 @@ export function ConnectionUpgrade({ id, context }: ContextModalProps): React.Rea
 							Upgrade connection
 						</Button>
 					)}
-				</Group>
+				</div>
 			)}
 		</React.Fragment>
 	);
