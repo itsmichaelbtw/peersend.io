@@ -52,6 +52,8 @@ You are writing TypeScript/React code for PeerSend.io. Follow these conventions 
 - Co-locate types with their feature; put shared types in `types/`
 - State stores live in `state/{feature-name}/` with their own types and actions
 - There must be one major React component per file, unless there is reason for multiple React components per file, such as if they are one line components or all share the same parent component that may be rendered as a list or different heading sizes etc or they are shared logic. Typescript files can contain multiple functions
+- Barrel files (`index.ts`) only re-export from other files, never contain their own logic
+- Modularise by feature, not by type — e.g. `file-transfer/` contains components, state, types related to file transfer, not split into separate `components/`, `state/`, `types/` directories
 
 ## Architecture & Patterns
 

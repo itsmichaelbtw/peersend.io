@@ -28,7 +28,7 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-      target: local
+      target: development
     ports:
       - 3500:5173
     environment:

@@ -12,3 +12,4 @@ server/bin/*
 !server/bin/.gitkeep
 deploy/server.env
 web/.env
+web/dist
