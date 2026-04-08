@@ -10,7 +10,6 @@ import { ConnectionStatus } from "@/components/connection-status";
 import { Collaboration } from "@/components/collaboration";
 import { SessionStatusBar } from "@/components/session-status-bar";
 import { Seo } from "@/components/seo";
-import { APP_VERSION } from "@/config/constants";
 
 export function ActiveSessionView(): React.ReactNode {
 	const { sessionState } = useAppState();
@@ -102,10 +101,6 @@ export function ActiveSessionView(): React.ReactNode {
 						<Collaboration />
 					</div>
 				</div>
-			</div>
-
-			<div className="border border-t-0 border-x-0 sm:border-x px-3 sm:px-4 md:px-6 py-2 flex justify-end bg-card">
-				<span className="text-xs text-muted-foreground font-mono">v{APP_VERSION}</span>
 			</div>
 		</div>
 	);

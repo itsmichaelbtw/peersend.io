@@ -1,6 +1,7 @@
 import React from "react";
 
 import { useAppState } from "@/hooks/use-app-state";
+import { APP_VERSION } from "@/config/constants";
 
 export function Diagnostics(): React.ReactNode {
 	const { sessionState, webrtcState } = useAppState();
@@ -37,6 +38,11 @@ export function Diagnostics(): React.ReactNode {
 						<span className="text-xs font-medium font-mono">{sessionState.sessionCode}</span>
 					</div>
 				)}
+
+				<div className="flex justify-between">
+					<span className="text-xs text-muted-foreground">Version</span>
+					<span className="text-xs font-medium font-mono">v{APP_VERSION}</span>
+				</div>
 			</div>
 		</div>
 	);
