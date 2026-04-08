@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/itsmichaelbtw/peersend.io/compare/v0.3.0...v0.3.1) (2026-04-08)
+
+
+### Bug Fixes
+
+* **web/seo:** add /session/create to sitemap ([6218865](https://github.com/itsmichaelbtw/peersend.io/commit/6218865ff30fe382308aef53727f03fd40eecfc3))
+* **web/seo:** address audit findings ([fdb1241](https://github.com/itsmichaelbtw/peersend.io/commit/fdb12411ce195288f1babf3fc15db68babb6fd32))
+
 ## [0.3.0](https://github.com/itsmichaelbtw/peersend.io/compare/v0.2.1...v0.3.0) (2026-04-08)
 
 
