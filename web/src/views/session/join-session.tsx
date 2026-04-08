@@ -10,6 +10,7 @@ import { useAppState } from "@/hooks/use-app-state";
 import { appState } from "@/state";
 import { envVar } from "@/config/constants";
 import { getWebSocketClient } from "@/lib/networking/client-registry";
+import { Seo } from "@/components/seo";
 
 const INFO_LIST_POINTS: string[] = [
 	"You'll initially connect to our servers",
@@ -55,6 +56,11 @@ export function JoinSessionView(): React.ReactNode {
 
 	return (
 		<Card className="select-none w-md">
+			<Seo
+				title="Join a session"
+				description="Enter a session code to receive files directly from a peer — secure, encrypted, zero storage."
+				noIndex
+			/>
 			<CardHeader className="border-b">
 				<div className="flex items-center justify-between">
 					<div className="border-r">

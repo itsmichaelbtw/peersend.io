@@ -12,10 +12,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowRight, NetworkIcon } from "lucide-react";
 import { Link } from "react-router";
+import { Seo } from "@/components/seo";
 
 export function LandingView(): React.ReactNode {
 	return (
 		<div className="min-h-screen">
+			<Seo
+				description="Share files directly from browser to browser. No uploads, no storage, no account needed. Encrypted end-to-end with WebRTC."
+				canonical="https://peersend.io/"
+			/>
 			<main>
 				<section className="relative border-b overflow-hidden">
 					<div className="min-h-screen w-full relative">
@@ -256,18 +261,18 @@ export function LandingView(): React.ReactNode {
 					peersend.io
 				</div>
 				<div className="flex gap-8">
-					{/* <a
-						href="/privacy"
+					<Link
+						to="/privacy"
 						className="text-muted-foreground text-sm uppercase tracking-widest underline-offset-4 hover:text-foreground"
 					>
 						Privacy Policy
-					</a>
-					<a
-						href="/terms"
+					</Link>
+					<Link
+						to="/terms"
 						className="text-muted-foreground text-sm uppercase tracking-widest underline-offset-4 hover:text-foreground"
 					>
 						Terms
-					</a> */}
+					</Link>
 				</div>
 				<div className="text-xs tracking-widest uppercase text-muted-foreground">
 					© {new Date().getFullYear()} peersend.io

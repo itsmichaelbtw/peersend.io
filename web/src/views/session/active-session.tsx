@@ -9,6 +9,7 @@ import { useAppState } from "@/hooks/use-app-state";
 import { ConnectionStatus } from "@/components/connection-status";
 import { Collaboration } from "@/components/collaboration";
 import { SessionStatusBar } from "@/components/session-status-bar";
+import { Seo } from "@/components/seo";
 
 export function ActiveSessionView(): React.ReactNode {
 	const { sessionState } = useAppState();
@@ -17,6 +18,11 @@ export function ActiveSessionView(): React.ReactNode {
 	if (!sessionState.isConnected || sessionState.connectionType === "none") {
 		return (
 			<Card className="select-none w-md border-x-0 sm:border-x">
+				<Seo
+					title="Active session"
+					description="Live peer-to-peer file transfer session."
+					noIndex
+				/>
 				<div className="border-b px-3 sm:px-4 md:px-6 py-3">
 					<h2 className="font-semibold text-base md:text-lg">No Active Session</h2>
 				</div>
@@ -51,6 +57,11 @@ export function ActiveSessionView(): React.ReactNode {
 
 	return (
 		<div className="select-none w-full">
+			<Seo
+				title="Active session"
+				description="Live peer-to-peer file transfer session."
+				noIndex
+			/>
 			<div className="border border-b-0 border-x-0 sm:border-x bg-card">
 				<SessionStatusBar />
 

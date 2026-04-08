@@ -9,6 +9,7 @@ import { WEBSITE_FEATURES } from "@/config/constants";
 import { useAppState } from "@/hooks/use-app-state";
 import { appState } from "@/state";
 import { getWebSocketClient } from "@/lib/networking/client-registry";
+import { Seo } from "@/components/seo";
 
 const FEATURE_HIGHLIGHTS = [...WEBSITE_FEATURES].sort(() => Math.random() - 0.5).slice(0, 3);
 
@@ -25,6 +26,11 @@ export function CreateSessionView(): React.ReactNode {
 
 	return (
 		<Card className="select-none w-md">
+			<Seo
+				title="Create a session"
+				description="Start a new PeerSend session and share files directly with anyone — no sign-up needed."
+				noIndex
+			/>
 			<CardHeader className="border-b">
 				<div className="flex items-center justify-between">
 					<div className="border-r">

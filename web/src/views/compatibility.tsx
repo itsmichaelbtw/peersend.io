@@ -2,6 +2,7 @@ import React from "react";
 
 import { AlertTriangleIcon, CheckIcon } from "lucide-react";
 import { useCompatibility } from "@/hooks/use-compatibility";
+import { Seo } from "@/components/seo";
 
 export function CompatibilityView(): React.ReactNode {
 	const { browser, isCompatible } = useCompatibility();
@@ -9,6 +10,11 @@ export function CompatibilityView(): React.ReactNode {
 	if (isCompatible) {
 		return (
 			<div className="w-full mx-auto max-w-lg">
+				<Seo
+					title="Browser check"
+					description="Check if your browser supports WebRTC peer-to-peer file transfers."
+					noIndex
+				/>
 				<div className="flex h-screen px-8 flex-col items-center justify-center">
 					<div className="mb-6 h-fit w-fit bg-green-100 p-4">
 						<CheckIcon size={36} className="text-green-400" />
@@ -28,6 +34,11 @@ export function CompatibilityView(): React.ReactNode {
 
 	return (
 		<div className="w-full mx-auto max-w-lg">
+			<Seo
+				title="Browser check"
+				description="Check if your browser supports WebRTC peer-to-peer file transfers."
+				noIndex
+			/>
 			<div className="flex h-screen px-8 flex-col items-center justify-center">
 				<div className="mb-6 h-fit w-fit bg-red-100 p-4">
 					<AlertTriangleIcon size={36} className="text-red-400" />
