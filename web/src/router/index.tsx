@@ -3,6 +3,8 @@ import { createBrowserRouter, redirect } from "react-router";
 import { SessionLayout } from "@/layouts/session-layout";
 import { CompatibilityView } from "@/views/compatibility";
 import { LandingView } from "@/views/landing";
+import { PrivacyView } from "@/views/privacy";
+import { TermsView } from "@/views/terms";
 import { CreateSessionView } from "@/views/session/create-session";
 import { JoinSessionView } from "@/views/session/join-session";
 import { ActiveSessionView } from "@/views/session/active-session";
@@ -14,6 +16,14 @@ export const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <LandingView />
+	},
+	{
+		path: "/privacy",
+		element: <PrivacyView />
+	},
+	{
+		path: "/terms",
+		element: <TermsView />
 	},
 	{
 		path: "/compatibility",
