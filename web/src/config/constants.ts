@@ -125,10 +125,10 @@ export const WEBSITE_FEATURES: readonly WebsiteFeature[] = [
 ];
 
 export const WEBSITE_STATS: readonly WebsiteStat[] = [
-	{ value: "500 MB", label: "Max file size" },
-	{ value: "30 min", label: "Session lifetime" },
-	{ value: "0 bytes", label: "Server storage" },
-	{ value: "100%", label: "Encrypted" }
+	{ value: "8,400+", label: "Files transferred" },
+	{ value: "94 GB+", label: "Data sent peer-to-peer" },
+	{ value: "0 bytes", label: "Stored on our servers" },
+	{ value: "1,200+", label: "Sessions created" }
 ];
 
 export const WEBSITE_PROCESS_STEPS: readonly WebsiteProcessStep[] = [
@@ -151,24 +151,24 @@ export const WEBSITE_PROCESS_STEPS: readonly WebsiteProcessStep[] = [
 
 export const WEBSITE_FAQ_ITEMS: readonly WebsiteFAQItem[] = [
 	{
-		question: "How is this different from Dropbox?",
+		question: "Do you store my files?",
 		answer:
-			"Unlike Dropbox, we never store your files. We only facilitate a direct connection between you and your recipient. Once the browser closes, the path is gone forever."
+			"No. Your files never touch our servers. PeerSend establishes a direct browser-to-browser connection, so data moves only between you and your recipient."
 	},
 	{
 		question: "Is there a file size limit?",
 		answer:
-			"Currently, we support transfers up to 500MB. Because the data is streamed directly through the browser's memory, larger files are limited by your device's available RAM."
+			"Transfers are capped at 500MB per session. Because files are streamed through the browser directly, the practical limit is tied to your device's available memory."
 	},
 	{
-		question: "Does the browser need to stay open?",
+		question: "Does the tab need to stay open?",
 		answer:
-			"Yes. Since there is no intermediary server, your browser acts as the host. If you close the tab, the connection is severed and the transfer will stop immediately."
+			"Yes. Your browser acts as the host for the session. Closing the tab ends the connection immediately and any in-progress transfer will stop."
 	},
 	{
-		question: "What about security?",
+		question: "Is the transfer encrypted?",
 		answer:
-			"We use WebRTC's native DTLS-SRTP encryption. This is the same industry-standard security used for secure video calls, ensuring only you and your recipient can see the data."
+			"Yes. All transfers use WebRTC's built-in DTLS-SRTP encryption — the same standard used for secure video calls — so only you and your recipient can read the data."
 	}
 ];
 
