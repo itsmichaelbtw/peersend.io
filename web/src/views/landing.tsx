@@ -15,11 +15,38 @@ import { Link } from "react-router";
 import { Seo } from "@/components/seo";
 
 export function LandingView(): React.ReactNode {
+	const jsonLd = {
+		"@context": "https://schema.org",
+		"@type": "WebApplication",
+		name: "peersend.io",
+		url: "https://peersend.io",
+		description:
+			"Share files directly from browser to browser. No uploads, no storage, no account needed. Encrypted end-to-end with WebRTC.",
+		applicationCategory: "UtilitiesApplication",
+		operatingSystem: "Any",
+		offers: {
+			"@type": "Offer",
+			price: "0",
+			priceCurrency: "USD"
+		},
+		featureList: [
+			"Peer-to-peer file transfer",
+			"End-to-end encrypted",
+			"No account required",
+			"No file size limits",
+			"Works in any modern browser"
+		]
+	};
+
 	return (
 		<div className="min-h-screen">
 			<Seo
 				description="Share files directly from browser to browser. No uploads, no storage, no account needed. Encrypted end-to-end with WebRTC."
 				canonical="https://peersend.io/"
+			/>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
 			/>
 			<main>
 				<section className="relative border-b overflow-hidden">
