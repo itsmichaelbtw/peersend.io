@@ -1,4 +1,5 @@
 import React from "react";
+import clsx from "clsx";
 
 import {
 	WEBSITE_BROWSER_ENTRIES,
@@ -9,8 +10,7 @@ import {
 	WEBSITE_STATS
 } from "@/config/constants";
 import { Button } from "@/components/ui/button";
-import clsx from "clsx";
-import { NetworkIcon } from "lucide-react";
+import { ArrowRight, NetworkIcon } from "lucide-react";
 import { Link } from "react-router";
 
 export function LandingView(): React.ReactNode {
@@ -70,18 +70,15 @@ export function LandingView(): React.ReactNode {
 							<div className="max-w-300 mx-auto px-3 sm:px-4 md:px-6 py-4 flex justify-between items-center">
 								<div className="flex items-center gap-2 text-xl font-bold tracking-tighter">
 									<NetworkIcon size={20} />
-									<span>PeerSend</span>
+									<span>peersend.io</span>
 								</div>
-								<Button asChild size="sm">
-									<Link to="/session/create">Open App</Link>
-								</Button>
 							</div>
 						</nav>
 						<div className="max-w-300 mx-auto px-3 sm:px-4 md:px-6 pt-24 pb-32 text-center relative z-10">
 							<span className="inline-block border border-primary/30 text-primary px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] mb-8 bg-secondary">
 								WebRTC Powered • Zero Storage
 							</span>
-							<h1 className="font-semibold text-4xl md:text-6xl lg:text-8xl tracking-tighter mb-8 leading-[0.9]">
+							<h1 className="font-semibold text-4xl sm:text-6xl md:text-8xl tracking-tighter mb-8 leading-[0.9]">
 								Files Sent. Direct. <span className="text-primary">Encrypted.</span>
 							</h1>
 							<p className="max-w-2xl mx-auto text-muted-foreground text-lg md:text-xl mb-12 font-medium">
@@ -129,7 +126,7 @@ export function LandingView(): React.ReactNode {
 							<div
 								key={stat.label}
 								className={clsx(
-									"text-center p-10 border-b",
+									"text-center p-4 sm:p-6 md:p-10 border-b",
 									index < WEBSITE_STATS.length - 1 && "border-r"
 								)}
 							>
@@ -148,8 +145,8 @@ export function LandingView(): React.ReactNode {
 					<div className="h-8 w-full relative border-b">
 						<div className="absolute inset-0 bg-[linear-gradient(-45deg,transparent_48%,var(--color-border)_48%,var(--color-border)_52%,transparent_52%)] bg-size-[20px_20px]" />
 					</div>
-					<div className="border-b p-10">
-						<h2 className="text-xl md:text-3xl font-bold tracking-tight text-foreground">
+					<div className="border-b p-4 sm:p-6 md:p-10">
+						<h2 className="text-lg sm:text-xl md:text-3xl font-bold tracking-tight text-foreground">
 							Everything you&apos;d expect<span className="text-primary">.</span> Nothing you
 							don&apos;t<span className="text-primary">.</span>
 						</h2>
@@ -164,7 +161,7 @@ export function LandingView(): React.ReactNode {
 								<div
 									key={title}
 									className={clsx(
-										"p-10 hover:bg-secondary transition-colors",
+										"p-4 sm:p-6 md:p-10 hover:bg-secondary transition-colors",
 										!isLastItem && "border-b",
 										isSecondRow && !isLastItem && "md:border-b-0",
 										!isLastInRow && "border-r"
@@ -185,19 +182,19 @@ export function LandingView(): React.ReactNode {
 					<div className="h-8 w-full relative border-b">
 						<div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_48%,var(--color-border)_48%,var(--color-border)_52%,transparent_52%)] bg-size-[20px_20px]" />
 					</div>
-					<div className="border-b p-10">
-						<h2 className="text-xl md:text-3xl font-bold tracking-tight text-foreground">
+					<div className="border-b p-4 sm:p-6 md:p-10">
+						<h2 className="text-lg sm:text-xl md:text-3xl font-bold tracking-tight text-foreground">
 							The technical path to privacy<span className="text-primary">.</span>
 						</h2>
 					</div>
 					<div className="flex flex-col md:flex-row">
-						<div className="md:w-48 p-8 border-b md:border-b-0 flex items-start border-r bg-secondary not-md:hidden" />
+						<div className="md:w-48 p-4 sm:p-6 md:p-8 border-b md:border-b-0 flex items-start border-r bg-secondary not-md:hidden" />
 						<div className="flex-1 grid grid-cols-1 md:grid-cols-3">
 							{WEBSITE_PROCESS_STEPS.map((item, index) => (
 								<div
 									key={item.step}
 									className={clsx(
-										"p-8",
+										"p-4 sm:p-5 md:p-8",
 										index < WEBSITE_PROCESS_STEPS.length - 1 && "border-b md:border-b-0 md:border-r"
 									)}
 								>
@@ -216,8 +213,8 @@ export function LandingView(): React.ReactNode {
 
 				<section className="max-w-300 mx-auto md:border-x">
 					<div className="flex flex-col md:flex-row items-stretch">
-						<div className="flex-1 p-12 md:p-20">
-							<h2 className="text-4xl md:text-5xl font-bold tracking-tighter mb-4 text-foreground">
+						<div className="flex-1 p-6 sm:p-10 md:p-20">
+							<h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tighter mb-4 text-foreground">
 								Ready to share?
 							</h2>
 							<p className="text-muted-foreground font-medium uppercase tracking-widest text-[12px]">
@@ -226,16 +223,16 @@ export function LandingView(): React.ReactNode {
 						</div>
 						<Link
 							to="/session/create"
-							className="md:w-1/3 flex border-t md:border-t-0 bg-primary -mt-px -mx-px"
+							className="md:w-1/3 flex items-center justify-center border-t md:border-t-0 bg-primary -mt-px -mx-px py-4"
 						>
-							<div className="" />
+							<ArrowRight size={48} className="text-white" />
 						</Link>
 					</div>
 				</section>
 
 				<section className="mx-auto bg-foreground text-background">
-					<div className="p-12 md:p-20 max-w-3xl mx-auto flex flex-col justify-center">
-						<h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-16 border-b border-white/10 pb-8">
+					<div className="p-4 sm:p-8 md:p-12 lg:p-20 max-w-3xl mx-auto flex flex-col justify-center">
+						<h2 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-8 sm:mb-12 md:mb-16 border-b border-white/10 pb-6 md:pb-8">
 							FREQUENTLY ASKED QUESTIONS
 						</h2>
 						<div className="space-y-12">
@@ -256,10 +253,10 @@ export function LandingView(): React.ReactNode {
 
 			<footer className="bg-white max-w-300 mx-auto px-3 sm:px-4 md:px-6 py-8 flex flex-wrap justify-between items-center gap-4">
 				<div className="text-sm font-black text-foreground uppercase tracking-tighter">
-					PeerSend
+					peersend.io
 				</div>
 				<div className="flex gap-8">
-					<a
+					{/* <a
 						href="/privacy"
 						className="text-muted-foreground text-sm uppercase tracking-widest underline-offset-4 hover:text-foreground"
 					>
@@ -270,10 +267,10 @@ export function LandingView(): React.ReactNode {
 						className="text-muted-foreground text-sm uppercase tracking-widest underline-offset-4 hover:text-foreground"
 					>
 						Terms
-					</a>
+					</a> */}
 				</div>
 				<div className="text-xs tracking-widest uppercase text-muted-foreground">
-					© 2025 PeerSend.io
+					© {new Date().getFullYear()} peersend.io
 				</div>
 			</footer>
 		</div>
