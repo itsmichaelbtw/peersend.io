@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/itsmichaelbtw/peersend.io/compare/v0.3.1...v0.3.2) (2026-04-08)
+
+
+### Bug Fixes
+
+* **web/seo:** remove disallow for /session/ in robots.txt ([99392f1](https://github.com/itsmichaelbtw/peersend.io/commit/99392f110844e6f11b7edef3eb1e768aa1497f59))
+
 ## [0.3.1](https://github.com/itsmichaelbtw/peersend.io/compare/v0.3.0...v0.3.1) (2026-04-08)
 
 
