@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0](https://github.com/itsmichaelbtw/peersend.io/compare/v0.2.1...v0.3.0) (2026-04-08)
+
+
+### Features
+
+* **web/legal:** add Terms of Service and Privacy Policy pages ([9be09b2](https://github.com/itsmichaelbtw/peersend.io/commit/9be09b264d95be83c4e602b444dd904a41bbad63))
+* **web/seo:** add comprehensive SEO with react-helmet-async ([829b376](https://github.com/itsmichaelbtw/peersend.io/commit/829b376d50328afb8d75c1823dafbcecec41beac))
+* **web:** add landing page ([ba85c7e](https://github.com/itsmichaelbtw/peersend.io/commit/ba85c7e279e41e22f6dc657078cbca9e91447f14))
+* **web:** implement landing page with Mantine components ([a394669](https://github.com/itsmichaelbtw/peersend.io/commit/a39466999afe20f584eb1a3bbf6b02cfb6163b38))
+
+
+### Bug Fixes
+
+* **web/active-session:** decouple column layout and add disconnected state ([86f86b9](https://github.com/itsmichaelbtw/peersend.io/commit/86f86b99d20202fad0baadfa71d364d44ea60964))
+* **web/router:** reset scroll to top on page navigation ([c95c56c](https://github.com/itsmichaelbtw/peersend.io/commit/c95c56c935d9a0e67f0f82ec1717aadc1e179c00))
+* **web:** add baseUrl to tsconfig.app.json to resolve TS5090 path alias error ([f74fdda](https://github.com/itsmichaelbtw/peersend.io/commit/f74fdda6a2c9a6a6c456446c9e3cb0a3b5fb196c))
+
 ## [0.2.1](https://github.com/itsmichaelbtw/peersend.io/compare/v0.2.0...v0.2.1) (2026-03-24)
 
 
