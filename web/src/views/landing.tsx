@@ -52,51 +52,15 @@ export function LandingView(): React.ReactNode {
 				<section className="relative border-b overflow-hidden">
 					<div className="min-h-screen w-full relative">
 						<div
-							className="absolute inset-0 z-0"
-							style={{
-								backgroundImage: `
-        linear-gradient(to right, #e7e5e4 1px, transparent 1px),
-        linear-gradient(to bottom, #e7e5e4 1px, transparent 1px)
-      `,
-								backgroundSize: "20px 20px",
-								backgroundPosition: "0 0, 0 0",
-								maskImage: `
-         repeating-linear-gradient(
-              to right,
-              black 0px,
-              black 3px,
-              transparent 3px,
-              transparent 8px
-            ),
-            repeating-linear-gradient(
-              to bottom,
-              black 0px,
-              black 3px,
-              transparent 3px,
-              transparent 8px
-            ),
-            radial-gradient(ellipse 100% 80% at 50% 100%, #000 50%, transparent 90%)
-      `,
-								WebkitMaskImage: `
-  repeating-linear-gradient(
-              to right,
-              black 0px,
-              black 3px,
-              transparent 3px,
-              transparent 8px
-            ),
-            repeating-linear-gradient(
-              to bottom,
-              black 0px,
-              black 3px,
-              transparent 3px,
-              transparent 8px
-            ),
-            radial-gradient(ellipse 100% 80% at 50% 100%, #000 50%, transparent 90%)
-      `,
-								maskComposite: "intersect",
-								WebkitMaskComposite: "source-in"
-							}}
+							className={clsx(
+								"absolute inset-0 z-0",
+								"bg-[linear-gradient(to_right,#e7e5e4_1px,transparent_1px),linear-gradient(to_bottom,#e7e5e4_1px,transparent_1px)]",
+								"bg-size-[20px_20px]",
+								"mask-[repeating-linear-gradient(to_right,black_0px,black_3px,transparent_3px,transparent_8px),repeating-linear-gradient(to_bottom,black_0px,black_3px,transparent_3px,transparent_8px),radial-gradient(ellipse_100%_80%_at_50%_100%,#000_50%,transparent_90%)]",
+								"[-webkit-mask-image:repeating-linear-gradient(to_right,black_0px,black_3px,transparent_3px,transparent_8px),repeating-linear-gradient(to_bottom,black_0px,black_3px,transparent_3px,transparent_8px),radial-gradient(ellipse_100%_80%_at_50%_100%,#000_50%,transparent_90%)]",
+								"mask-intersect",
+								"[-webkit-mask-composite:source-in]"
+							)}
 						/>
 						<nav className="top-0 z-50 w-full relative">
 							<div className="max-w-300 mx-auto px-3 sm:px-4 md:px-6 py-4 flex justify-between items-center">
@@ -257,7 +221,7 @@ export function LandingView(): React.ReactNode {
 							to="/session/create"
 							className="md:w-1/3 flex items-center justify-center border-t md:border-t-0 bg-primary -mt-px -mx-px py-4"
 						>
-							<ArrowRight size={48} className="text-white" />
+							<ArrowRight size={42} className="text-white" />
 						</Link>
 					</div>
 				</section>
