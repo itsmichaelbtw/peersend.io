@@ -4,6 +4,8 @@ import { Link } from "react-router";
 
 import { LegalLayout } from "@/layouts/legal-layout";
 
+const EFFECTIVE_DATE = "April 2026";
+
 export function TermsView(): React.ReactNode {
 	return (
 		<LegalLayout>
@@ -15,16 +17,17 @@ export function TermsView(): React.ReactNode {
 					<h1 className="text-3xl sm:text-4xl font-bold tracking-tighter mt-6 mb-2">
 						Terms of Service
 					</h1>
-					<p className="text-muted-foreground text-sm">Effective date: April 2025</p>
+					<p className="text-muted-foreground text-sm">Effective date: {EFFECTIVE_DATE}</p>
 				</div>
 
 				<div className="space-y-10 text-sm leading-relaxed text-foreground">
 					<section>
 						<h2 className="text-base font-bold uppercase tracking-tight mb-3">Introduction</h2>
 						<p className="text-muted-foreground">
-							These Terms of Service ("Terms") govern your use of PeerSend.io ("Service"), a
-							browser-based peer-to-peer file transfer tool operated by peersend.io. By using the
-							Service, you agree to these Terms. If you do not agree, please do not use the Service.
+							These Terms of Service (&quot;Terms&quot;) govern your use of PeerSend.io
+							(&quot;Service&quot;), a browser-based peer-to-peer file transfer tool operated by
+							peersend.io. By using the Service, you agree to these Terms. If you do not agree,
+							please do not use the Service.
 						</p>
 					</section>
 
@@ -37,9 +40,9 @@ export function TermsView(): React.ReactNode {
 							applicable laws.
 						</p>
 						<p className="text-muted-foreground mt-3">
-							The Service is provided "as is" without any guarantee of uptime, availability, or
-							transfer reliability. We reserve the right to modify, suspend, or discontinue the
-							Service at any time without notice.
+							The Service is provided &quot;as is&quot; without any guarantee of uptime,
+							availability, or transfer reliability. We reserve the right to modify, suspend, or
+							discontinue the Service at any time without notice.
 						</p>
 					</section>
 
@@ -69,11 +72,11 @@ export function TermsView(): React.ReactNode {
 					<section>
 						<h2 className="text-base font-bold uppercase tracking-tight mb-3">Disclaimers</h2>
 						<p className="text-muted-foreground">
-							THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND,
-							EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS
-							FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. WE DO NOT WARRANT THAT THE SERVICE WILL
-							BE UNINTERRUPTED, ERROR-FREE, OR THAT FILES WILL BE TRANSFERRED WITHOUT LOSS OR
-							CORRUPTION.
+							THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT
+							WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
+							MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. WE DO NOT
+							WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR THAT FILES WILL BE
+							TRANSFERRED WITHOUT LOSS OR CORRUPTION.
 						</p>
 						<p className="text-muted-foreground mt-3">
 							WebRTC connections depend on network conditions and browser capabilities outside our
@@ -96,24 +99,10 @@ export function TermsView(): React.ReactNode {
 					<section>
 						<h2 className="text-base font-bold uppercase tracking-tight mb-3">Changes to Terms</h2>
 						<p className="text-muted-foreground">
-							We may update these Terms from time to time. The effective date at the top of this page
-							will reflect the date of the latest revision. Continued use of the Service after any
-							changes constitutes your acceptance of the revised Terms. We encourage you to review
-							these Terms periodically.
-						</p>
-					</section>
-
-					<section>
-						<h2 className="text-base font-bold uppercase tracking-tight mb-3">Contact</h2>
-						<p className="text-muted-foreground">
-							If you have questions or concerns about these Terms, please contact us at{" "}
-							<a
-								href="mailto:support@peersend.io"
-								className="text-primary underline underline-offset-4"
-							>
-								support@peersend.io
-							</a>
-							.
+							We may update these Terms from time to time. The effective date at the top of this
+							page will reflect the date of the latest revision. Continued use of the Service after
+							any changes constitutes your acceptance of the revised Terms. We encourage you to
+							review these Terms periodically.
 						</p>
 					</section>
 

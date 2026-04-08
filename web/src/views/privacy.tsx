@@ -4,6 +4,8 @@ import { Link } from "react-router";
 
 import { LegalLayout } from "@/layouts/legal-layout";
 
+const EFFECTIVE_DATE = "April 2026";
+
 export function PrivacyView(): React.ReactNode {
 	return (
 		<LegalLayout>
@@ -15,7 +17,7 @@ export function PrivacyView(): React.ReactNode {
 					<h1 className="text-3xl sm:text-4xl font-bold tracking-tighter mt-6 mb-2">
 						Privacy Policy
 					</h1>
-					<p className="text-muted-foreground text-sm">Effective date: April 2025</p>
+					<p className="text-muted-foreground text-sm">Effective date: {EFFECTIVE_DATE}</p>
 				</div>
 
 				<div className="space-y-10 text-sm leading-relaxed text-foreground">
@@ -30,9 +32,7 @@ export function PrivacyView(): React.ReactNode {
 
 					<section>
 						<h2 className="text-base font-bold uppercase tracking-tight mb-3">What We Collect</h2>
-						<p className="text-muted-foreground">
-							We collect almost nothing. Specifically:
-						</p>
+						<p className="text-muted-foreground">We collect almost nothing. Specifically:</p>
 						<ul className="list-none mt-3 space-y-3 text-muted-foreground">
 							{[
 								{
@@ -47,8 +47,7 @@ export function PrivacyView(): React.ReactNode {
 								},
 								{
 									label: "No tracking cookies",
-									detail:
-										"We do not use cookies for tracking, analytics, or advertising purposes."
+									detail: "We do not use cookies for tracking, analytics, or advertising purposes."
 								},
 								{
 									label: "Minimal server logs",
@@ -99,16 +98,16 @@ export function PrivacyView(): React.ReactNode {
 						</h2>
 						<p className="text-muted-foreground">
 							PeerSend.io does not integrate any third-party analytics, advertising, or tracking
-							services. We do not share any data with third parties because we do not collect data to
-							share.
+							services. We do not share any data with third parties because we do not collect data
+							to share.
 						</p>
 					</section>
 
 					<section>
 						<h2 className="text-base font-bold uppercase tracking-tight mb-3">Your Rights</h2>
 						<p className="text-muted-foreground">
-							Because we do not collect or store personal data, there is generally nothing to access,
-							correct, or delete. If you have concerns about operational logs or any other
+							Because we do not collect or store personal data, there is generally nothing to
+							access, correct, or delete. If you have concerns about operational logs or any other
 							data-related matter, please contact us and we will do our best to assist.
 						</p>
 					</section>
@@ -119,20 +118,6 @@ export function PrivacyView(): React.ReactNode {
 							We may update this Privacy Policy from time to time. The effective date at the top of
 							this page reflects the date of the latest revision. Continued use of the Service after
 							any changes constitutes your acceptance of the revised policy.
-						</p>
-					</section>
-
-					<section>
-						<h2 className="text-base font-bold uppercase tracking-tight mb-3">Contact</h2>
-						<p className="text-muted-foreground">
-							If you have any questions about this Privacy Policy, please contact us at{" "}
-							<a
-								href="mailto:support@peersend.io"
-								className="text-primary underline underline-offset-4"
-							>
-								support@peersend.io
-							</a>
-							.
 						</p>
 					</section>
 
