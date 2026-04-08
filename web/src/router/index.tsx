@@ -1,5 +1,6 @@
 import { createBrowserRouter, redirect } from "react-router";
 
+import { RootLayout } from "@/layouts/root-layout";
 import { SessionLayout } from "@/layouts/session-layout";
 import { CompatibilityView } from "@/views/compatibility";
 import { LandingView } from "@/views/landing";
@@ -14,70 +15,75 @@ import { appState } from "@/state";
 
 export const router = createBrowserRouter([
 	{
-		path: "/",
-		element: <LandingView />
-	},
-	{
-		path: "/privacy",
-		element: <PrivacyView />
-	},
-	{
-		path: "/terms",
-		element: <TermsView />
-	},
-	{
-		path: "/compatibility",
-		Component: CompatibilityView
-	},
-	{
-		path: "/session",
-		Component: SessionLayout,
-		loader(): null {
-			if (isBrowserCompatible()) {
-				return null;
-			}
-
-			throw redirect("/compatibility");
-		},
+		Component: RootLayout,
 		children: [
 			{
-				index: true,
-				loader(): void {
-					throw redirect("/session/create");
-				}
+				path: "/",
+				element: <LandingView />
 			},
 			{
-				path: "create",
-				loader(): void {
-					const { sessionState } = appState.get();
-
-					if (sessionState.isConnected && sessionState.sessionCode) {
-						throw redirect(`/session/${sessionState.sessionCode}`);
-					}
-				},
-				element: <CreateSessionView />
+				path: "/privacy",
+				element: <PrivacyView />
 			},
 			{
-				path: "join",
-				loader(): void {
-					const { sessionState } = appState.get();
-
-					if (sessionState.isConnected && sessionState.sessionCode) {
-						throw redirect(`/session/${sessionState.sessionCode}`);
-					}
-				},
-				element: <JoinSessionView />
+				path: "/terms",
+				element: <TermsView />
 			},
 			{
-				path: ":session_code",
-				loader(): void {
-					const { sessionState } = appState.get();
-
-					if (!sessionState.isConnected || sessionState.connectionType === "none") {
-						throw redirect("/session/create");
+				path: "/compatibility",
+				Component: CompatibilityView
+			},
+			{
+				path: "/session",
+				Component: SessionLayout,
+				loader(): null {
+					if (isBrowserCompatible()) {
+						return null;
 					}
+
+					throw redirect("/compatibility");
 				},
-				element: <ActiveSessionView />
+				children: [
+					{
+						index: true,
+						loader(): void {
+							throw redirect("/session/create");
+						}
+					},
+					{
+						path: "create",
+						loader(): void {
+							const { sessionState } = appState.get();
+
+							if (sessionState.isConnected && sessionState.sessionCode) {
+								throw redirect(`/session/${sessionState.sessionCode}`);
+							}
+						},
+						element: <CreateSessionView />
+					},
+					{
+						path: "join",
+						loader(): void {
+							const { sessionState } = appState.get();
+
+							if (sessionState.isConnected && sessionState.sessionCode) {
+								throw redirect(`/session/${sessionState.sessionCode}`);
+							}
+						},
+						element: <JoinSessionView />
+					},
+					{
+						path: ":session_code",
+						loader(): void {
+							const { sessionState } = appState.get();
+
+							if (!sessionState.isConnected || sessionState.connectionType === "none") {
+								throw redirect("/session/create");
+							}
+						},
+						element: <ActiveSessionView />
+					}
+				]
 			}
 		]
 	}
