@@ -8,6 +8,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { router } from "./router";
 
+// eslint-disable-next-line no-console
+console.log(`peersend.io v${__APP_VERSION__} — ${__GITHUB_URL__}`);
+
 const root = document.getElementById("root")!;
 
 createRoot(root).render(

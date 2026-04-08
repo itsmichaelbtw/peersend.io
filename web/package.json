@@ -74,5 +74,9 @@
     "vite-plugin-eslint": "^1.8.1",
     "vite-plugin-svgr": "^5.0.0",
     "vite-tsconfig-paths": "^6.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/itsmichaelbtw/peersend.io"
   }
 }

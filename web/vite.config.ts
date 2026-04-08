@@ -1,4 +1,5 @@
 import path, { dirname } from "path";
+import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -11,8 +12,20 @@ import svgr from "vite-plugin-svgr";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const pkg = JSON.parse(readFileSync(path.resolve(__dirname, "package.json"), "utf-8")) as {
+	version: string;
+	repository?: { url: string } | string;
+};
+
+const githubUrl =
+	typeof pkg.repository === "object" ? pkg.repository.url : (pkg.repository ?? "");
+
 export default defineConfig({
 	publicDir: "public",
+	define: {
+		__APP_VERSION__: JSON.stringify(pkg.version),
+		__GITHUB_URL__: JSON.stringify(githubUrl)
+	},
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src")

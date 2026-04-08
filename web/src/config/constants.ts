@@ -82,7 +82,8 @@ export const DEFAULT_SESSION_STATE: SessionState = {
 	connectionType: "none"
 };
 
-export const WEBSITE_GITHUB_URL = "https://github.com/peersend-io/peersend";
+export const WEBSITE_GITHUB_URL: string = __GITHUB_URL__;
+export const APP_VERSION: string = __APP_VERSION__;
 
 export const WEBSITE_FEATURES: readonly WebsiteFeature[] = [
 	{

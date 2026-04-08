@@ -17,7 +17,7 @@ export default [
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: "module",
-			globals: { ...globals.browser, ...globals.es2022 }
+			globals: { ...globals.browser, ...globals.es2022, __APP_VERSION__: "readonly", __GITHUB_URL__: "readonly" }
 		}
 	},
 	{
