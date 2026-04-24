@@ -247,8 +247,8 @@ export function LandingView(): React.ReactNode {
 			</main>
 
 			<footer className="bg-white max-w-300 mx-auto px-3 sm:px-4 md:px-6 py-8 flex flex-wrap justify-between items-center gap-4">
-				<div className="text-sm font-black text-foreground uppercase tracking-tighter">
-					peersend.io
+				<div className="flex items-center gap-2 text-sm font-black text-foreground uppercase tracking-tighter">
+					<Wordmark className="h-5" />
 				</div>
 				<div className="flex gap-8">
 					<Link
