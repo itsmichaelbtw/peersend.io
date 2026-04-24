@@ -67,7 +67,9 @@ func NewServer(sessionService *service.SessionService, clientService *service.Cl
 // message, then delegates to Connection.Listen for the message loop.
 //
 // Any error before the message loop starts causes a WebSocket close frame to
-// be sent and the connection to be shut down.
+// be sent and the connection to be shut down. A deferred cleanup guard ensures
+// that partially-created sessions or clients are removed from the repository if
+// the message loop never starts (e.g. on error or panic).
 func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 	ctx, cancelWs := context.WithCancel(context.Background())
 	defer cancelWs()
@@ -78,10 +80,28 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 
 	s.logger.Info().Str("mode", mode).Str("session_code", sessionCode).Msg("new websocket connection")
 
-	var session *domain.Session
 	var err error
+	var session *domain.Session
+	var client *domain.Client
+	var clientAdded bool
+	var listenStarted bool
 
-	// need to clean up the session is created but errors occur below
+	// Cleanup guard: if Listen never starts, remove any partially-registered
+	// client and empty sessions so the repository does not accumulate orphans.
+	defer func() {
+		if listenStarted {
+			return
+		}
+		if session != nil && clientAdded {
+			if err := s.SessionService.RemoveClient(ctx, session.ID, client.ID); err != nil {
+				s.logger.Warn().Err(err).Str("session_id", session.ID).Str("client_id", client.ID).Msg("pre-listen cleanup: failed to remove client")
+			}
+		} else if mode == "host" && session != nil {
+			if err := s.SessionService.CleanupSession(ctx, session.ID); err != nil {
+				s.logger.Warn().Err(err).Str("session_id", session.ID).Msg("pre-listen cleanup: failed to destroy empty session")
+			}
+		}
+	}()
 
 	switch mode {
 	case "host":
@@ -114,7 +134,7 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 		return
 	}
 
-	client := s.ClientService.NewClient(conn)
+	client = s.ClientService.NewClient(conn)
 	if err := s.SessionService.AddClient(ctx, session.ID, client); err != nil {
 		s.logger.Error().Err(err).Str("session_id", session.ID).Str("client_id", client.ID).Msg("failed to add client to session")
 		conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(
@@ -124,6 +144,7 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 		conn.Close()
 		return
 	}
+	clientAdded = true
 
 	sessionData, err := s.SessionService.GetSessionData(session.ID, client.ID)
 	if err != nil {
@@ -141,6 +162,7 @@ func (s *Server) handleConnection(conn *websocket.Conn, r *http.Request) {
 	}
 
 	connection := NewConnection(client, session, s.SessionService, s.Dispatcher, s.Broadcaster)
+	listenStarted = true
 	connection.Listen(ctx)
 }
 
