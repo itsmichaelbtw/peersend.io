@@ -1,6 +1,8 @@
 import React from "react";
 import clsx from "clsx";
 
+import Wordmark from "@/assets/svg/peersend-wordmark.svg?react";
+
 import {
 	WEBSITE_BROWSER_ENTRIES,
 	WEBSITE_FAQ_ITEMS,
@@ -10,7 +12,7 @@ import {
 	WEBSITE_STATS
 } from "@/config/constants";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, NetworkIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 import { Seo } from "@/components/seo";
 
@@ -64,10 +66,7 @@ export function LandingView(): React.ReactNode {
 						/>
 						<nav className="top-0 z-50 w-full relative">
 							<div className="max-w-300 mx-auto px-3 sm:px-4 md:px-6 py-4 flex justify-between items-center">
-								<div className="flex items-center gap-2 text-xl font-bold tracking-tighter">
-									<NetworkIcon size={20} />
-									<span>peersend.io</span>
-								</div>
+								<Wordmark className="h-7" />
 							</div>
 						</nav>
 						<div className="max-w-300 mx-auto px-3 sm:px-4 md:px-6 pt-24 pb-32 text-center relative z-10">
