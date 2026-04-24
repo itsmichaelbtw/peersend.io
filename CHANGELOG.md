@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.0](https://github.com/itsmichaelbtw/peersend.io/compare/v0.3.2...v0.4.0) (2026-04-24)
+
+
+### Features
+
+* **branding:** add SVG logo as favicon and landing page icon ([579f20d](https://github.com/itsmichaelbtw/peersend.io/commit/579f20d59671aa7f2052a223218696a3bb2c35ba))
+* **branding:** add wordmark to footer ([df210d4](https://github.com/itsmichaelbtw/peersend.io/commit/df210d4f933429383ad00d63ab4e175ce5c2e357))
+* **file-transfer:** integrate abort registry for connection-aware transfers ([5daad31](https://github.com/itsmichaelbtw/peersend.io/commit/5daad316313c4a7df9c52d13b78d9bc86a28c3fe))
+* **ui:** file transfer error state, websocket read-only mode, and toasts ([3cf4f37](https://github.com/itsmichaelbtw/peersend.io/commit/3cf4f372357e92e0eb76dbfced4974c0cd0eb0de))
+* **web:** move version number into session diagnostics panel ([07912c7](https://github.com/itsmichaelbtw/peersend.io/commit/07912c75e70f2e23245b89d277cd7bc1eb1bad8e))
+
+
+### Bug Fixes
+
+* **networking:** centralise session teardown and improve disconnect handling ([b29efe4](https://github.com/itsmichaelbtw/peersend.io/commit/b29efe426ee07884a052df72825fd05e2a7ad70b))
+* **server:** prevent orphan session on rapid disconnect ([513f310](https://github.com/itsmichaelbtw/peersend.io/commit/513f310fbd88db9e0a1f8c861d343f6c6bb912a9))
+* **web:** GitHub URL from package.json, version on session, sonner styling ([b060d81](https://github.com/itsmichaelbtw/peersend.io/commit/b060d8104c33f079fd5a1b0c453136be2f1af4bf))
+
 ## [0.3.2](https://github.com/itsmichaelbtw/peersend.io/compare/v0.3.1...v0.3.2) (2026-04-08)
 
 
