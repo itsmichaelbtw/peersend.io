@@ -75,7 +75,9 @@ export function JoinSessionView(): React.ReactNode {
 							</Button>
 						</Link>
 					</div>
-					<h2 className="font-semibold text-base md:text-lg pr-3 sm:pr-4 md:pr-6">Join a session</h2>
+					<h2 className="font-semibold text-base md:text-lg pr-3 sm:pr-4 md:pr-6">
+						Join a session
+					</h2>
 				</div>
 			</CardHeader>
 
@@ -109,7 +111,9 @@ export function JoinSessionView(): React.ReactNode {
 					</div>
 				</div>
 				{error && (
-					<p className="text-xs text-destructive pr-3 sm:pr-4 md:pr-6 py-3 text-right ml-auto w-fit">{error}</p>
+					<p className="text-xs text-destructive pr-3 sm:pr-4 md:pr-6 py-3 text-right ml-auto w-fit">
+						{error}
+					</p>
 				)}
 
 				<div className="p-3 sm:p-4 md:p-6 bg-secondary">

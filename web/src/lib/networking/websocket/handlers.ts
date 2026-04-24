@@ -35,11 +35,13 @@ export const messageHandlers: NetworkEvents<WebSocketIncomingMessage, WebSocketH
 	},
 
 	sync_clients(data: WebSocketDataSyncClients, ctx: WebSocketHandlerContext): void {
-		const { sessionState } = appState.get();
+		const { sessionState, webrtcState } = appState.get();
 
 		if (sessionState.clients.length > data.clients.length) {
-			log.warn("There was a discrepancy in the client list, resetting direct connections.");
-			ctx.rtc.disconnect();
+			if (webrtcState.isConnected || webrtcState.isConnecting) {
+				log.warn("There was a discrepancy in the client list, resetting direct connections.");
+				ctx.rtc.disconnect();
+			}
 		}
 
 		appState.dispatch("SET_CLIENTS", data);

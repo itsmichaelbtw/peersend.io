@@ -10,10 +10,11 @@ import { messageHandlers } from "./handlers";
 import { getWebSocketClient } from "../client-registry";
 import { abortRegistry } from "../core/abort-registry";
 
-import { appState, isWebRtcConnected } from "@/state";
+import { appState, isWebRtcConnected, isWebSocketConnected, fileTransferState } from "@/state";
 import { DEFAULT_WEBRTC_STATE } from "@/config/constants";
 import { sleep } from "@/utils/sleep";
 import { createLogger } from "@/utils/logger";
+import { toast } from "sonner";
 
 const log = createLogger("WebRTCClient");
 
@@ -74,7 +75,6 @@ export class WebRTCClient extends NetworkClient<
 						this.startLatencyMonitoring();
 						break;
 					}
-					case "disconnected":
 					case "failed":
 					case "closed": {
 						this.disconnect();
@@ -101,6 +101,29 @@ export class WebRTCClient extends NetworkClient<
 			onClose: (): void => {
 				log.debug("DataChannel onClose");
 				abortRegistry.end();
+
+				const { files } = fileTransferState.get();
+				const interrupted: string[] = [];
+
+				for (const file of files) {
+					if (file.status === "in-transit") {
+						fileTransferState.dispatch("SET_FILE_STATUS", {
+							id: file.id,
+							status: "error",
+							errorMessage: "Connection lost"
+						});
+						interrupted.push(file.metadata.name);
+					}
+				}
+
+				if (interrupted.length > 0) {
+					toast.error(
+						interrupted.length === 1
+							? "Transfer interrupted"
+							: `${interrupted.length} transfers interrupted`,
+						{ description: interrupted.join(", ") }
+					);
+				}
 			},
 			onError: (event: RTCErrorEvent): void => {
 				log.error("DataChannel onError", event.error);
@@ -310,8 +333,10 @@ export class WebRTCClient extends NetworkClient<
 		this.stopLatencyMonitoring();
 		this.reset();
 
-		const ws = getWebSocketClient();
-		ws.startLatencyMonitoring();
+		if (isWebSocketConnected()) {
+			const ws = getWebSocketClient();
+			ws.startLatencyMonitoring();
+		}
 
 		log.info("Disconnected");
 
@@ -325,7 +350,6 @@ export class WebRTCClient extends NetworkClient<
 		});
 
 		log.debug("State has been reset");
-
 		return this;
 	}
 

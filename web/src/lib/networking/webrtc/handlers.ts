@@ -70,7 +70,8 @@ export const messageHandlers: NetworkEvents<WebRTCIncomingMessage, WebRTCHandler
 		fileStorage.remove(data.id);
 		fileTransferState.dispatch("SET_FILE_STATUS", {
 			id: data.id,
-			status: "error"
+			status: "error",
+			errorMessage: "Transfer was incomplete"
 		});
 	},
 

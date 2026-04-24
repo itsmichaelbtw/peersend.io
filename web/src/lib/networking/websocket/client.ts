@@ -14,6 +14,7 @@ import {
 	DEFAULT_WEBSOCKET_STATE
 } from "@/config/constants";
 import { appState, isWebSocketConnected } from "@/state";
+import { resetFileTransfers } from "@/lib/file-transfer/reset";
 import { sleep } from "@/utils/sleep";
 import { createLogger } from "@/utils/logger";
 
@@ -126,6 +127,8 @@ export class WebSocketClient extends NetworkClient<
 			webrtcState: DEFAULT_WEBRTC_STATE,
 			websocketState: DEFAULT_WEBSOCKET_STATE
 		});
+
+		resetFileTransfers();
 
 		log.debug("State has been reset");
 

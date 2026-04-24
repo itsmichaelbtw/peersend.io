@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { appState } from "@/state";
 import { useAppState } from "@/hooks/use-app-state";
 import { capitalise } from "@/utils/capitalise";
-import { getWebRTCClient, getWebSocketClient } from "@/lib/networking/client-registry";
+import { teardownSession } from "@/lib/networking/session-teardown";
 
 export function SessionLayout(): React.ReactNode {
 	const { sessionState } = useAppState();
@@ -29,8 +29,7 @@ export function SessionLayout(): React.ReactNode {
 
 	useEffect(() => {
 		return (): void => {
-			getWebRTCClient().disconnect();
-			getWebSocketClient().disconnect();
+			teardownSession();
 		};
 	}, []);
 
