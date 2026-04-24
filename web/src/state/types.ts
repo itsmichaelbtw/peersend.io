@@ -54,6 +54,7 @@ export interface PeerSendFile<T extends FileTransferType = FileTransferType> {
 	id: string;
 	timestamp: number;
 	status: "pending" | "in-transit" | "sent" | "received" | "error";
+	errorMessage?: string;
 	transfer: {
 		type: T;
 		percentage: number;

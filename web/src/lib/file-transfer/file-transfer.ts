@@ -8,6 +8,8 @@ import { calculatePercentage, createBufferWithHeader } from "./utils";
 import { ProgressThrottler } from "./progress-throttler";
 import { sleep } from "@/utils/sleep";
 import { createLogger } from "@/utils/logger";
+import { abortRegistry } from "@/lib/networking/core/abort-registry";
+import { toast } from "sonner";
 
 const log = createLogger("FileStorage");
 
@@ -30,6 +32,14 @@ export class FileTransfer {
 			);
 		}
 
+		let signal: AbortSignal | undefined;
+
+		try {
+			signal = abortRegistry.register(file.id);
+		} catch {
+			log.warn("No active abort registry session, transfer will not be abortable");
+		}
+
 		const fileChunker = new FileChunker(file.nativeFile);
 		const throttler = new ProgressThrottler(1, 150);
 
@@ -43,7 +53,7 @@ export class FileTransfer {
 		try {
 			await this.transport.start(file.id, totalBytes, file.metadata);
 
-			for await (const chunk of fileChunker.chunk()) {
+			for await (const chunk of fileChunker.chunk(undefined, signal)) {
 				let percentage = calculatePercentage(bytesSent + chunk.length, totalBytes);
 
 				if (!throttler.canUpdate(percentage)) {
@@ -62,8 +72,24 @@ export class FileTransfer {
 			log.success(`File transfer has been completed for ${file.metadata.name}`);
 			await this.transport.complete(file.id);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : "An unknown error occurred";
+			const isAbort = error instanceof DOMException && error.name === "AbortError";
+			const message = isAbort
+				? "Connection lost"
+				: error instanceof Error
+					? error.message
+					: "An unknown error occurred";
+
+			// not notifiying user of abort errors as these
+			// are handled when the datachannel is closed
+			if (!isAbort) {
+				toast.error(`Transfer failed: ${file.metadata.name}`, {
+					description: message
+				});
+			}
+
 			await this.transport.error(file.id, message);
+		} finally {
+			abortRegistry.abort(file.id);
 		}
 	}
 

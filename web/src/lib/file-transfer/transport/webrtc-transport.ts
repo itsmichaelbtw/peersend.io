@@ -5,6 +5,7 @@ import type { FileTransferTransport } from "../types";
 import { BUFFER_THRESHOLD } from "../constants";
 import { fileTransferState } from "@/state";
 import { createLogger } from "@/utils/logger";
+import { abortRegistry } from "@/lib/networking/core/abort-registry";
 
 const log = createLogger("WebRtcTransport");
 
@@ -17,21 +18,29 @@ export class WebRTCTransport implements FileTransferTransport {
 		this.datachannel = datachannel;
 	}
 
-	private async wait(): Promise<void> {
+	private async wait(id: string): Promise<void> {
 		if (this.datachannel.bufferedAmount <= BUFFER_THRESHOLD) {
 			return;
 		}
 
-		return new Promise((resolve) => {
+		const signal = abortRegistry.getSignal(id);
+
+		return new Promise((resolve, reject) => {
 			this.datachannel.bufferedAmountLowThreshold = BUFFER_THRESHOLD;
 
-			const listener = (): void => {
-				log.warn("Data channel buffered amount is low");
-				this.datachannel.removeEventListener("bufferedamountlow", listener);
+			const onLow = (): void => {
+				signal?.removeEventListener("abort", onAbort);
+				this.datachannel.removeEventListener("bufferedamountlow", onLow);
 				resolve();
 			};
 
-			this.datachannel.addEventListener("bufferedamountlow", listener);
+			const onAbort = (): void => {
+				this.datachannel.removeEventListener("bufferedamountlow", onLow);
+				reject(new DOMException("Transfer aborted", "AbortError"));
+			};
+
+			this.datachannel.addEventListener("bufferedamountlow", onLow);
+			signal?.addEventListener("abort", onAbort, { once: true });
 		});
 	}
 
@@ -55,7 +64,7 @@ export class WebRTCTransport implements FileTransferTransport {
 	public async chunk(id: string, chunk: Uint8Array, percentage: number): Promise<void> {
 		if (this.datachannel.bufferedAmount > BUFFER_THRESHOLD) {
 			log.warn("Data channel buffer exceeded threshold, waiting...");
-			await this.wait();
+			await this.wait(id);
 		}
 
 		this.client.emit({
@@ -92,7 +101,8 @@ export class WebRTCTransport implements FileTransferTransport {
 
 		fileTransferState.dispatch("SET_FILE_STATUS", {
 			id: id,
-			status: "error"
+			status: "error",
+			errorMessage: message
 		});
 
 		return Promise.resolve();

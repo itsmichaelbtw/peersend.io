@@ -17,6 +17,7 @@ interface StateActions {
 	};
 	SET_FILE_STATUS: ID & {
 		status: PeerSendFile["status"];
+		errorMessage?: string;
 	};
 }
 
@@ -104,7 +105,8 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
 						if (file.id === action.payload.id) {
 							return {
 								...file,
-								status: action.payload.status
+								status: action.payload.status,
+								errorMessage: action.payload.errorMessage
 							};
 						}
 

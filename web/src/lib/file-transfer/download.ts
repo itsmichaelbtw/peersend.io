@@ -17,8 +17,8 @@ export function downloadFiles(files: PeerSendFile[]): void {
 			// https://github.com/itsmichaelbtw/peersend.io/issues/39
 
 			saveFileToDisk(nativeFile);
-		} catch (error) {
-			log.error(error);
+		} catch {
+			throw new Error(`"${file.metadata.name}" cannot be downloaded`);
 		}
 	}
 }

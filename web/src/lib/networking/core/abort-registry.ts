@@ -50,6 +50,10 @@ class AbortRegistry {
 		return controller.signal;
 	}
 
+	public getSignal(id: string): AbortSignal | null {
+		return this.tasks.get(id)?.signal ?? null;
+	}
+
 	public abort(id: string): void {
 		const controller = this.tasks.get(id);
 

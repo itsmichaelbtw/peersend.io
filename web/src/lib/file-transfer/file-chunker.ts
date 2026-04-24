@@ -10,12 +10,16 @@ export class FileChunker {
 		this.file = file;
 	}
 
-	async *chunk(chunkSize: number = DEFAULT_CHUNK_SIZE): AsyncGenerator<Uint8Array, void> {
+	async *chunk(chunkSize: number = DEFAULT_CHUNK_SIZE, signal?: AbortSignal): AsyncGenerator<Uint8Array, void> {
 		log.info(`Starting chunk on file ${this.file.name}`);
 
 		let offset = 0;
 
 		while (offset < this.file.size) {
+			if (signal?.aborted) {
+				throw new DOMException("Transfer aborted", "AbortError");
+			}
+
 			const end = Math.min(offset + chunkSize, this.file.size);
 			const blob = this.file.slice(offset, end);
 			const buffer = await blob.arrayBuffer();
