@@ -15,7 +15,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { EllipsisIcon, FileIcon } from "lucide-react";
+import { EllipsisIcon, FileIcon, CircleAlertIcon } from "lucide-react";
 
 import { formatFileSize, truncateFileName } from "@/lib/file-transfer";
 import { SortableHeader } from "./sorting-header";
@@ -50,9 +50,16 @@ export const selectionColumn = columnHelper.display({
 export const fileIconColumn = columnHelper.display({
 	id: "file-icon",
 	size: 48,
-	cell() {
+	cell({ row }) {
+		const isError = row.original.status === "error";
 		return (
-			<div className="flex items-center justify-center h-8 w-8 bg-secondary text-muted-foreground">
+			<div
+				className={
+					isError
+						? "flex items-center justify-center h-8 w-8 bg-red-100 text-red-500"
+						: "flex items-center justify-center h-8 w-8 bg-secondary text-muted-foreground"
+				}
+			>
 				<FileIcon size={18} />
 			</div>
 		);
@@ -120,6 +127,15 @@ export const fileStatusColumn = columnHelper.accessor((file) => file, {
 						</TooltipTrigger>
 						<TooltipContent>
 							<p>{file.transfer.percentage}%</p>
+						</TooltipContent>
+					</Tooltip>
+				) : file.status === "error" ? (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<CircleAlertIcon size={16} className="text-destructive cursor-default" />
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>{file.errorMessage ?? "Transfer failed"}</p>
 						</TooltipContent>
 					</Tooltip>
 				) : (

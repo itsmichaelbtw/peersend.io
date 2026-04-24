@@ -18,7 +18,7 @@ createRoot(root).render(
 		<HelmetProvider>
 			<TooltipProvider skipDelayDuration={0} delayDuration={200}>
 				<RouterProvider router={router} />
-				<Toaster />
+				<Toaster position="top-right" />
 			</TooltipProvider>
 		</HelmetProvider>
 	</StrictMode>

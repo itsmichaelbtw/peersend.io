@@ -15,18 +15,26 @@ export function Collaboration(): React.ReactNode {
 
 	if (sessionState.connectionType === "websocket") {
 		if (sessionState.clients.length === sessionState.maximumClients) {
-			if (sessionState.isHost) {
-				return <InitiateDirectConnectionCard />;
-			} else {
-				return <HostStandbyCard />;
-			}
+			return (
+				<React.Fragment>
+					{sessionState.isHost ? (
+						<InitiateDirectConnectionCard />
+					) : (
+						<HostStandbyCard />
+					)}
+					<FileTransferCard />
+				</React.Fragment>
+			);
 		}
 
 		return (
-			<InvitePromptCard
-				clientsConnected={sessionState.clients.length}
-				maximumClients={sessionState.maximumClients}
-			/>
+			<React.Fragment>
+				<InvitePromptCard
+					clientsConnected={sessionState.clients.length}
+					maximumClients={sessionState.maximumClients}
+				/>
+				<FileTransferCard />
+			</React.Fragment>
 		);
 	}
 

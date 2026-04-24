@@ -9,6 +9,7 @@ import { Dropzone } from "@/components/ui/dropzone";
 import type { FileWithPath } from "@/components/ui/dropzone";
 import { toast } from "sonner";
 import { useFileTransferState } from "@/hooks/use-file-transfer-state";
+import { useAppState } from "@/hooks/use-app-state";
 import {
 	FileTransfer,
 	WebRTCTransport,
@@ -22,6 +23,9 @@ import { FileTable } from "../file-table";
 
 export function FileTransferCard(): React.ReactNode {
 	const { fileGroups } = useFileTransferState();
+	const { sessionState } = useAppState();
+
+	const isWebRTCMode = sessionState.connectionType === "webrtc";
 
 	async function onSend(files: PeerSendFile[]): Promise<void> {
 		const filesToSend = files.filter((f) => f.status === "pending");
@@ -48,7 +52,13 @@ export function FileTransferCard(): React.ReactNode {
 	}
 
 	function onDownload(files: PeerSendFile[]): void {
-		downloadFiles(files);
+		try {
+			downloadFiles(files);
+		} catch (error) {
+			toast.error("Cannot download file", {
+				description: error instanceof Error ? error.message : "An unknown error occurred"
+			});
+		}
 	}
 
 	function onDrop(files: FileWithPath[]): void {
@@ -72,55 +82,63 @@ export function FileTransferCard(): React.ReactNode {
 		}
 	}
 
+	if (!isWebRTCMode && fileGroups.incoming.length === 0) {
+		return null;
+	}
+
 	return (
 		<div className="divide-y">
-			<div className="p-3 sm:p-4 md:p-6 flex items-center justify-between">
-				<h2 className="font-semibold text-base md:text-lg leading-snug">File Transfer</h2>
-				<Badge variant="secondary">500MB limit</Badge>
-			</div>
+			{isWebRTCMode && (
+				<div className="p-3 sm:p-4 md:p-6 flex items-center justify-between">
+					<h2 className="font-semibold text-base md:text-lg leading-snug">File Transfer</h2>
+					<Badge variant="secondary">500MB limit</Badge>
+				</div>
+			)}
 
-			<Dropzone onDrop={onDrop} onReject={onReject} />
-			<FileTable files={fileGroups.outgoing}>
-				{({ isUsingSelection, files }) => {
-					const filesToRemove = isUsingSelection ? files : fileGroups.outgoing;
-					const hasInTransit = filesToRemove.some((f) => f.status === "in-transit");
-					return (
-						<div className="flex items-center justify-between pl-4">
-							<div>
-								{isUsingSelection && (
-									<p className="text-sm text-muted-foreground">
-										{files.length} of {fileGroups.outgoing.length} selected
-									</p>
-								)}
+			{isWebRTCMode && <Dropzone onDrop={onDrop} onReject={onReject} />}
+			{isWebRTCMode && (
+				<FileTable files={fileGroups.outgoing}>
+					{({ isUsingSelection, files }) => {
+						const filesToRemove = isUsingSelection ? files : fileGroups.outgoing;
+						const hasInTransit = filesToRemove.some((f) => f.status === "in-transit");
+						return (
+							<div className="flex items-center justify-between pl-4">
+								<div>
+									{isUsingSelection && (
+										<p className="text-sm text-muted-foreground">
+											{files.length} of {fileGroups.outgoing.length} selected
+										</p>
+									)}
+								</div>
+								<div className="flex items-center">
+									<Button
+										size="sm"
+										variant="secondary"
+										disabled={hasInTransit}
+										className="gap-1.5"
+										onClick={() => {
+											fileTransferState.remove(filesToRemove);
+										}}
+									>
+										<Trash2Icon size={16} />
+										{isUsingSelection ? `Remove (${files.length})` : "Clear"}
+									</Button>
+									<Button
+										size="sm"
+										className="gap-1.5"
+										onClick={() => {
+											void onSend(isUsingSelection ? files : fileGroups.outgoing);
+										}}
+									>
+										<SendIcon size={16} />
+										Send {isUsingSelection && `(${files.length})`}
+									</Button>
+								</div>
 							</div>
-							<div className="flex items-center">
-								<Button
-									size="sm"
-									variant="secondary"
-									disabled={hasInTransit}
-									className="gap-1.5"
-									onClick={() => {
-										fileTransferState.remove(filesToRemove);
-									}}
-								>
-									<Trash2Icon size={16} />
-									{isUsingSelection ? `Remove (${files.length})` : "Clear"}
-								</Button>
-								<Button
-									size="sm"
-									className="gap-1.5"
-									onClick={() => {
-										void onSend(isUsingSelection ? files : fileGroups.outgoing);
-									}}
-								>
-									<SendIcon size={16} />
-									Send {isUsingSelection && `(${files.length})`}
-								</Button>
-							</div>
-						</div>
-					);
-				}}
-			</FileTable>
+						);
+					}}
+				</FileTable>
+			)}
 
 			<div className="p-3 sm:p-4 md:p-6">
 				<h2 className="font-semibold text-base md:text-lg leading-snug">Shared Files</h2>
@@ -129,9 +147,11 @@ export function FileTransferCard(): React.ReactNode {
 			<FileTable
 				files={fileGroups.incoming}
 				emptyComponent={
-					<div className="flex justify-center p-12">
-						<p className="text-sm text-muted-foreground">Files sent by others will appear here</p>
-					</div>
+					isWebRTCMode ? (
+						<div className="flex justify-center p-12">
+							<p className="text-sm text-muted-foreground">Files sent by others will appear here</p>
+						</div>
+					) : undefined
 				}
 			>
 				{({ isUsingSelection, files }) => {
