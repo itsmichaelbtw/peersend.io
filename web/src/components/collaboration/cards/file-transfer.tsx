@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dropzone } from "@/components/ui/dropzone";
 import type { FileWithPath } from "@/components/ui/dropzone";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { useFileTransferState } from "@/hooks/use-file-transfer-state";
 import { useAppState } from "@/hooks/use-app-state";
@@ -14,10 +15,12 @@ import {
 	FileTransfer,
 	WebRTCTransport,
 	createCustomFileFromUpload,
-	downloadFiles
+	downloadFiles,
+	formatFileSize,
+	getCurrentFileCapacity
 } from "@/lib/file-transfer";
 import { getWebRTCClient } from "@/lib/networking/client-registry";
-import { appState, fileTransferState } from "@/state";
+import { appState, fileTransferState, isAppFeatureEnabled } from "@/state";
 
 import { FileTable } from "../file-table";
 
@@ -26,6 +29,18 @@ export function FileTransferCard(): React.ReactNode {
 	const { sessionState } = useAppState();
 
 	const isWebRTCMode = sessionState.connectionType === "webrtc";
+
+	const totalIncomingBytes = getCurrentFileCapacity(fileGroups.incoming);
+	const hasCapacityLimit = isAppFeatureEnabled("file_transfer_capacity");
+
+	const formattedUsed = React.useMemo(
+		() => formatFileSize(totalIncomingBytes),
+		[totalIncomingBytes]
+	);
+	const formattedMaxCapacity = React.useMemo(
+		() => formatFileSize(sessionState.fileTransferCapacity),
+		[sessionState.fileTransferCapacity]
+	);
 
 	async function onSend(files: PeerSendFile[]): Promise<void> {
 		const filesToSend = files.filter((f) => f.status === "pending");
@@ -91,7 +106,6 @@ export function FileTransferCard(): React.ReactNode {
 			{isWebRTCMode && (
 				<div className="p-3 sm:p-4 md:p-6 flex items-center justify-between">
 					<h2 className="font-semibold text-base md:text-lg leading-snug">File Transfer</h2>
-					<Badge variant="secondary">500MB limit</Badge>
 				</div>
 			)}
 
@@ -140,8 +154,22 @@ export function FileTransferCard(): React.ReactNode {
 				</FileTable>
 			)}
 
-			<div className="p-3 sm:p-4 md:p-6">
+			<div className="p-3 sm:p-4 md:p-6 flex items-center justify-between">
 				<h2 className="font-semibold text-base md:text-lg leading-snug">Shared Files</h2>
+				{hasCapacityLimit && (
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge variant="secondary" className="cursor-default">
+									{formattedUsed} / {formattedMaxCapacity}
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent side="bottom" className="max-w-56 text-center">
+								Memory usage for received files. Remove files to free up transfer capacity.
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
+				)}
 			</div>
 
 			<FileTable

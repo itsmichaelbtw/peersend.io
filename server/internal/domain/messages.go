@@ -61,6 +61,9 @@ type SessionData struct {
 	EncryptionMode string `json:"encryption_mode"`
 
 	// configured via server settings.
+	FileTransferCapacity int `json:"file_transfer_capacity"`
+
+	// configured via server settings.
 	AutoWebRTC bool `json:"auto_webrtc"`
 
 	HostTransferData

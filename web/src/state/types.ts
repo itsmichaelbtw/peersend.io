@@ -37,6 +37,7 @@ export interface SessionState {
 	isHost: boolean;
 	isConnected: boolean;
 	autoWebRTC: boolean;
+	fileTransferCapacity: number;
 	encryptionMode: EncryptionModes;
 	latency: number;
 	clientId: WithNullable<string>;

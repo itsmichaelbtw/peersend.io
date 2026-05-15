@@ -20,6 +20,11 @@ export interface WebRTCDataEndFileTransit {
 	id: string;
 }
 
+export interface WebRTCDataRejectFileTransit {
+	id: string;
+	reason: string;
+}
+
 export interface WebRTCDataError {
 	type: string;
 	reason: string;
@@ -31,6 +36,7 @@ interface WebRTCCommonEvents {
 	start_file_transit: WebRTCDataStartFileTransit;
 	in_file_transit: WebRTCDataInFileTransit;
 	end_file_transit: WebRTCDataEndFileTransit;
+	reject_file_transit: WebRTCDataRejectFileTransit;
 }
 
 export interface WebRTCEventMapIncomingEvents extends WebRTCCommonEvents {

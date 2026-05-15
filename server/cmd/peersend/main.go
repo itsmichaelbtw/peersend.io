@@ -44,6 +44,10 @@ func main() {
 			log.Info().Msg("auto WebRTC is enabled — clients will connect directly without manual intervention")
 		}
 
+		if cfg.Server.FileTransferCapacityBytes > 0 {
+			log.Info().Int("limit_bytes", cfg.Server.FileTransferCapacityBytes).Msg("transfer capacity is enabled — files exceeding the limit will be rejected")
+		}
+
 		serverErrors <- server.ListenAndServe()
 	}()
 

@@ -16,7 +16,7 @@ import type { WebRTCClient } from "../webrtc/client";
 
 import type { SessionState, WebRTCConnectionState } from "@/state";
 
-import { appState } from "@/state";
+import { appState, isAppFeatureEnabled } from "@/state";
 import { createLogger } from "@/utils/logger";
 
 const log = createLogger("WebSocketEvents");
@@ -27,7 +27,7 @@ function canWebRTCAutoConnect(
 	incomingClientCount: number
 ): boolean {
 	return (
-		sessionState.autoWebRTC &&
+		isAppFeatureEnabled("auto_webrtc") &&
 		sessionState.isHost &&
 		incomingClientCount === sessionState.maximumClients &&
 		!webrtcState.isConnected &&

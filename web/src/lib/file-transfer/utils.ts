@@ -101,6 +101,30 @@ export function formatFileSize(bytes: number, decimals = 2): string {
 	return `${value} ${sizes[i]}`;
 }
 
+export function getCurrentFileCapacity(files: PeerSendFile[]): number {
+	return files.reduce((acc, f) => acc + f.metadata.size, 0);
+}
+
+export function getRemainingFileCapacity(files: PeerSendFile[], maxCapacity: number): number {
+	return maxCapacity - getCurrentFileCapacity(files);
+}
+
+export function hasFileCapacityOverflowed(files: PeerSendFile[], maxCapacity: number): boolean {
+	return getCurrentFileCapacity(files) > maxCapacity;
+}
+
+export function isFileCapacityBreached(files: PeerSendFile[], maxCapacity: number): boolean {
+	return getCurrentFileCapacity(files) >= maxCapacity;
+}
+
+export function willFileBreachCapacity(
+	file: PeerSendFile,
+	files: PeerSendFile[],
+	maxCapacity: number
+): boolean {
+	return getCurrentFileCapacity(files) + file.metadata.size > maxCapacity;
+}
+
 export function calculatePercentage(a: number, b: number): number {
 	if (b === 0) {
 		// Guard against division by zero (e.g. empty files).

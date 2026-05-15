@@ -5,6 +5,7 @@ server:
   max_clients: 2
   max_generation_attempts: 10
   auto_webrtc_enabled: true
+  file_transfer_capacity_bytes: 524288000
   encryption_mode: "none"
   address: "0.0.0.0"
   port: 8080

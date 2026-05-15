@@ -53,6 +53,7 @@ export class AppStateStore extends StateStore<AppState, StateActions> {
 						clients: action.payload.clients,
 						isHost: action.payload.host_id === action.payload.client_id,
 						maximumClients: action.payload.maximum_clients,
+						fileTransferCapacity: action.payload.file_transfer_capacity,
 						sessionCode: action.payload.session_code,
 						autoWebRTC: action.payload.auto_webrtc,
 						encryptionMode: action.payload.encryption_mode,

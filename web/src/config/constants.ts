@@ -74,6 +74,7 @@ export const DEFAULT_SESSION_STATE: SessionState = {
 	isHost: false,
 	isConnected: false,
 	autoWebRTC: false,
+	fileTransferCapacity: 0,
 	clientId: null,
 	maximumClients: 0,
 	latency: -1,

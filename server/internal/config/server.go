@@ -20,8 +20,13 @@ type ServerConfig struct {
 	// generating a unique session code before returning an error.
 	MaxGenerationAttempts int `yaml:"max_generation_attempts"`
 
-	// AutoWebRTCEnabled controls whether the server advertises automatic
-	// WebRTC upgrade capability to joining clients.
+	// FileTransferCapacityBytes is the maximum size in bytes of a single
+	// file that can be received in a session. Files larger than this are rejected
+	// at the start of transfer. A value of 0 disables the limit.
+	FileTransferCapacityBytes int `yaml:"file_transfer_capacity_bytes"`
+
+	// AutoWebRTCEnabled controls whether the server automatically initiates
+	// WebRTC connections once a session reaches its maximum client count.
 	AutoWebRTCEnabled bool `yaml:"auto_webrtc_enabled"`
 
 	// EncryptionMode is the name of the encryption scheme advertised to

@@ -23,6 +23,7 @@ export interface WebSocketDataSessionInformation
 	session_code: string;
 	client_id: string;
 	maximum_clients: number;
+	file_transfer_capacity: number;
 	connection_type: NetworkConnectionTypes;
 	encryption_mode: EncryptionModes;
 	auto_webrtc: boolean;
