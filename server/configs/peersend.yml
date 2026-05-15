@@ -4,7 +4,7 @@ server:
   session_code_prefix: "X-"
   max_clients: 2
   max_generation_attempts: 10
-  auto_webrtc_enabled: false
+  auto_webrtc_enabled: true
   encryption_mode: "none"
   address: "0.0.0.0"
   port: 8080

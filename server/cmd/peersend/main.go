@@ -39,6 +39,11 @@ func main() {
 			Str("environment", cfg.Environment).
 			Str("address", server.Addr).
 			Msg("server starting")
+
+		if cfg.Server.AutoWebRTCEnabled {
+			log.Info().Msg("auto WebRTC is enabled — clients will connect directly without manual intervention")
+		}
+
 		serverErrors <- server.ListenAndServe()
 	}()
 

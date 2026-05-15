@@ -14,10 +14,26 @@ import type { NetworkEvents } from "../types";
 import type { WebSocketClient } from "./client";
 import type { WebRTCClient } from "../webrtc/client";
 
+import type { SessionState, WebRTCConnectionState } from "@/state";
+
 import { appState } from "@/state";
 import { createLogger } from "@/utils/logger";
 
 const log = createLogger("WebSocketEvents");
+
+function canWebRTCAutoConnect(
+	sessionState: SessionState,
+	webrtcState: WebRTCConnectionState,
+	incomingClientCount: number
+): boolean {
+	return (
+		sessionState.autoWebRTC &&
+		sessionState.isHost &&
+		incomingClientCount === sessionState.maximumClients &&
+		!webrtcState.isConnected &&
+		!webrtcState.isConnecting
+	);
+}
 
 export interface WebSocketHandlerContext {
 	ws: WebSocketClient;
@@ -45,6 +61,13 @@ export const messageHandlers: NetworkEvents<WebSocketIncomingMessage, WebSocketH
 		}
 
 		appState.dispatch("SET_CLIENTS", data);
+
+		const { sessionState: updatedSession, webrtcState: updatedWebrtc } = appState.get();
+
+		if (canWebRTCAutoConnect(updatedSession, updatedWebrtc, data.clients.length)) {
+			log.info("Auto WebRTC enabled and session is full — initiating direct connection automatically");
+			void ctx.rtc.connect();
+		}
 	},
 
 	host_transferred(data: WebSocketDataHostTransfer): void {
