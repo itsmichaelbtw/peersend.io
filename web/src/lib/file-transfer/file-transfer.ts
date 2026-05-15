@@ -22,14 +22,15 @@ export class FileTransfer {
 		this.files = files;
 	}
 
-	public async transfer(file: PeerSendFile): Promise<void> {
+	public async transfer(file: PeerSendFile): Promise<boolean> {
 		log.info(`Starting transfer of file ${file.metadata.name}`);
 
 		if (!file.nativeFile) {
-			return await this.transport.error(
+			await this.transport.error(
 				file.id,
 				`File ${file.metadata.name} has no native file associated with it`
 			);
+			return false;
 		}
 
 		let signal: AbortSignal | undefined;
@@ -71,6 +72,7 @@ export class FileTransfer {
 
 			log.success(`File transfer has been completed for ${file.metadata.name}`);
 			await this.transport.complete(file.id);
+			return true;
 		} catch (error) {
 			const isAbort = error instanceof DOMException && error.name === "AbortError";
 			const message = isAbort
@@ -88,6 +90,7 @@ export class FileTransfer {
 			}
 
 			await this.transport.error(file.id, message);
+			return false;
 		} finally {
 			abortRegistry.abort(file.id);
 		}
@@ -97,8 +100,17 @@ export class FileTransfer {
 		// change this to concurrent in future
 		// https://github.com/itsmichaelbtw/peersend.io/issues/15
 
+		let successCount = 0;
+
 		for (const file of this.files) {
-			await this.transfer(file);
+			if (await this.transfer(file)) successCount++;
+		}
+
+		if (successCount > 0) {
+			const label = successCount === 1 ? "file" : "files";
+			toast.success("Transfer complete", {
+				description: `${successCount} ${label} sent`
+			});
 		}
 	}
 }

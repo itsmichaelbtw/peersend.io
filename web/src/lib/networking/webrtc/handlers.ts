@@ -15,9 +15,11 @@ import {
 	fileStorage,
 	createCustomFileFromTransfer,
 	parseTransitBuffer,
-	ProgressThrottler
+	ProgressThrottler,
+	truncateFileName
 } from "@/lib/file-transfer";
 import { createLogger } from "@/utils/logger";
+import { toast } from "sonner";
 
 const log = createLogger("WebRtcEvents");
 
@@ -57,10 +59,17 @@ export const messageHandlers: NetworkEvents<WebRTCIncomingMessage, WebRTCHandler
 		log.info(`Finished receiving file with id ${data.id}`);
 		throttler.reset();
 
+		const file = getPeersendFile(data.id);
+		const truncated = file ? truncateFileName(file.metadata.name) : "Unknown file";
+
 		if (fileStorage.isComplete(data.id)) {
 			fileTransferState.dispatch("SET_FILE_STATUS", {
 				id: data.id,
 				status: "received"
+			});
+
+			toast.success("File received", {
+				description: truncated
 			});
 
 			return;
@@ -72,6 +81,10 @@ export const messageHandlers: NetworkEvents<WebRTCIncomingMessage, WebRTCHandler
 			id: data.id,
 			status: "error",
 			errorMessage: "Transfer was incomplete"
+		});
+
+		toast.error("File transfer failed", {
+			description: truncated
 		});
 	},
 
