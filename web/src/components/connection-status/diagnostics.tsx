@@ -2,6 +2,7 @@ import React from "react";
 
 import { useAppState } from "@/hooks/use-app-state";
 import { APP_VERSION } from "@/config/constants";
+import { LatencyGraph } from "./latency-graph";
 
 export function Diagnostics(): React.ReactNode {
 	const { sessionState, webrtcState } = useAppState();
@@ -25,10 +26,10 @@ export function Diagnostics(): React.ReactNode {
 					</div>
 				)}
 
-				{sessionState.latency > -1 && (
-					<div className="flex justify-between">
+				{sessionState.latencyHistory.length > 0 && (
+					<div className="flex justify-between items-center h-4">
 						<span className="text-xs text-muted-foreground">Latency</span>
-						<span className="text-xs font-medium font-mono">{sessionState.latency}ms</span>
+						<LatencyGraph history={sessionState.latencyHistory} />
 					</div>
 				)}
 

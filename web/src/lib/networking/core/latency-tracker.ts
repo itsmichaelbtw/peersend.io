@@ -3,6 +3,8 @@ import { createLogger } from "@/utils/logger";
 
 const log = createLogger("LatencyTracker");
 
+const MAX_HISTORY = 25;
+
 export interface PongData {
 	client_timestamp: number;
 	server_timestamp: number;
@@ -12,6 +14,7 @@ export class LatencyTracker {
 	private interval: number | null = null;
 	private readonly intervalMs: number;
 	private readonly sendPing: (timestamp: number) => void;
+	private history: number[] = [];
 
 	constructor(sendPing: (timestamp: number) => void, intervalMs: number = 1000) {
 		this.sendPing = sendPing;
@@ -32,12 +35,15 @@ export class LatencyTracker {
 			log.info("Latency tracking stopped");
 		}
 
-		appState.dispatch("UPDATE", { sessionState: { latency: -1 } });
+		this.history = [];
+		appState.dispatch("UPDATE", { sessionState: { latencyHistory: [] } });
 	}
 
 	public pong(data: PongData): void {
 		const now = Date.now();
 		const latency = Math.round(now - data.server_timestamp + (now - data.client_timestamp) / 2);
-		appState.dispatch("UPDATE", { sessionState: { latency } });
+
+		this.history = [...this.history, latency].slice(-MAX_HISTORY);
+		appState.dispatch("UPDATE", { sessionState: { latencyHistory: this.history } });
 	}
 }
