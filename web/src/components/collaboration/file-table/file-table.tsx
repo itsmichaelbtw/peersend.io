@@ -30,7 +30,7 @@ import {
 	selectionColumn
 } from "./columns";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 interface RenderChildrenArgs {
 	isUsingSelection: boolean;
