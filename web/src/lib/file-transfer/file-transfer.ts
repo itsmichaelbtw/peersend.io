@@ -9,6 +9,7 @@ import { ProgressThrottler } from "./progress-throttler";
 import { sleep } from "@/utils/sleep";
 import { createLogger } from "@/utils/logger";
 import { abortRegistry } from "@/lib/networking/core/abort-registry";
+import { getPeersendFile } from "@/state";
 import { toast } from "sonner";
 
 const log = createLogger("FileStorage");
@@ -75,14 +76,17 @@ export class FileTransfer {
 			return true;
 		} catch (error) {
 			const isAbort = error instanceof DOMException && error.name === "AbortError";
+
+			if (isAbort && getPeersendFile(file.id)?.status === "error") {
+				return false;
+			}
+
 			const message = isAbort
 				? "Connection lost"
 				: error instanceof Error
 					? error.message
 					: "An unknown error occurred";
 
-			// not notifiying user of abort errors as these
-			// are handled when the datachannel is closed
 			if (!isAbort) {
 				toast.error(`Transfer failed: ${file.metadata.name}`, {
 					description: message
