@@ -33,6 +33,21 @@ export function getWebsocketState(): WebSocketConnectionState {
 	return appState.get().websocketState;
 }
 
+export type AppFeature = "auto_webrtc" | "file_transfer_capacity" | "encryption_mode";
+
+export function isAppFeatureEnabled(feature: AppFeature): boolean {
+	const { sessionState } = appState.get();
+
+	switch (feature) {
+		case "auto_webrtc":
+			return sessionState.autoWebRTC;
+		case "file_transfer_capacity":
+			return sessionState.fileTransferCapacity > 0;
+		case "encryption_mode":
+			return sessionState.encryptionMode !== "none";
+	}
+}
+
 export function isWebSocketConnected(): boolean {
 	const { websocketState } = appState.get();
 

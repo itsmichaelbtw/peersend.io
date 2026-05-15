@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/ui/copy-button";
 import { WEBSITE_FEATURES } from "@/config/constants";
 import { useAppState } from "@/hooks/use-app-state";
-import { appState } from "@/state";
+import { appState, isAppFeatureEnabled } from "@/state";
 import { getWebSocketClient } from "@/lib/networking/client-registry";
 import { Seo } from "@/components/seo";
 
@@ -88,7 +88,7 @@ export function CreateSessionView(): React.ReactNode {
 								</div>
 								<div className="flex justify-between">
 									<span className="text-muted-foreground">Auto WebRTC:</span>
-									{sessionState.autoWebRTC ? (
+									{isAppFeatureEnabled("auto_webrtc") ? (
 										<span className="text-primary font-semibold">Enabled</span>
 									) : (
 										<span className="text-destructive font-semibold">Disabled</span>
@@ -96,7 +96,7 @@ export function CreateSessionView(): React.ReactNode {
 								</div>
 								<div className="flex justify-between">
 									<span className="text-muted-foreground">End-to-end encryption:</span>
-									{sessionState.encryptionMode !== "none" ? (
+									{isAppFeatureEnabled("encryption_mode") ? (
 										<span className="text-primary font-semibold">
 											{sessionState.encryptionMode}
 										</span>

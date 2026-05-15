@@ -2,6 +2,7 @@ import React from "react";
 
 import { ArrowUpFromLineIcon, LockIcon, RouterIcon, ShieldIcon } from "lucide-react";
 import { useAppState } from "@/hooks/use-app-state";
+import { isAppFeatureEnabled } from "@/state";
 import { Button } from "@/components/ui/button";
 import { getWebRTCClient } from "@/lib/networking/client-registry";
 
@@ -10,7 +11,7 @@ interface Props {
 }
 
 export function ConnectionUpgrade({ onClose }: Props): React.ReactNode {
-	const { sessionState, webrtcState } = useAppState();
+	const { webrtcState } = useAppState();
 
 	return (
 		<React.Fragment>
@@ -55,7 +56,7 @@ export function ConnectionUpgrade({ onClose }: Props): React.ReactNode {
 							</div>
 						</div>
 
-						{sessionState.encryptionMode !== "none" && (
+						{isAppFeatureEnabled("encryption_mode") && (
 							<div className="p-4 border-2 border-border bg-secondary">
 								<div className="flex gap-4 items-center flex-nowrap">
 									<ShieldIcon size={30} className="shrink-0" />

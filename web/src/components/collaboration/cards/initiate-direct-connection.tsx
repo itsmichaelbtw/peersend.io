@@ -6,10 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ClockIcon } from "lucide-react";
 import { ConnectionUpgrade } from "@/components/collaboration/connection-upgrade";
 import { useAppState } from "@/hooks/use-app-state";
+import { isAppFeatureEnabled } from "@/state";
 
 export function InitiateDirectConnectionCard(): React.ReactNode {
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const { sessionState, webrtcState } = useAppState();
+	const { webrtcState } = useAppState();
 
 	return (
 		<Card className="select-none border-0 flex flex-col">
@@ -28,7 +29,7 @@ export function InitiateDirectConnectionCard(): React.ReactNode {
 						<div className="mb-4 animate-spin rounded-full h-10 w-10 border-2 border-border border-t-foreground" />
 						<h3 className="text-base md:text-lg font-medium">Establishing Connection</h3>
 						<p className="text-sm text-muted-foreground text-center leading-tight">
-							{sessionState.autoWebRTC
+							{isAppFeatureEnabled("auto_webrtc")
 								? "Connecting automatically — hang tight"
 								: "Establishing your direct connection"}
 						</p>

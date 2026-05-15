@@ -1,6 +1,7 @@
 import React from "react";
 
 import { useAppState } from "@/hooks/use-app-state";
+import { isAppFeatureEnabled } from "@/state";
 import { cn } from "@/lib/utils";
 import { ZapIcon } from "lucide-react";
 
@@ -47,7 +48,7 @@ export function ConnectionStatus(): React.ReactNode {
 				<InfoStatistic
 					title="Auto WebRTC"
 					stat={
-						sessionState.autoWebRTC ? (
+						isAppFeatureEnabled("auto_webrtc") ? (
 							<span className="text-primary font-semibold">Enabled</span>
 						) : (
 							<span className="text-destructive font-semibold">Disabled</span>
@@ -57,7 +58,7 @@ export function ConnectionStatus(): React.ReactNode {
 				<InfoStatistic
 					title="Encryption"
 					stat={
-						sessionState.encryptionMode !== "none" ? (
+						isAppFeatureEnabled("encryption_mode") ? (
 							<span className="text-primary font-semibold">{sessionState.encryptionMode}</span>
 						) : (
 							<span className="text-destructive font-semibold">Disabled</span>

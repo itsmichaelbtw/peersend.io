@@ -2,17 +2,15 @@ import React from "react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ClockIcon } from "lucide-react";
-import { useAppState } from "@/hooks/use-app-state";
+import { isAppFeatureEnabled } from "@/state";
 
 export function HostStandbyCard(): React.ReactNode {
-	const { sessionState } = useAppState();
-
 	return (
 		<Card className="select-none border-0 flex flex-col">
 			<CardHeader className="border-b p-3 sm:p-4 md:p-6">
 				<h2 className="font-semibold text-base md:text-lg leading-snug">Standby</h2>
 				<p className="text-muted-foreground leading-snug">
-					{sessionState.autoWebRTC
+					{isAppFeatureEnabled("auto_webrtc")
 						? "Connecting automatically"
 						: "Waiting for the host to begin the connection"}
 				</p>
@@ -20,7 +18,7 @@ export function HostStandbyCard(): React.ReactNode {
 
 			<CardContent className="flex flex-1 items-center justify-center p-3 sm:p-4 md:p-6">
 				<div className="flex flex-col gap-0.5 items-center text-center max-w-sm">
-					{sessionState.autoWebRTC ? (
+					{isAppFeatureEnabled("auto_webrtc") ? (
 						<>
 							<div className="mb-4 animate-spin rounded-full h-10 w-10 border-2 border-border border-t-foreground" />
 							<h3 className="text-base md:text-lg font-medium">Connecting Automatically</h3>
