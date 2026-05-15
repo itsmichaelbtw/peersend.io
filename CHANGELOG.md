@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0](https://github.com/itsmichaelbtw/peersend.io/compare/v0.4.0...v0.5.0) (2026-05-15)
+
+
+### Features
+
+* **diagnostics:** add latency history sparkline graph (closes [#68](https://github.com/itsmichaelbtw/peersend.io/issues/68)) ([58deede](https://github.com/itsmichaelbtw/peersend.io/commit/58deede342c47ae29aacce45f0e7cd53f33ae478))
+* **file-table:** add pagination with 10 files per page (closes [#13](https://github.com/itsmichaelbtw/peersend.io/issues/13)) ([5dce710](https://github.com/itsmichaelbtw/peersend.io/commit/5dce710dd4ef77c40baacb92d463f6524c53e3bd))
+* **file-transfer:** implement file transfer capacity limit (closes [#72](https://github.com/itsmichaelbtw/peersend.io/issues/72)) ([f2d488a](https://github.com/itsmichaelbtw/peersend.io/commit/f2d488a2438ed1163d4e37ffa4135622c0e499ec))
+* **file-transfer:** show success and error notifications after transfer (closes [#56](https://github.com/itsmichaelbtw/peersend.io/issues/56)) ([bb74abd](https://github.com/itsmichaelbtw/peersend.io/commit/bb74abdf24f1dc4206ddf8fadf949280f34f44a6))
+* **webrtc:** auto-connect peers when autoWebRTC is enabled (closes [#62](https://github.com/itsmichaelbtw/peersend.io/issues/62)) ([544bd80](https://github.com/itsmichaelbtw/peersend.io/commit/544bd80aba4b95491ab45b21a398e8bc0b9c6608))
+
+
+### Bug Fixes
+
+* **file-transfer:** preserve rejection reason when transfer is aborted ([5c95600](https://github.com/itsmichaelbtw/peersend.io/commit/5c956006334d8aeb86f1973a26b8777d7b18dd6b))
+
 ## [0.4.0](https://github.com/itsmichaelbtw/peersend.io/compare/v0.3.2...v0.4.0) (2026-04-24)
 
 
