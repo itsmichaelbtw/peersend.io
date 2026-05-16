@@ -39,7 +39,6 @@ export interface SessionState {
 	autoWebRTC: boolean;
 	fileTransferCapacity: number;
 	encryptionMode: EncryptionModes;
-	latencyHistory: number[];
 	clientId: WithNullable<string>;
 	clients: string[];
 	maximumClients: number;

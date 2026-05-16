@@ -1,18 +1,18 @@
 import { test, expect } from "@playwright/test";
 
 import { LatencyTracker } from "@/lib/networking/core/latency-tracker";
-import { appState } from "@/state/app-state/state";
+import { latencyState } from "@/state";
 
 test.describe("LatencyTracker", () => {
 	test("pong updates latency history in app state", () => {
 		const originalNow = Date.now;
 		Date.now = (): number => 2_000;
-		appState.dispatch("UPDATE", { sessionState: { latencyHistory: [] } });
+		latencyState.dispatch("CLEAR", null);
 
 		try {
 			const tracker = new LatencyTracker((): void => {});
 			tracker.pong({ client_timestamp: 1_800, server_timestamp: 1_900 });
-			expect(appState.get().sessionState.latencyHistory).toContain(200);
+			expect(latencyState.get().history).toContain(200);
 		} finally {
 			Date.now = originalNow;
 		}
@@ -37,7 +37,7 @@ test.describe("LatencyTracker", () => {
 		globalThis.setInterval = ((() => ++intervalId) as unknown) as typeof globalThis.setInterval;
 		globalThis.clearInterval = ((() => {}) as unknown) as typeof globalThis.clearInterval;
 
-		appState.dispatch("UPDATE", { sessionState: { latencyHistory: [42] } });
+		latencyState.dispatch("SET_HISTORY", [42]);
 
 		try {
 			const tracker = new LatencyTracker((timestamp: number): void => {
@@ -46,7 +46,7 @@ test.describe("LatencyTracker", () => {
 			tracker.start();
 			expect(sent.length).toBeGreaterThan(0);
 			tracker.stop();
-			expect(appState.get().sessionState.latencyHistory).toEqual([]);
+			expect(latencyState.get().history).toEqual([]);
 		} finally {
 			(globalThis as unknown as { window: Window | undefined }).window = originalWindow;
 			globalThis.setInterval = originalSetInterval;

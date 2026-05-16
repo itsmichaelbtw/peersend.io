@@ -1,4 +1,4 @@
-import { appState } from "@/state";
+import { latencyState } from "@/state";
 import { createLogger } from "@/utils/logger";
 
 const log = createLogger("LatencyTracker");
@@ -36,7 +36,7 @@ export class LatencyTracker {
 		}
 
 		this.history = [];
-		appState.dispatch("UPDATE", { sessionState: { latencyHistory: [] } });
+		latencyState.dispatch("CLEAR", null);
 	}
 
 	public pong(data: PongData): void {
@@ -44,6 +44,6 @@ export class LatencyTracker {
 		const latency = Math.round(now - data.server_timestamp + (now - data.client_timestamp) / 2);
 
 		this.history = [...this.history, latency].slice(-MAX_HISTORY);
-		appState.dispatch("UPDATE", { sessionState: { latencyHistory: this.history } });
+		latencyState.dispatch("SET_HISTORY", this.history);
 	}
 }

@@ -77,7 +77,6 @@ export const DEFAULT_SESSION_STATE: SessionState = {
 	fileTransferCapacity: 0,
 	clientId: null,
 	maximumClients: 0,
-	latencyHistory: [],
 	lastError: null,
 	encryptionMode: "none",
 	connectionType: "none"
