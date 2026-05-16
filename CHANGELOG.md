@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.1](https://github.com/itsmichaelbtw/peersend.io/compare/v0.5.0...v0.5.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* **file-transfer:** harden WebRTC handlers and sync fileStorage with state (closes [#37](https://github.com/itsmichaelbtw/peersend.io/issues/37)) ([b83f467](https://github.com/itsmichaelbtw/peersend.io/commit/b83f46770e06c6381531dd42226808596b6be2ab))
+
+
+### Performance Improvements
+
+* **state:** isolate latency history in dedicated store to prevent app-wide re-renders (closes [#23](https://github.com/itsmichaelbtw/peersend.io/issues/23)) ([f2b4fa1](https://github.com/itsmichaelbtw/peersend.io/commit/f2b4fa1d8b4c9fb88210e047a09c115d8860a266))
+
 ## [0.5.0](https://github.com/itsmichaelbtw/peersend.io/compare/v0.4.0...v0.5.0) (2026-05-15)
 
 
