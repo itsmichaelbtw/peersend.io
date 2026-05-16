@@ -13,3 +13,7 @@ server/bin/*
 deploy/server.env
 web/.env
 web/dist
+
+# Playwright
+web/tests/test-results
+web/playwright-report

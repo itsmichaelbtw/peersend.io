@@ -7,7 +7,7 @@
  *
  * Covered actions:
  *   UPDATE, SET_SESSION_INFORMATION, SET_CLIENTS, SET_HOST,
- *   SET_LAST_ERROR, RESET_CONNECTING_STATES
+ *   RESET_CONNECTING_STATES
  * Covered infrastructure:
  *   subscribe/unsubscribe, dispatch triggers listeners, deep-merge behaviour
  */
@@ -29,11 +29,10 @@ function makeInitialState(): AppState {
       isConnected: false,
       autoWebRTC: false,
       encryptionMode: "none",
-      latency: -1,
+      fileTransferCapacity: 0,
       clientId: null,
       clients: [],
       maximumClients: 0,
-      lastError: null,
       connectionType: "none"
     },
     webrtcState: {
@@ -222,12 +221,7 @@ test.describe("AppStateStore — SET_SESSION_INFORMATION action", () => {
     expect(store.get().webrtcState.isConnected).toBe(false);
   });
 
-  test("clears lastError", () => {
-    const store = makeStore();
-    store.dispatch("SET_LAST_ERROR", { title: "Old", message: "Error" });
-    store.dispatch("SET_SESSION_INFORMATION", makeSessionInfo());
-    expect(store.get().sessionState.lastError).toBeNull();
-  });
+
 });
 
 test.describe("AppStateStore — SET_CLIENTS action", () => {
@@ -259,38 +253,6 @@ test.describe("AppStateStore — SET_HOST action", () => {
     store.dispatch("SET_SESSION_INFORMATION", makeSessionInfo()); // client-1 is current
     store.dispatch("SET_HOST", { host_id: "client-2" });
     expect(store.get().sessionState.isHost).toBe(false);
-  });
-});
-
-test.describe("AppStateStore — SET_LAST_ERROR action", () => {
-  test("stores the error data in sessionState.lastError", () => {
-    const store = makeStore();
-    store.dispatch("SET_LAST_ERROR", { title: "Oops", message: "Something went wrong" });
-    expect(store.get().sessionState.lastError).toEqual({
-      title: "Oops",
-      message: "Something went wrong"
-    });
-  });
-
-  test("clears lastError when payload is null", () => {
-    const store = makeStore();
-    store.dispatch("SET_LAST_ERROR", { title: "Err", message: "msg" });
-    store.dispatch("SET_LAST_ERROR", null);
-    expect(store.get().sessionState.lastError).toBeNull();
-  });
-
-  test("sets websocket isConnecting to false", () => {
-    const store = makeStore();
-    store.dispatch("UPDATE", { websocketState: { isConnecting: true } });
-    store.dispatch("SET_LAST_ERROR", { title: "E", message: "M" });
-    expect(store.get().websocketState.isConnecting).toBe(false);
-  });
-
-  test("sets webrtc isConnecting to false", () => {
-    const store = makeStore();
-    store.dispatch("UPDATE", { webrtcState: { isConnecting: true } });
-    store.dispatch("SET_LAST_ERROR", { title: "E", message: "M" });
-    expect(store.get().webrtcState.isConnecting).toBe(false);
   });
 });
 

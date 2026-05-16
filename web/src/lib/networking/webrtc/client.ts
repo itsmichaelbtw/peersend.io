@@ -15,6 +15,7 @@ import { DEFAULT_WEBRTC_STATE } from "@/config/constants";
 import { sleep } from "@/utils/sleep";
 import { createLogger } from "@/utils/logger";
 import { toast } from "sonner";
+import { capitalise } from "@/utils/capitalise";
 
 const log = createLogger("WebRTCClient");
 
@@ -128,12 +129,13 @@ export class WebRTCClient extends NetworkClient<
 			onError: (event: RTCErrorEvent): void => {
 				log.error("DataChannel onError", event.error);
 				if (event.error) {
-					appState.dispatch("SET_LAST_ERROR", {
-						title: "Direct Connection Error",
-						message:
+					toast.error("Direct Connection Error", {
+						id: "Direct Connection Error",
+						description: capitalise(
 							event.error instanceof Error
 								? event.error.message
 								: "An error occurred with the direct connection"
+						)
 					});
 				}
 			},
@@ -144,10 +146,10 @@ export class WebRTCClient extends NetworkClient<
 	}
 
 	private async handleDataChannelMessage(event: MessageEvent): Promise<void> {
-		const { sessionState, webrtcState } = appState.get();
+		const { webrtcState } = appState.get();
 
-		if (sessionState.lastError || webrtcState.isConnecting) {
-			appState.dispatch("SET_LAST_ERROR", null);
+		if (webrtcState.isConnecting) {
+			appState.dispatch("RESET_CONNECTING_STATES", null);
 		}
 
 		switch (true) {
@@ -175,9 +177,11 @@ export class WebRTCClient extends NetworkClient<
 			log.debug("Received a message of type:", type);
 			this.messageBus.emit(type, data);
 		} catch (error) {
-			appState.dispatch("SET_LAST_ERROR", {
-				title: "Message Error",
-				message: error instanceof Error ? error.message : "Failed to parse incoming WebRTC message"
+			toast.error("Message Error", {
+				id: "Message Error",
+				description: capitalise(
+					error instanceof Error ? error.message : "Failed to parse incoming WebRTC message"
+				)
 			});
 		}
 	}
@@ -198,9 +202,9 @@ export class WebRTCClient extends NetworkClient<
 		}
 
 		if (!sessionState.isHost) {
-			appState.dispatch("SET_LAST_ERROR", {
-				title: "Connection Error",
-				message: "Only the host can initiate a direct connection"
+			toast.error("Connection Error", {
+				id: "Connection Error",
+				description: "Only the host can initiate a direct connection"
 			});
 
 			return this;
@@ -236,9 +240,11 @@ export class WebRTCClient extends NetworkClient<
 			log.error("Failed to establish a WebRTC connection");
 
 			this.disconnect();
-			appState.dispatch("SET_LAST_ERROR", {
-				title: "Connection Issue",
-				message: error instanceof Error ? error.message : "Unable to establish a direct connection"
+			toast.error("Connection Issue", {
+				id: "Connection Issue",
+				description: capitalise(
+					error instanceof Error ? error.message : "Unable to establish a direct connection"
+				)
 			});
 		}
 

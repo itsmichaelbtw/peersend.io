@@ -18,6 +18,8 @@ import type { SessionState, WebRTCConnectionState } from "@/state";
 
 import { appState, isAppFeatureEnabled } from "@/state";
 import { createLogger } from "@/utils/logger";
+import { toast } from "sonner";
+import { capitalise } from "@/utils/capitalise";
 
 const log = createLogger("WebSocketEvents");
 
@@ -96,18 +98,19 @@ export const messageHandlers: NetworkEvents<WebSocketIncomingMessage, WebSocketH
 		log.error(`WebRTC connection was rejected: ${data.reason}`);
 		ctx.ws.disconnect();
 
-		appState.dispatch("SET_LAST_ERROR", {
-			title: "Direct Connection Failed",
-			message: data.reason
+		toast.error("Direct Connection Failed", {
+			id: "Direct Connection Failed",
+			description: capitalise(data.reason)
 		});
 	},
 
 	error(data: WebSocketDataError): void {
 		log.error("WebSocket received an error");
 
-		appState.dispatch("SET_LAST_ERROR", {
-			title: data.type,
-			message: data.reason
+		appState.dispatch("RESET_CONNECTING_STATES", null);
+		toast.error(data.type, {
+			id: data.type,
+			description: capitalise(data.reason)
 		});
 	}
 };

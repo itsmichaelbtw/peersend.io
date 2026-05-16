@@ -23,6 +23,7 @@ import {
 } from "@/lib/file-transfer";
 import { createLogger } from "@/utils/logger";
 import { toast } from "sonner";
+import { capitalise } from "@/utils/capitalise";
 import { abortRegistry } from "@/lib/networking/core/abort-registry";
 
 const log = createLogger("WebRtcEvents");
@@ -172,9 +173,10 @@ export const messageHandlers: NetworkEvents<WebRTCIncomingMessage, WebRTCHandler
 
 	error(data: WebRTCDataError): void {
 		log.error("WebRTC received an error");
-		appState.dispatch("SET_LAST_ERROR", {
-			title: data.type,
-			message: data.reason
+		appState.dispatch("RESET_CONNECTING_STATES", null);
+		toast.error(data.type, {
+			id: data.type,
+			description: capitalise(data.reason)
 		});
 	}
 };

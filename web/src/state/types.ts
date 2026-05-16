@@ -13,10 +13,6 @@ export interface ConnectionState {
 	isConnecting: boolean;
 }
 
-export interface ConnectionErrorData {
-	title: string;
-	message: string;
-}
 
 export interface WebRTCConnectionState extends ConnectionState {
 	dataChannel: WithNullable<DataChannelAdapter>;
@@ -42,7 +38,6 @@ export interface SessionState {
 	clientId: WithNullable<string>;
 	clients: string[];
 	maximumClients: number;
-	lastError: WithNullable<ConnectionErrorData>;
 	connectionType: NetworkConnectionTypes;
 }
 

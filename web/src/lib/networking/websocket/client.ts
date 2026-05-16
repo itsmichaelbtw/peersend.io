@@ -17,6 +17,8 @@ import { appState, isWebSocketConnected } from "@/state";
 import { resetFileTransfers } from "@/lib/file-transfer/reset";
 import { sleep } from "@/utils/sleep";
 import { createLogger } from "@/utils/logger";
+import { toast } from "sonner";
+import { capitalise } from "@/utils/capitalise";
 
 const log = createLogger("WebSocketClient");
 
@@ -70,17 +72,20 @@ export class WebSocketClient extends NetworkClient<
 				onClose: (event): void => {
 					log.debug("onClose event received");
 					this.disconnect();
-					appState.dispatch(
-						"SET_LAST_ERROR",
-						event.reason ? { title: "Connection Issue", message: event.reason } : null
-					);
+					if (event.reason) {
+						toast.error("Connection Issue", {
+							id: "Connection Issue",
+							description: capitalise(event.reason)
+						});
+					}
 					abortRegistry.end();
 				},
 				onError: (): void => {
 					log.error("onError event received");
-					appState.dispatch("SET_LAST_ERROR", {
-						title: "Connection Issue",
-						message: "Failed to connect: The server may be offline"
+					appState.dispatch("RESET_CONNECTING_STATES", null);
+					toast.error("Connection Issue", {
+						id: "Connection Issue",
+						description: "Failed to connect: The server may be offline"
 					});
 				},
 				onMessage: (event): void => {
@@ -93,9 +98,11 @@ export class WebSocketClient extends NetworkClient<
 			log.error("Failed to establish a WebSocket connection");
 
 			this.disconnect();
-			appState.dispatch("SET_LAST_ERROR", {
-				title: "Connection Issue",
-				message: error instanceof Error ? error.message : "Unable to establish connection"
+			toast.error("Connection Issue", {
+				id: "Connection Issue",
+				description: capitalise(
+					error instanceof Error ? error.message : "Unable to establish connection"
+				)
 			});
 		}
 
@@ -154,10 +161,10 @@ export class WebSocketClient extends NetworkClient<
 	private handleRawMessage(event: MessageEvent): void {
 		log.debug("onMessage event received");
 
-		const { sessionState, websocketState } = appState.get();
+		const { websocketState } = appState.get();
 
-		if (sessionState.lastError || websocketState.isConnecting) {
-			appState.dispatch("SET_LAST_ERROR", null);
+		if (websocketState.isConnecting) {
+			appState.dispatch("RESET_CONNECTING_STATES", null);
 		}
 
 		try {
@@ -170,10 +177,11 @@ export class WebSocketClient extends NetworkClient<
 			log.debug("Received a message of type:", type);
 			this.messageBus.emit(type, data);
 		} catch (error) {
-			appState.dispatch("SET_LAST_ERROR", {
-				title: "Message Error",
-				message:
+			toast.error("Message Error", {
+				id: "Message Error",
+				description: capitalise(
 					error instanceof Error ? error.message : "Failed to parse incoming WebSocket message"
+				)
 			});
 		}
 	}

@@ -36,7 +36,6 @@ export const DEFAULT_SESSION_STATE = {
 	clientId: null,
 	maximumClients: 0,
 	latency: -1,
-	lastError: null,
 	encryptionMode: "none" as const,
 	connectionType: "none" as const
 };

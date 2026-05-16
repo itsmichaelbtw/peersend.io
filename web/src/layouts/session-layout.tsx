@@ -1,32 +1,9 @@
-import type { ConnectionErrorData } from "@/state/types";
-
 import React, { useEffect } from "react";
 
 import { Outlet } from "react-router";
-import { toast } from "sonner";
-import { appState } from "@/state";
-import { useAppState } from "@/hooks/use-app-state";
-import { capitalise } from "@/utils/capitalise";
 import { teardownSession } from "@/lib/networking/session-teardown";
 
 export function SessionLayout(): React.ReactNode {
-	const { sessionState } = useAppState();
-
-	function handleLastError(lastError: ConnectionErrorData): void {
-		appState.dispatch("SET_LAST_ERROR", null);
-		toast.error(lastError.title, {
-			id: lastError.title,
-			description: capitalise(lastError.message),
-			position: "top-right"
-		});
-	}
-
-	useEffect(() => {
-		if (sessionState.lastError) {
-			handleLastError(sessionState.lastError);
-		}
-	}, [sessionState.lastError]);
-
 	useEffect(() => {
 		return (): void => {
 			teardownSession();

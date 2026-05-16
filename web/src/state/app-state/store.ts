@@ -1,6 +1,6 @@
 import type { RecursivePartial } from "@/types/misc";
 import type { ContextReducerActions } from "@/context/context.types";
-import type { AppState, ConnectionErrorData } from "../types";
+import type { AppState } from "../types";
 import type { WebSocketEventMapIncomingEvents } from "@/lib/networking";
 
 import { StateStore } from "../store";
@@ -8,7 +8,6 @@ import { isObject } from "@/utils/is-x";
 
 interface StateActions {
 	UPDATE: RecursivePartial<AppState>;
-	SET_LAST_ERROR: ConnectionErrorData | null;
 	SET_SESSION_INFORMATION: WebSocketEventMapIncomingEvents["session_information"];
 	SET_CLIENTS: WebSocketEventMapIncomingEvents["sync_clients"];
 	SET_HOST: WebSocketEventMapIncomingEvents["host_transferred"];
@@ -57,8 +56,7 @@ export class AppStateStore extends StateStore<AppState, StateActions> {
 						sessionCode: action.payload.session_code,
 						autoWebRTC: action.payload.auto_webrtc,
 						encryptionMode: action.payload.encryption_mode,
-						connectionType: action.payload.connection_type,
-						lastError: null
+						connectionType: action.payload.connection_type
 					},
 					websocketState: {
 						isConnected: true,
@@ -83,20 +81,6 @@ export class AppStateStore extends StateStore<AppState, StateActions> {
 				return this.update({
 					sessionState: {
 						isHost: action.payload.host_id === state.sessionState.clientId
-					}
-				});
-			}
-
-			case "SET_LAST_ERROR": {
-				return this.update({
-					sessionState: {
-						lastError: action.payload
-					},
-					websocketState: {
-						isConnecting: false
-					},
-					webrtcState: {
-						isConnecting: false
 					}
 				});
 			}
