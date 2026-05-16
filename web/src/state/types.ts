@@ -48,6 +48,7 @@ export interface SessionState {
 
 export interface FileTransferState {
 	files: PeerSendFile[];
+	fileIds: Set<string>;
 }
 
 export interface PeerSendFile<T extends FileTransferType = FileTransferType> {

@@ -8,3 +8,4 @@ export * from "./file-chunker";
 export * from "./file-storage";
 export * from "./file-transfer";
 export * from "./reset";
+export * from "./pending-chunk-buffer";

@@ -11,9 +11,10 @@ import type {
 import type { NetworkEvents } from "../types";
 import type { WebRTCClient } from "./client";
 
-import { appState, fileTransferState, getPeersendFile, isAppFeatureEnabled } from "@/state";
+import { appState, fileTransferState, getPeersendFile, hasPeersendFile, isAppFeatureEnabled } from "@/state";
 import {
 	fileStorage,
+	pendingChunkBuffer,
 	createCustomFileFromTransfer,
 	parseTransitBuffer,
 	ProgressThrottler,
@@ -34,7 +35,7 @@ export interface WebRTCHandlerContext {
 
 export const messageHandlers: NetworkEvents<WebRTCIncomingMessage, WebRTCHandlerContext> = {
 	start_file_transit(data: WebRTCDataStartFileTransit, ctx: WebRTCHandlerContext): void {
-		if (getPeersendFile(data.id)) {
+		if (hasPeersendFile(data.id)) {
 			log.error(`File with id ${data.id} already exists, ignoring incoming file transfer.`);
 			return;
 		}
@@ -65,12 +66,27 @@ export const messageHandlers: NetworkEvents<WebRTCIncomingMessage, WebRTCHandler
 
 		log.info(`Receiving file: ${data.metadata.name} (${data.transferSize} bytes)`);
 		fileStorage.init(data.id, data.transferSize);
+
+		if (pendingChunkBuffer.has(data.id)) {
+			const buffered = pendingChunkBuffer.drain(data.id);
+			log.warn(`Draining ${buffered.length} buffered chunk(s) for file ${data.id}`);
+			for (const chunk of buffered) {
+				fileStorage.addChunk(data.id, chunk);
+			}
+		}
+
 		fileTransferState.add([file]);
 	},
 
 	in_file_transit(data: WebRTCDataInFileTransit): void {
-		// https://github.com/itsmichaelbtw/peersend.io/issues/37
 		const parsed = parseTransitBuffer(data);
+
+		if (!fileStorage.has(parsed.fileId) || !hasPeersendFile(parsed.fileId)) {
+			log.warn(`Chunk received for unknown file ${parsed.fileId}, buffering`);
+			pendingChunkBuffer.buffer(parsed.fileId, parsed.chunk);
+			return;
+		}
+
 		const progress = fileStorage.addChunk(parsed.fileId, parsed.chunk);
 
 		if (throttler.canUpdate(progress)) {
@@ -86,7 +102,14 @@ export const messageHandlers: NetworkEvents<WebRTCIncomingMessage, WebRTCHandler
 		throttler.reset();
 
 		const file = getPeersendFile(data.id);
-		const truncated = file ? truncateFileName(file.metadata.name) : "Unknown file";
+
+		if (!file) {
+			log.warn(`end_file_transit received for unknown file ${data.id}, ignoring`);
+			pendingChunkBuffer.clear(data.id);
+			return;
+		}
+
+		const truncated = truncateFileName(file.metadata.name);
 
 		if (fileStorage.isComplete(data.id)) {
 			fileTransferState.dispatch("SET_FILE_STATUS", {
@@ -116,6 +139,8 @@ export const messageHandlers: NetworkEvents<WebRTCIncomingMessage, WebRTCHandler
 
 	reject_file_transit(data: WebRTCDataRejectFileTransit): void {
 		log.warn(`File ${data.id} was rejected by the receiver: ${data.reason}`);
+
+		pendingChunkBuffer.clear(data.id);
 
 		fileTransferState.dispatch("SET_FILE_STATUS", {
 			id: data.id,

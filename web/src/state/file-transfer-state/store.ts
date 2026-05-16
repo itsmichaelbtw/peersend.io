@@ -38,10 +38,6 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
 		}
 
 		this.dispatch("BULK_REMOVE_FILES", safeFiles);
-
-		for (const file of safeFiles) {
-			fileStorage.remove(file.id);
-		}
 	}
 
 	protected reducer(
@@ -50,8 +46,11 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
 	): Partial<FileTransferState> {
 		switch (action.type) {
 			case "BULK_ADD_FILES": {
+				const newIds = new Set(state.fileIds);
+				for (const f of action.payload) newIds.add(f.id);
 				return {
-					files: state.files.concat(action.payload)
+					files: state.files.concat(action.payload),
+					fileIds: newIds
 				};
 			}
 
@@ -66,14 +65,22 @@ export class FileTransferStore extends StateStore<FileTransferState, StateAction
 			}
 
 			case "BULK_REMOVE_FILES": {
+				const removedIds = new Set(action.payload.map((f) => f.id));
+				const newIds = new Set(state.fileIds);
+				for (const id of removedIds) {
+					newIds.delete(id);
+					fileStorage.remove(id);
+				}
 				return {
-					files: state.files.filter((f) => !action.payload.includes(f))
+					files: state.files.filter((f) => !action.payload.includes(f)),
+					fileIds: newIds
 				};
 			}
 
 			case "BULK_SET_FILES": {
 				return {
-					files: action.payload
+					files: action.payload,
+					fileIds: new Set(action.payload.map((f) => f.id))
 				};
 			}
 
