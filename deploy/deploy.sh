@@ -5,7 +5,11 @@ mkdir -p "$SERVER_DIRECTORY"
 
 echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
+OLD_IMAGE_ID=$(docker inspect --format='{{.Image}}' "$SERVER_CONTAINER_NAME" 2>/dev/null || true)
+
 docker pull "${SERVER_IMAGE}:${SERVER_TAG}"
+
+NEW_IMAGE_ID=$(docker inspect --format='{{.Id}}' "${SERVER_IMAGE}:${SERVER_TAG}")
 
 docker stop "$SERVER_CONTAINER_NAME" 2>/dev/null || true
 docker rm   "$SERVER_CONTAINER_NAME" 2>/dev/null || true
@@ -25,3 +29,8 @@ else
     "${NGINX_CONTAINER_NAME}:/etc/nginx/conf.d/server.peersend.io.conf"
 fi
 docker exec "$NGINX_CONTAINER_NAME" nginx -s reload
+
+if [ -n "$OLD_IMAGE_ID" ] && [ "$OLD_IMAGE_ID" != "$NEW_IMAGE_ID" ]; then
+  docker rmi "$OLD_IMAGE_ID" 2>/dev/null || true
+fi
+docker image prune -f
